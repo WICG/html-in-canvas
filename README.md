@@ -113,6 +113,4 @@ This would render the text “hello [world](https://example.com)\!” to the can
 
 ## Other documents
 
-* [Security and Privacy Questionaire](./security-privacy-questionaire.md)
-
-## Q&A
+* [Security and Privacy Questionaire](./security-privacy-questionnaire.md)
