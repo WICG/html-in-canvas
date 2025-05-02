@@ -2,6 +2,8 @@
      and for what purposes is that exposure necessary?
      
      No new information will be exposed to the site. This feature enables rendering content which is already in the Document to the canvas surface.
+
+     TODO(schenney) Add information about tainting, and how to allow non-tainting. Maybe just link to the PII section below.
      
 02.  Do features in your specification expose the minimum amount of information
      necessary to enable their intended uses?
@@ -13,10 +15,12 @@
      them?
      
      Since the feature renders pixels from DOM elements into 3D contexts, those pixels can now be accessed by script. This requires ensuring that no PII is present in those pixels, for example different styles for visited links, spell check etc. The algorithm for painting an element into a texture will be hardened to ensure no such data is leaked.
+
+     TODO(schenney) This needs expansion.
      
 04.  How do the features in your specification deal with sensitive information?
      
-     See answer above, the feature ensures sensitive user information on the DOM content is removed when painting it into a texture which will be accessible to script.
+     See answer above, the feature ensures no sensitive user information on the DOM content is available when painting it into a texture which will be accessible to script.
 
 05.  Do the features in your specification introduce new state for an origin
      that persists across browsing sessions?
@@ -27,6 +31,8 @@
      underlying platform to origins?
      
      CSS allows authors to indicate that styling specific to the underlying platform should be used for DOM elements like buttons, form controls etc. This information can already be retrieved by Javascript via computed style. We may want to restrict the styling as needed to ensure this doesn't leak any additional information about the platform.
+
+     TODO(schenney) Expand on fingerprinting risks.
      
 8.  Does this specification allow an origin to send data to the underlying
      platform?
@@ -60,6 +66,8 @@
      third-party contexts?
      
      There is no difference in behaviour.
+
+     TODO(schenney) We should always taint in thid-party contexts.
      
 15.  How do the features in this specification work in the context of a browser’s
      Private Browsing or Incognito mode?
