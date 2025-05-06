@@ -4,7 +4,7 @@ This proposal covers new HTML Canvas APIs for rendering HTML content into the ca
 
 ## Status
 
-**Authors:** [Stephen Chenney](mailto:schenney@igalia.com), Chris Harrelson, [Khushal Sagar](mailto:khushalsagar@google.com), Vlad Levin, [Fernando Serboncini](mailto:fserb@google.com), Aaron Krajeski TODO: GitHub Ids, anyone else?
+**Authors:** [Stephen Chenney](mailto:schenney@igalia.com), [Chris Harrelson](emaail:chrishtr@google.com), [Khushal Sagar](mailto:khushalsagar@google.com), [Vlad Levin](email:vmpstr@google.com), [Fernando Serboncini](mailto:fserb@google.com), Aaron Krajeski
 
 **Champions:** [Stephen Chenney](mailto:schenney@igalia.com), TODO: Who else will be leading?
 
@@ -23,7 +23,7 @@ A fundamental capability missing from the web is the ability to complement Canva
 * **Composing HTML Elements with Shaders.** A limited set of CSS shaders, such as filter effects, are already available, but there is a desire to use general WebGL shaders with HTML.
 * **HTML Rendering in a 3D Context.** This enables structured, styled, fully accessible text content in 3D.
 
-In summary, users should be able to read multi-line text in canvas that provides correct i18n, a11y and all other layout and styling capabilities expected from web content.
+In summary, users should be able to read multi-line text in canvas that provides correct i18n, accessibility and all the layout and styling capabilities expected from web content.
 
 ### Demo
 
