@@ -4,7 +4,7 @@ This proposal covers new HTML Canvas APIs for rendering HTML content into the ca
 
 ## Status
 
-**Authors:** [Stephen Chenney](mailto:schenney@igalia.com), [Chris Harrelson](emaail:chrishtr@google.com), [Khushal Sagar](mailto:khushalsagar@google.com), [Vlad Levin](email:vmpstr@google.com), [Fernando Serboncini](mailto:fserb@google.com), Aaron Krajeski
+**Authors:** [Stephen Chenney](mailto:schenney@igalia.com), [Chris Harrelson](emaail:chrishtr@google.com), [Khushal Sagar](mailto:khushalsagar@google.com), [Vlad Levin](email:vmpstr@google.com), [Fernando Serboncini](mailto:fserb@chromium.org)
 
 **Champions:** [Stephen Chenney](mailto:schenney@igalia.com), TODO: Who else will be leading?
 
