@@ -71,21 +71,20 @@ Usage example:
 <!doctype html>
 <html>
   <body>
-    <canvas id="c">
-      <div id="d">hello <a href="https://example.com">world</a>!</div>
+    <canvas id="c" layoutsubtree="true">
+      <div id="d">Hello world!</div>
     </canvas>
     <script>
       const ctx = document.getElementById("c").getContext("2d");
       const el = document.getElementById("d");
       ctx.rotate(Math.PI / 4);
-      ctx.drawImage(el, 10, 10);
-      ctx.updatedElement(el, ctx.getTransform());
+      ctx.drawElement(el, 30, 0);
     </script>
   </body>
 </html>
 ```
 
-This would render the text “hello [world](https://example.com)\!” to the canvas with an interactable text.
+This renders the text “Hello World!” to the canvas at a 45 degree angle.
 
 ## DevTrial Information
 The HTML-in-Canvas features may be enabled by passing the `--enable-blink-features=CanvasElementDrawElement` to Chrome Canary versions later than 138.0.7175.0.
