@@ -4,9 +4,9 @@ This proposal covers new HTML Canvas APIs for rendering HTML content into the ca
 
 ## Status
 
-**Authors:** [Stephen Chenney](mailto:schenney@igalia.com), [Chris Harrelson](emaail:chrishtr@google.com), [Khushal Sagar](mailto:khushalsagar@google.com), [Vlad Levin](email:vmpstr@google.com), [Fernando Serboncini](mailto:fserb@chromium.org)
+**Authors:** [Stephen Chenney](mailto:schenney@igalia.com), [Chris Harrelson](mailto:chrishtr@google.com), [Khushal Sagar](mailto:khushalsagar@google.com), [Vlad Levin](mailto:vmpstr@google.com), [Fernando Serboncini](mailto:fserb@chromium.org)
 
-**Champions:** [Stephen Chenney](mailto:schenney@igalia.com), TODO: Who else will be leading?
+**Champions:** [Stephen Chenney](mailto:schenney@igalia.com), [Chris Harrelson](mailto:chrishtr@google.com)
 
 This proposal is at Stage 0 of the [WHATWG Stages process](https://whatwg.org/stages).
 
@@ -18,7 +18,7 @@ A fundamental capability missing from the web is the ability to complement Canva
 
 ### Use cases
 
-* **Styled, Laid Out Content in Canvas.** There’s a strong need for better text support on Canvas. Examples include chart components (legend, axes, etc.) and in-game menus.
+* **Styled, Laid Out Content in Canvas.** There’s a strong need for better styled text support in Canvas. Examples include chart components (legend, axes, etc.) and in-game menus.
 * **Accessibility Improvements.** There is currently no guarantee that the canvas fallback content currently used for accessibility always matches the rendered content, and such fallback content can be hard to generate. Accessibility information from HTML placed in the canvas would automatically match that content.
 * **Composing HTML Elements with Shaders.** A limited set of CSS shaders, such as filter effects, are already available, but there is a desire to use general WebGL shaders with HTML.
 * **HTML Rendering in a 3D Context.** This enables structured, styled, fully accessible text content in 3D.
@@ -34,60 +34,36 @@ https://github.com/user-attachments/assets/a99bb40f-0b9f-4773-a0a8-d41fec575705
 
 The `drawElement(element)` method renders an Element and its subtree into the 2D Canvas.
 
-This element must be a direct child of the Canvas element. The children elements of Canvas don’t impact the overall document layout and, before `drawElement`, are considered fallback content used to provide accessibility information on modern browsers.
+This element must be a direct child of the Canvas element. The Canvas element itself must have the `layout-subtree` HTML attribute set to `true`, causing the children
+to participate in document styling and layout. To avoid unintended impacts on the document outside the canvas, use `contain: layout style` in the style for the children.
+The containing block and other layout context comes from the canvas element itself.
 
-The element is rendered at a particular position and takes the CTM (current transform matrix) of the canvas into consideration. From a document layout perspective, when `drawElement` is called on an element it becomes part of the document layout (although isolated from the rest of the document), and has CSS applied. The containing block and other layout context comes from the canvas element itself.
+When `drawElement(element, x, y, dwidth, dheight)` is called with an `element` the element is rendered at the given position and takes the CTM (current transform matrix)
+of the canvas into consideration. The intrinsic size of the element is the border box; content outside the border box will be clipped, including shadows. The `dwidth`
+and `dheight` parameters scale the element to fit the given rectangle. They may be omitted to draw the element at its intrinsic size. The same element may be drawn multiple times.
 
-`drawElement()` will taint the canvas unless the subtree meets certain requirements. TODO(schenney) Expand on what would prevent tainting.
+Once drawn, the resulting canvas image is static. Subsequent changes to the element will not be reflected in the canvas, so the element must be explicitly redrawn if an author wishes to see the changes.
 
-It returns the element placed or null if failed.
+The children elements of Canvas are still considered fallback content used to provide accessibility information on modern browsers.
+See [Issue#11](https://github.com/WICG/html-in-canvas/issues/11) for an ongoing discussion of accessibility concerns. 
 
-It’s also worth noting that this never duplicates the element. If called twice on a single canvas, it simply replicates the element to a new location \+ CTM and to a new position in the canvas stack.
+`drawElement()` currently does not taint the canvas. When using this feature in a DevTrial, take steps to avoid leaking private information.
+[Issue#11](https://github.com/WICG/html-in-canvas/issues/5) is concerned with future steps for preserving privacy.
 
 ```idl
-TODO Update this.
+interface CanvasRenderingContext2D {
 
-interface mixin CanvasDrawElements {
-  undefined updateElement(Element el,
-    optional DOMMatrixInit transform = {}, optional long zOrder);
-  undefined removeElement(Element el);
-}
+  ...
 
-interface CanvasInvalidationEvent {
-  readonly attribute HTMLCanvasElement canvas;
-  readonly attribute DOMString reason;
-  readonly attribute DOMRect invalidation;
-}
+  [RaisesException]
+  void drawElement(Element element, unrestricted double x, unrestricted double y);
 
-// for Canvas 2D
-// drawImage
-typedef (... or Element) CanvasImageSource;
+  [RaisesException]
+  void drawElement(Element element, unrestricted double x, unrestricted double y,
+                   unrestricted double dwidth, unrestricted double dheight);
 
-CanvasRenderingContext2D includes CanvasDrawElements;
-
-// for WebGL
-// texImage2D, texSubImage2D
-typedef (... or Element) TexImageSource;
-
-WebGLRenderingContext includes CanvasDrawElements;
-WebGL2RenderingContext includes CanvasDrawElements;
-
-// for WebGPU
-// copyExternalImageToTexture
-typedef (... or Element) GPUImageCopyExternalImageSource;
-
-GPUCanvasContext includes CanvasDrawElements;
+[TODO: Define a separate mixin and use it in WebGL, WebGP, etc]
 ```
-
-TODO: The following is still relevant in some way, but needs re-writing.
-
-When using the drawElement API, the author must complete the rendering loop in Javascript to make the element alive:
-
-* it needs to call the draw function (`drawImage`, `texImage2D`, `GPUImageCopyExternalImageSource`),
-* update the element transform (so the browser knows where the element ended up (in relationship to the canvas), and
-* respond to a new invalidation event (for redrawing or refocusing within the scene, as needed). In theory, the invalidation event is optional if the user is updating the element on RAF, but it could still be useful if the page wants to respond to a find-in-page event, for example.
-
-In theory, `drawElement` can be used to provide non-accessible text. We still enforce that the element (at drawing time) must be a child of its canvas, but the liveness of the element depends on developers doing the right thing. That said, the current status quo is that it’s impossible for developers to “do the right thing”, i.e., text in 3D contexts \- for example \- is currently always inaccessible. This API would allow developers to do the right thing.
 
 Usage example:
 
@@ -111,6 +87,20 @@ Usage example:
 
 This would render the text “hello [world](https://example.com)\!” to the canvas with an interactable text.
 
+## DevTrial Information
+The HTML-in-Canvas features may be enabled by passing the `--enable-blink-features=CanvasElementDrawElement` to Chrome Canary versions later than 138.0.7175.0.
+
+Notes for DevTrial usage:
+* The features are currently under active development and changes to the API may happen at any time, though we make every effort to avoid churn.
+* The canvas is not tainted regardless of the content drawn, so take extreme care to avoid leaking confidential personal information (PII).
+* The space of possible HTML content is enormous and only a tiny fraction has been tested with `drawElement`.
+
+We are most interesting in feedback on the following topics:
+* What content works, and what fails? Which failure modes are most important to fix?
+* Is necessary support missing for some flavors of Canvas rendering contexts?
+* How does the feature interact with accessibility features? How can accessibility support be improved?
+* Please file bugs at [TODO: link]
+
 ## Other documents
 
-* [Security and Privacy Questionaire](./security-privacy-questionnaire.md)
+* [Security and Privacy Questionnaire](./security-privacy-questionnaire.md)
