@@ -28,24 +28,25 @@ There is no web API to easily render complex layouts of text and other content i
 TODO: This demo needs updating to remove the scrollbars and scrolling, but otherwise is still useful.
 https://github.com/user-attachments/assets/a99bb40f-0b9f-4773-a0a8-d41fec575705
 
-## Proposed solution: drawElement on CanvasRenderingContext2D, and texElement2D on WebGLRenderingContext; `layoutsubtree` attribute on the <canvas> element
+## Proposed solution: `layoutsubtree`, `drawElement`, and `texElement2D` 
 
-The `CanvasRenderingContext2D.drawElement(element)` method renders an Element and its subtree into the 2D canvas.
+* the `layoutsubtree` attribute on a `<canvas>` element allows its descendant elements to have layout (*), and causes the direct children of the `<canvas>` to have a stacking context and become a containing block for all descendants. Descendant elements of the `<canvas>` still do not paint or hit-test, and are not discovered by UA algorithms like find-in-page.
+* The `CanvasRenderingContext2D.drawElement(element, x, y)` method renders `element` and its subtree into a 2D canvas at offset x and y, so long as `element` is a direct child of the `<canvas>`. It has no effect if `layoutsubtree` is not specified on the `<canvas>`.
+* The `WebGLRenderingContext.texElement2D(..., element)` method renders `element` into a WebGL texture. It has no effect if `layoutsubtree` is not specified on the `<canvas>`.
 
-This element must be a direct child of the  `<canvas>` element. The `<canvas>` element itself must have the `layoutsubtree` HTML attribute set to `true`, causing the children
-to participate in document styling and layout. Direct children of the `<canvas>` establish a stacking context, and a containing block for all descendants. 
+(*) Without `layoutsubtree`, geometry APIs such as `getBoundingClientRect()` on these elements return an empty rect. They do have computed styles, however, and are keyboard-focusable.
 
-When `drawElement(element, x, y, dwidth, dheight)` is called with an `element` the element is rendered at the given position and takes the CTM (current transform matrix)
-of the canvas into consideration. The intrinsic size of the element is the border box; content outside the border box will be clipped, including shadows. The `dwidth`
-and `dheight` parameters scale the element to fit the given rectangle. They may be omitted to draw the element at its intrinsic size. The same element may be drawn multiple times.
+`drawElement(element ...)` takes the CTM (current transform matrix) of the canvas into consideration. The image drawn inot the canvas is sized to `element`'s border box size; element outsize that bounds (including ink and layout overflow) are clipped. The `drawElement(element, x, y, dwidth, dheight)` variant resizes the image of `element`'s subtree to `dwidth` and `dheight`.
+
+The same element may be drawn multiple times.
 
 Once drawn, the resulting canvas image is static. Subsequent changes to the element will not be reflected in the canvas, so the element must be explicitly redrawn if an author wishes to see the changes.
 
-The children elements of Canvas are still considered fallback content used to provide accessibility information on modern browsers.
+The descendant elements of the `<canvas>` are considered fallback content used to provide accessibility information.
 See [Issue#11](https://github.com/WICG/html-in-canvas/issues/11) for an ongoing discussion of accessibility concerns. 
 
-`drawElement()` currently does not taint the canvas. When using this feature in a DevTrial, take steps to avoid leaking private information.
-[Issue#11](https://github.com/WICG/html-in-canvas/issues/5) is concerned with future steps for preserving privacy.
+**NOTE**: The current implementation of `drawElement()` and `texElement2D` does not taint the canvas and is not suitable for use outside of local demos. When using this feature in a DevTrial, take steps to avoid leaking private information. See
+[Issue#11](https://github.com/WICG/html-in-canvas/issues/5) for discussion of design options for preserving privacy.
 
 ```idl
 interface CanvasRenderingContext2D {
@@ -59,7 +60,17 @@ interface CanvasRenderingContext2D {
   void drawElement(Element element, unrestricted double x, unrestricted double y,
                    unrestricted double dwidth, unrestricted double dheight);
 
-[TODO: Define a separate mixin and use it in WebGL, WebGP, etc]
+```
+
+```idl
+interface WebGLRenderingContext {
+
+  ...
+
+  [RaisesException]
+    void texElement2D(GLenum target, GLint level, GLint internalformat,
+                      GLenum format, GLenum type, Element element);
+
 ```
 
 Usage example:
