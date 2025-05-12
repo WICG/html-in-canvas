@@ -80,7 +80,7 @@ Usage example:
 <html>
   <body>
     <canvas id="c" layoutsubtree="true">
-      <div id="d">Hello world!</div>
+      <div id="d">Hello world!<br>I'm multi-line, <b>formatted</b> text.</div>
     </canvas>
     <script>
       const ctx = document.getElementById("c").getContext("2d");
