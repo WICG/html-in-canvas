@@ -14,29 +14,26 @@ This proposal is a subset of a [previous proposal](placeElement) covering APIs t
 
 ## Motivation
 
-A fundamental capability missing from the web is the ability to complement Canvas with HTML elements. Adding this capability enables Canvas surfaces to benefit from the styling and layout of HTML with CSS, including built-in accessibility.
+There is no web API to easily render complex layouts of text and other content into a `<canvas>`. As a result, `<canvas>`-based content suffers in accessibilty, internationalization, performance and quality.
 
 ### Use cases
 
-* **Styled, Laid Out Content in Canvas.** There’s a strong need for better styled text support in Canvas. Examples include chart components (legend, axes, etc.) and in-game menus.
-* **Accessibility Improvements.** There is currently no guarantee that the canvas fallback content currently used for accessibility always matches the rendered content, and such fallback content can be hard to generate. Accessibility information from HTML placed in the canvas would automatically match that content.
+* **Styled, Laid Out Content in Canvas.** There’s a strong need for better styled text support in Canvas. Examples include chart components (legend, axes, etc.), rich content boxes in creative tools, and in-game menus.
+* **Accessibility Improvements.** There is currently no guarantee that the canvas fallback content currently used for `<canvas>` accessibility always matches the rendered content, and such fallback content can be hard to generate. Accessibility information from HTML placed in the canvas would automatically match that content.
 * **Composing HTML Elements with Shaders.** A limited set of CSS shaders, such as filter effects, are already available, but there is a desire to use general WebGL shaders with HTML.
-* **HTML Rendering in a 3D Context.** This enables structured, styled, fully accessible text content in 3D.
-
-In summary, users should be able to read multi-line text in canvas that provides correct i18n, accessibility and all the layout and styling capabilities expected from web content.
+* **HTML Rendering in a 3D Context.** 3D aspects of sites and games need to render rich 2D content into surfaces within a 3D scene.
 
 ### Demo
 
 TODO: This demo needs updating to remove the scrollbars and scrolling, but otherwise is still useful.
 https://github.com/user-attachments/assets/a99bb40f-0b9f-4773-a0a8-d41fec575705
 
-## drawElement Proposal
+## Proposed solution: drawElement on CanvasRenderingContext2D, and texElement2D on WebGLRenderingContext; `layoutsubtree` attribute on the <canvas> element
 
-The `drawElement(element)` method renders an Element and its subtree into the 2D Canvas.
+The `CanvasRenderingContext2D.drawElement(element)` method renders an Element and its subtree into the 2D canvas.
 
-This element must be a direct child of the Canvas element. The Canvas element itself must have the `layout-subtree` HTML attribute set to `true`, causing the children
-to participate in document styling and layout. To avoid unintended impacts on the document outside the canvas, use `contain: layout style` in the style for the children.
-The containing block and other layout context comes from the canvas element itself.
+This element must be a direct child of the  `<canvas>` element. The `<canvas>` element itself must have the `layoutsubtree` HTML attribute set to `true`, causing the children
+to participate in document styling and layout. Direct children of the `<canvas>` establish a stacking context, and a containing block for all descendants. 
 
 When `drawElement(element, x, y, dwidth, dheight)` is called with an `element` the element is rendered at the given position and takes the CTM (current transform matrix)
 of the canvas into consideration. The intrinsic size of the element is the border box; content outside the border box will be clipped, including shadows. The `dwidth`
