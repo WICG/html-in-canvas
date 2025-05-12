@@ -1,6 +1,6 @@
 # HTML-in-Canvas
 
-This proposal covers new HTML Canvas APIs for rendering HTML content into the canvas on Canvas 2D, WebGL and WebGPU.
+We propose new HTML Canvas APIs for rendering HTML content into the canvas for Canvas 2D and WebGL.
 
 ## Status
 
