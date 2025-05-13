@@ -82,8 +82,8 @@ Usage example:
     border: 1px solid blue;
   }
   #drawElementContents {
-    transform: translateY(100px) translateX(50px) rotateZ(45deg);
-    transform-origin: center; width: 300px;
+    transformf: translateY(100px) translateX(50px) rotateZ(45deg);
+    transform-originf: center; width: 300px;
     border: 1px solid black;
   }
   img {
@@ -92,18 +92,16 @@ Usage example:
   }
 </style>
 <canvas id="canvas" layoutsubtree="true" width=500 height=500>
-  <div id=drawElement style="width: 500px; height: 500px;">
-    <div id=drawElementContents style="" id="d">
-      Hello world!<br>I'm multi-line, <b>formatted</b>,
-      rotated text with emoji (&#128512;), RTL text
-      <span dir=rtl>من فارسی صحبت میکنم</span>,
-      vertical text:
-      <p style="writing-mode: vertical-rl;">
-        这是垂直文本
-      </p>
-      and an inline image:
-      <img src="https://upload.wikimedia.org/wikipedia/commons/9/9b/Gustav_chocolate.jpg">
-  </div>
+  <div id=drawElement style="width: 300px; height: 300px;" id="d">
+    Hello world!<br>I'm multi-line, <b>formatted</b>,
+    rotated text with emoji (&#128512;), RTL text
+    <span dir=rtl>من فارسی صحبت میکنم</span>,
+    vertical text:
+    <p style="writing-mode: vertical-rl;">
+      这是垂直文本
+    </p>
+    and an inline image:
+    <img src="https://upload.wikimedia.org/wikipedia/commons/9/9b/Gustav_chocolate.jpg">
   </div>
 </canvas>
 
@@ -111,6 +109,8 @@ Usage example:
   onload = () => {
     const ctx = document.getElementById("canvas").getContext("2d");
     const el = document.getElementById("drawElement");
+    ctx.rotate((45 * Math.PI) / 180);
+    ctx.translate(250, -100);
     ctx.drawElement(el, 30, 0);
   }
 </script>
