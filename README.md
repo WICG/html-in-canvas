@@ -95,7 +95,7 @@ Usage example:
 This renders the text “Hello World!” to the canvas at a 45 degree angle.
 
 ## Developer Trial (dev trial) Information
-The HTML-in-Canvas features may be enabled by passing the `--enable-blink-features=CanvasElementDrawElement` to Chrome Canary versions later than 138.0.7175.0.
+The HTML-in-Canvas features may be enabled by passing the `--enable-blink-features=CanvasDrawElement` to Chrome Canary versions later than 138.0.7175.0.
 
 Notes for dev trial usage:
 * The features are currently under active development and changes to the API may happen at any time, though we make every effort to avoid unnecessary churn.
