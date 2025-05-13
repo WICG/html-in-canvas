@@ -79,32 +79,48 @@ Usage example:
 <!doctype html>
 <style>
   canvas {
-    border: 1px solid lightblue;
+    border: 1px solid blue;
   }
   #drawElementContents {
-    transform: translateY(50px) translateX(10px) rotateZ(45deg);
-    transform-origin: center; width: 100px;
-    border: 1px solid gray;
-
+    transform: translateY(100px) translateX(50px) rotateZ(45deg);
+    transform-origin: center; width: 300px;
+    border: 1px solid black;
+  }
+  img {
+    width: 40px;
+    height: auto;
   }
 </style>
-<canvas id="canvas" layoutsubtree="true" width=300 height=300>
-  <div id=drawElement style="width: 300px; height: 300px;">
+<canvas id="canvas" layoutsubtree="true" width=500 height=500>
+  <div id=drawElement1 style="width: 500px; height: 500px;">
     <div id=drawElementContents style="" id="d">
-      Hello world!<br>I'm multi-line, <b>formatted</b>, rotated text.</div>
+      Hello world!<br>I'm multi-line, <b>formatted</b>,
+      rotated text with emoji (&#128512;), RTL text
+      <span dir=rtl>من فارسی صحبت می‌کنم</span>,
+      vertical text:
+      <p style="writing-mode: vertical-rl;">
+        这是垂直文本
+      </p>
+      and an inline image:
+      <img src="https://upload.wikimedia.org/wikipedia/commons/9/9b/Gustav_chocolate.jpg">
+  </div>
   </div>
 </canvas>
+
 <script>
-  const ctx = document.getElementById("canvas").getContext("2d");
-  const el = document.getElementById("drawElement");
-  ctx.drawElement(el, 30, 0);
+  onload = () => {
+    const ctx = document.getElementById("canvas").getContext("2d");
+    const el = document.getElementById("drawElement1");
+    ctx.drawElement(el, 30, 0);
+  }
 </script>
+
 ```
 
 This should render to an image like the following (the blue rectangle indicates the bounds of the canvas, and the black the element passed to
 drawElement:
 
-![image](https://github.com/user-attachments/assets/ed8b7daf-4ebb-45e3-a6df-0fd069b47d27)
+![image](https://github.com/user-attachments/assets/78e05759-330e-458d-841d-9b381875cc13)
 
 ## Developer Trial (dev trial) Information
 The HTML-in-Canvas features may be enabled by passing the `--enable-blink-features=CanvasDrawElement` to Chrome Canary versions later than 138.0.7175.0.
