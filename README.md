@@ -129,6 +129,8 @@ Notes for dev trial usage:
 * The features are currently under active development and changes to the API may happen at any time, though we make every effort to avoid unnecessary churn.
 * The canvas is not tainted regardless of the content drawn, so take extreme care to avoid leaking confidential personal information (PII) in any demos.
 * The space of possible HTML content is enormous and only a tiny fraction has been tested with `drawElement`.
+* Interactive elements (such as links, forms or buttons) can be drawn into the canvas, but are not automatically interactive.
+* HTML text transformed with canvas transform commands may have poor quality in the current implementation.
 
 We are most interesting in feedback on the following topics:
 * What content works, and what fails? Which failure modes are most important to fix?
