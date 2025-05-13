@@ -117,8 +117,8 @@ Usage example:
 
 ```
 
-This should render to an image like the following (the blue rectangle indicates the bounds of the canvas, and the black the element passed to
-drawElement:
+This should render to an image like the following (the blue rectangle indicates the bounds of the `<canvas>`, and the black the element passed to
+drawElement):
 
 ![image](https://github.com/user-attachments/assets/78e05759-330e-458d-841d-9b381875cc13)
 
