@@ -92,7 +92,7 @@ Usage example:
   }
 </style>
 <canvas id="canvas" layoutsubtree="true" width=500 height=500>
-  <div id=drawElement1 style="width: 500px; height: 500px;">
+  <div id=drawElement style="width: 500px; height: 500px;">
     <div id=drawElementContents style="" id="d">
       Hello world!<br>I'm multi-line, <b>formatted</b>,
       rotated text with emoji (&#128512;), RTL text
@@ -110,7 +110,7 @@ Usage example:
 <script>
   onload = () => {
     const ctx = document.getElementById("canvas").getContext("2d");
-    const el = document.getElementById("drawElement1");
+    const el = document.getElementById("drawElement");
     ctx.drawElement(el, 30, 0);
   }
 </script>
