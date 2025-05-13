@@ -96,7 +96,7 @@ Usage example:
     <div id=drawElementContents style="" id="d">
       Hello world!<br>I'm multi-line, <b>formatted</b>,
       rotated text with emoji (&#128512;), RTL text
-      <span dir=rtl>من فارسی صحبت می‌کنم</span>,
+      <span dir=rtl>من فارسی صحبت میکنم</span>,
       vertical text:
       <p style="writing-mode: vertical-rl;">
         这是垂直文本
@@ -114,13 +114,13 @@ Usage example:
     ctx.drawElement(el, 30, 0);
   }
 </script>
-
 ```
 
 This should render to an image like the following (the blue rectangle indicates the bounds of the `<canvas>`, and the black the element passed to
 drawElement):
 
-![image](https://github.com/user-attachments/assets/78e05759-330e-458d-841d-9b381875cc13)
+![image](https://github.com/user-attachments/assets/1955f410-2d49-403d-a4d1-b6ed37cb2efd)
+
 
 ## Developer Trial (dev trial) Information
 The HTML-in-Canvas features may be enabled by passing the `--enable-blink-features=CanvasDrawElement` to Chrome Canary versions later than 138.0.7175.0.
