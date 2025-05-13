@@ -104,7 +104,7 @@ Usage example:
 This should render to an image like the following (the blue rectangle indicates the bounds of the canvas, and the black the element passed to
 drawElement:
 
-
+![image](https://github.com/user-attachments/assets/ed8b7daf-4ebb-45e3-a6df-0fd069b47d27)
 
 ## Developer Trial (dev trial) Information
 The HTML-in-Canvas features may be enabled by passing the `--enable-blink-features=CanvasDrawElement` to Chrome Canary versions later than 138.0.7175.0.
