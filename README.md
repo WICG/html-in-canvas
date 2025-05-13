@@ -116,7 +116,7 @@ Usage example:
 </script>
 ```
 
-This should render to an image like the following (the blue rectangle indicates the bounds of the `<canvas>`, and the black the element passed to
+This should render like the following (the blue rectangle indicates the bounds of the `<canvas>`, and the black the element passed to
 drawElement):
 
 ![image](https://github.com/user-attachments/assets/1955f410-2d49-403d-a4d1-b6ed37cb2efd)
