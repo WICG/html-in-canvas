@@ -77,22 +77,34 @@ Usage example:
 
 ```html
 <!doctype html>
-<html>
-  <body>
-    <canvas id="c" layoutsubtree="true">
-      <div id="d">Hello world!<br>I'm multi-line, <b>formatted</b> text.</div>
-    </canvas>
-    <script>
-      const ctx = document.getElementById("c").getContext("2d");
-      const el = document.getElementById("d");
-      ctx.rotate(Math.PI / 4);
-      ctx.drawElement(el, 30, 0);
-    </script>
-  </body>
-</html>
+<style>
+  canvas {
+    border: 1px solid lightblue;
+  }
+  #drawElementContents {
+    transform: translateY(50px) translateX(10px) rotateZ(45deg);
+    transform-origin: center; width: 100px;
+    border: 1px solid gray;
+
+  }
+</style>
+<canvas id="canvas" layoutsubtree="true" width=300 height=300>
+  <div id=drawElement style="width: 300px; height: 300px;">
+    <div id=drawElementContents style="" id="d">
+      Hello world!<br>I'm multi-line, <b>formatted</b>, rotated text.</div>
+  </div>
+</canvas>
+<script>
+  const ctx = document.getElementById("canvas").getContext("2d");
+  const el = document.getElementById("drawElement");
+  ctx.drawElement(el, 30, 0);
+</script>
 ```
 
-This renders the text “Hello World!” to the canvas at a 45 degree angle.
+This should render to an image like the following (the blue rectangle indicates the bounds of the canvas, and the black the element passed to
+drawElement:
+
+
 
 ## Developer Trial (dev trial) Information
 The HTML-in-Canvas features may be enabled by passing the `--enable-blink-features=CanvasDrawElement` to Chrome Canary versions later than 138.0.7175.0.
