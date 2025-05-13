@@ -96,7 +96,7 @@ Usage example:
     Hello world!<br>I'm multi-line, <b>formatted</b>,
     rotated text with emoji (&#128512;), RTL text
     <span dir=rtl>من فارسی صحبت میکنم</span>,
-    vertical text:
+    vertical text,
     <p style="writing-mode: vertical-rl;">
       这是垂直文本
     </p>
@@ -119,7 +119,7 @@ Usage example:
 This should render like the following (the blue rectangle indicates the bounds of the `<canvas>`, and the black the element passed to
 drawElement):
 
-![image](https://github.com/user-attachments/assets/eadb50e5-3bfa-4bef-9153-8fa91c18e8df)
+![image](https://github.com/user-attachments/assets/c64e1a94-647b-42c5-8c25-a9f3c633a38b)
 
 ## Developer Trial (dev trial) Information
 The HTML-in-Canvas features may be enabled by passing the `--enable-blink-features=CanvasDrawElement` to Chrome Canary versions later than 138.0.7175.0.
