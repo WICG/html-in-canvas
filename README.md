@@ -73,7 +73,7 @@ interface WebGLRenderingContext {
 
 ```
 
-Usage example:
+[Usage example](Examples/complex-text.html):
 
 ```html
 <!doctype html>
