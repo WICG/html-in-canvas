@@ -116,7 +116,8 @@ drawElement):
 
 ![image](https://github.com/user-attachments/assets/c64e1a94-647b-42c5-8c25-a9f3c633a38b)
 
-[See here](Examples/webGL.html) for an example of how to use the WebGL API to populate GL texture with HTML content.
+[See here](Examples/webGL.html) for an example of how to use the WebGL `texElement2D` API to populate GL texture with HTML content
+(specifically, the `loadTexture` method).
 The example should render like the following snapshot. Note how the border box fills the entire face of the cube.
 To adjust that, modify the texture coordinates for rendering the cube and possibly adjust the texture wrap
 parameters. Or, wrap the content in a larger `<div>` and draw the `<div>`.
