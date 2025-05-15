@@ -3,11 +3,6 @@
   canvas {
     border: 1px solid blue;
   }
-  #drawElementContents {
-    transformf: translateY(100px) translateX(50px) rotateZ(45deg);
-    transform-originf: center; width: 300px;
-    border: 1px solid black;
-  }
   img {
     width: 40px;
     height: auto;
@@ -32,7 +27,8 @@
     const ctx = document.getElementById("canvas").getContext("2d");
     const el = document.getElementById("drawElement");
     ctx.rotate((45 * Math.PI) / 180);
-    ctx.translate(250, -100);
+    ctx.translate(200, -125);
     ctx.drawElement(el, 30, 0);
   }
 </script>
+

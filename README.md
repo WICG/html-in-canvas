@@ -68,53 +68,11 @@ interface WebGLRenderingContext {
 
 ```
 
-[2D Canvas Usage example](Examples/complex-text.html):
 
-```html
-<!doctype html>
-<style>
-  canvas {
-    border: 1px solid blue;
-  }
-  #drawElementContents {
-    transformf: translateY(100px) translateX(50px) rotateZ(45deg);
-    transform-originf: center; width: 300px;
-    border: 1px solid black;
-  }
-  img {
-    width: 40px;
-    height: auto;
-  }
-</style>
-<canvas id="canvas" layoutsubtree="true" width=500 height=500>
-  <div id=drawElement style="width: 300px; height: 300px;" id="d">
-    Hello world!<br>I'm multi-line, <b>formatted</b>,
-    rotated text with emoji (&#128512;), RTL text
-    <span dir=rtl>من فارسی صحبت میکنم</span>,
-    vertical text,
-    <p style="writing-mode: vertical-rl;">
-      这是垂直文本
-    </p>
-    and an inline image:
-    <img src="https://upload.wikimedia.org/wikipedia/commons/9/9b/Gustav_chocolate.jpg">
-  </div>
-</canvas>
-
-<script>
-  onload = () => {
-    const ctx = document.getElementById("canvas").getContext("2d");
-    const el = document.getElementById("drawElement");
-    ctx.rotate((45 * Math.PI) / 180);
-    ctx.translate(250, -100);
-    ctx.drawElement(el, 30, 0);
-  }
-</script>
-```
-
-This should render like the following (the blue rectangle indicates the bounds of the `<canvas>`, and the black the element passed to
+[See here](Examples/complex-text.html) to see an example of how to use the API. It should render like the following (the blue rectangle indicates the bounds of the `<canvas>`, and the black the element passed to
 drawElement):
 
-![image](https://github.com/user-attachments/assets/c64e1a94-647b-42c5-8c25-a9f3c633a38b)
+![image](https://github.com/user-attachments/assets/5d984209-c8ae-4f7a-9b15-7e4f2660086b)
 
 [See here](Examples/webGL.html) for an example of how to use the WebGL `texElement2D` API to populate GL texture with HTML content
 (specifically, the `loadTexture` method).
