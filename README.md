@@ -23,11 +23,6 @@ There is no web API to easily render complex layouts of text and other content i
 * **Composing HTML Elements with Shaders.** A limited set of CSS shaders, such as filter effects, are already available, but there is a desire to use general WebGL shaders with HTML.
 * **HTML Rendering in a 3D Context.** 3D aspects of sites and games need to render rich 2D content into surfaces within a 3D scene.
 
-### Demo
-
-TODO: This demo needs updating to remove the scrollbars and scrolling, but otherwise is still useful.
-https://github.com/user-attachments/assets/a99bb40f-0b9f-4773-a0a8-d41fec575705
-
 ## Proposed solution: `layoutsubtree`, `drawElement`, and `texElement2D` 
 
 * the `layoutsubtree` attribute on a `<canvas>` element allows its descendant elements to have layout (*), and causes the direct children of the `<canvas>` to have a stacking context and become a containing block for all descendants. Descendant elements of the `<canvas>` still do not paint or hit-test, and are not discovered by UA algorithms like find-in-page.
@@ -73,10 +68,19 @@ interface WebGLRenderingContext {
 
 ```
 
+
 [See here](Examples/complex-text.html) to see an example of how to use the API. It should render like the following (the blue rectangle indicates the bounds of the `<canvas>`, and the black the element passed to
 drawElement):
 
 ![image](https://github.com/user-attachments/assets/5d984209-c8ae-4f7a-9b15-7e4f2660086b)
+
+[See here](Examples/webGL.html) for an example of how to use the WebGL `texElement2D` API to populate GL texture with HTML content
+(specifically, the `loadTexture` method).
+The example should render like the following snapshot. Note how the border box fills the entire face of the cube.
+To adjust that, modify the texture coordinates for rendering the cube and possibly adjust the texture wrap
+parameters. Or, wrap the content in a larger `<div>` and draw the `<div>`.
+
+![image](https://private-user-images.githubusercontent.com/7917425/444254039-a5d5a80f-c44d-4cf1-ac81-36733a5a14b9.png?jwt=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJnaXRodWIuY29tIiwiYXVkIjoicmF3LmdpdGh1YnVzZXJjb250ZW50LmNvbSIsImtleSI6ImtleTUiLCJleHAiOjE3NDczMzU5NjEsIm5iZiI6MTc0NzMzNTY2MSwicGF0aCI6Ii83OTE3NDI1LzQ0NDI1NDAzOS1hNWQ1YTgwZi1jNDRkLTRjZjEtYWM4MS0zNjczM2E1YTE0YjkucG5nP1gtQW16LUFsZ29yaXRobT1BV1M0LUhNQUMtU0hBMjU2JlgtQW16LUNyZWRlbnRpYWw9QUtJQVZDT0RZTFNBNTNQUUs0WkElMkYyMDI1MDUxNSUyRnVzLWVhc3QtMSUyRnMzJTJGYXdzNF9yZXF1ZXN0JlgtQW16LURhdGU9MjAyNTA1MTVUMTkwMTAxWiZYLUFtei1FeHBpcmVzPTMwMCZYLUFtei1TaWduYXR1cmU9NGU2OTViM2E4MmIwNjBhMTFiMmYyN2UwYzk3NDM3MDNmMGU2YjY2MTRmZTMzZjU4MTJkZWMxNDZhZmU0N2FjOSZYLUFtei1TaWduZWRIZWFkZXJzPWhvc3QifQ.M6QguG5sWKFSiiS2wyZ_e50aPzCYI4zHIzTAeT99RyQ)
 
 ## Developer Trial (dev trial) Information
 The HTML-in-Canvas features may be enabled by passing the `--enable-blink-features=CanvasDrawElement` to Chrome Canary versions later than 138.0.7175.0.
