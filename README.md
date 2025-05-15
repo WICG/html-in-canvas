@@ -23,11 +23,6 @@ There is no web API to easily render complex layouts of text and other content i
 * **Composing HTML Elements with Shaders.** A limited set of CSS shaders, such as filter effects, are already available, but there is a desire to use general WebGL shaders with HTML.
 * **HTML Rendering in a 3D Context.** 3D aspects of sites and games need to render rich 2D content into surfaces within a 3D scene.
 
-### Demo
-
-TODO: This demo needs updating to remove the scrollbars and scrolling, but otherwise is still useful.
-https://github.com/user-attachments/assets/a99bb40f-0b9f-4773-a0a8-d41fec575705
-
 ## Proposed solution: `layoutsubtree`, `drawElement`, and `texElement2D` 
 
 * the `layoutsubtree` attribute on a `<canvas>` element allows its descendant elements to have layout (*), and causes the direct children of the `<canvas>` to have a stacking context and become a containing block for all descendants. Descendant elements of the `<canvas>` still do not paint or hit-test, and are not discovered by UA algorithms like find-in-page.
@@ -73,7 +68,7 @@ interface WebGLRenderingContext {
 
 ```
 
-[Usage example](Examples/complex-text.html):
+[2D Canvas Usage example](Examples/complex-text.html):
 
 ```html
 <!doctype html>
@@ -118,6 +113,48 @@ interface WebGLRenderingContext {
 
 This should render like the following (the blue rectangle indicates the bounds of the `<canvas>`, and the black the element passed to
 drawElement):
+
+![image](https://github.com/user-attachments/assets/c64e1a94-647b-42c5-8c25-a9f3c633a38b)
+
+[WebGL Canvas Usage example](Examples/webGL.html):
+
+```javascript
+...
+
+const gl = canvas.getContext("webgl2");
+
+...
+
+function loadTexture(gl) {
+  const texture = gl.createTexture();
+  gl.bindTexture(gl.TEXTURE_2D, texture);
+
+  const level = 0;
+  const internalFormat = gl.RGBA;
+  const srcFormat = gl.RGBA;
+  const srcType = gl.UNSIGNED_BYTE;
+  gl.texElement2D(gl.TEXTURE_2D, level, internalFormat,
+                  srcFormat, srcType, drawElement);
+
+  // Linear texture filtering produces better results than mipmap with text.
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+
+  return texture;
+}
+
+````
+In WebGL canvas contexts (note: only `webgl2` contexts are supported at this time) the `textElement2D`
+method is used to populate GL textures. For best results set texture level 0 and turn off mipmaps,
+as the mipmap filtering produces subtly flickering text.
+
+The rest of the WebGL demo uses the same HTML content as the 2D canvas example. See the code
+for GL setup and functions to draw the scene.
+
+The example should render like the following snapshot. Note how the border box fills the entire face of the cube.
+To adjust that, modify the texture coordinates for rendering the cube and possibly adjust the texture wrap
+parameters. Or, wrap the content in a larger `<div>` and draw the `<div>`.
 
 ![image](https://github.com/user-attachments/assets/c64e1a94-647b-42c5-8c25-a9f3c633a38b)
 
