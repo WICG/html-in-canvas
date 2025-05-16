@@ -68,6 +68,7 @@ interface WebGLRenderingContext {
 
 ```
 
+## Demos
 
 [See here](Examples/complex-text.html) to see an example of how to use the API. It should render like the following (the blue rectangle indicates the bounds of the `<canvas>`, and the black the element passed to
 drawElement):
