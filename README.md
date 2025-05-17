@@ -40,7 +40,7 @@ Once drawn, the resulting canvas image is static. Subsequent changes to the elem
 The descendant elements of the `<canvas>` are considered fallback content used to provide accessibility information.
 See [Issue#11](https://github.com/WICG/html-in-canvas/issues/11) for an ongoing discussion of accessibility concerns.
 
-Offscreen canvas contexts and detached canvases are not supported because drawing DOM content when the canvas is not in the DOM poses technical challenges.
+Offscreen canvas contexts and detached canvases are not supported because drawing DOM content when the canvas is not in the DOM poses technical challenges. See [Issue#2](https://github.com/WICG/html-in-canvas/issues/2) for further discussion.
 
 **NOTE**: The current implementation of `drawElement()` and `texElement2D` does not taint the canvas and is not suitable for use outside of local demos. When using this feature in a DevTrial, take steps to avoid leaking private information. See
 [Issue#11](https://github.com/WICG/html-in-canvas/issues/5) for discussion of design options for preserving privacy.
