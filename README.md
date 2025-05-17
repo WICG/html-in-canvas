@@ -38,7 +38,9 @@ The same element may be drawn multiple times.
 Once drawn, the resulting canvas image is static. Subsequent changes to the element will not be reflected in the canvas, so the element must be explicitly redrawn if an author wishes to see the changes.
 
 The descendant elements of the `<canvas>` are considered fallback content used to provide accessibility information.
-See [Issue#11](https://github.com/WICG/html-in-canvas/issues/11) for an ongoing discussion of accessibility concerns. 
+See [Issue#11](https://github.com/WICG/html-in-canvas/issues/11) for an ongoing discussion of accessibility concerns.
+
+Offscreen canvas contexts and detached canvases are not supported because drawing DOM content when the canvas is not in the DOM poses technical challenges.
 
 **NOTE**: The current implementation of `drawElement()` and `texElement2D` does not taint the canvas and is not suitable for use outside of local demos. When using this feature in a DevTrial, take steps to avoid leaking private information. See
 [Issue#11](https://github.com/WICG/html-in-canvas/issues/5) for discussion of design options for preserving privacy.
@@ -95,7 +97,7 @@ Notes for dev trial usage:
 
 We are most interesting in feedback on the following topics:
 * What content works, and what fails? Which failure modes are most important to fix?
-* Is necessary support missing for some flavors of Canvas rendering contexts?
+* Is necessary support missing for some flavors of Canvas rendering contexts? 
 * How does the feature interact with accessibility features? How can accessibility support be improved?
 
 Please file bugs at [TODO: link]
