@@ -8,8 +8,6 @@ We propose new HTML Canvas APIs for rendering HTML content into the canvas for C
 
 **Champions:** [Stephen Chenney](mailto:schenney@igalia.com), [Chris Harrelson](mailto:chrishtr@google.com)
 
-This proposal is at [Stage 1](https://github.com/whatwg/html/issues/10650) of the [WHATWG Stages process](https://whatwg.org/stages).
-
 This proposal is a subset of a [previous proposal](placeElement) covering APIs to allow live HTML elements.
 
 ## Motivation
