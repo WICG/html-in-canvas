@@ -95,6 +95,10 @@ Notes for dev trial usage:
 * Interactive elements (such as links, forms or buttons) can be drawn into the canvas, but are not automatically interactive.
 * HTML text transformed with canvas transform commands may have poor quality in the current implementation.
 
+Other known limitations:
+* Cross-origin iframes are not rendered
+* SVG foreignObject is not yet working
+
 We are most interesting in feedback on the following topics:
 * What content works, and what fails? Which failure modes are most important to fix?
 * Is necessary support missing for some flavors of Canvas rendering contexts? 
