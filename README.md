@@ -101,7 +101,7 @@ We are most interesting in feedback on the following topics:
 * Is necessary support missing for some flavors of Canvas rendering contexts? 
 * How does the feature interact with accessibility features? How can accessibility support be improved?
 
-Please file bugs at [TODO: link]
+Please file bugs or design issues [here](https://github.com/WICG/html-in-canvas/issues/new).
 
 ## Other documents
 
