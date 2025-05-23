@@ -91,7 +91,6 @@ Notes for dev trial usage:
 * The canvas is not tainted regardless of the content drawn, so take extreme care to avoid leaking confidential personal information (PII) in any demos.
 * The space of possible HTML content is enormous and only a tiny fraction has been tested with `drawElement`.
 * Interactive elements (such as links, forms or buttons) can be drawn into the canvas, but are not automatically interactive.
-* HTML text transformed with canvas transform commands may have poor quality in the current implementation.
 
 Other known limitations:
 * Cross-origin iframes are not rendered
