@@ -73,7 +73,7 @@ interface WebGLRenderingContext {
 [See here](Examples/complex-text.html) to see an example of how to use the API. It should render like the following (the blue rectangle indicates the bounds of the `<canvas>`, and the black the element passed to
 drawElement):
 
-![image](https://github.com/user-attachments/assets/5d984209-c8ae-4f7a-9b15-7e4f2660086b)
+![image](https://github.com/user-attachments/assets/88d5200b-176c-4102-a4a0-f5893101b295)
 
 [See here](Examples/webGL.html) for an example of how to use the WebGL `texElement2D` API to populate a GL texture with HTML content.
 The example should render an animated cube, like in the following shapshot. Note how the border box fills the entire face of the cube.
