@@ -10,6 +10,8 @@
     height: auto;
   }
 </style>
+
+
 <canvas id="canvas" layoutsubtree="true">
   <div id=drawElement style="width: 500px; height: 500px;">
     Hello world!<br>I'm multi-line, <b>formatted</b>,
@@ -19,8 +21,13 @@
     <p style="writing-mode: vertical-rl;">
       这是垂直文本
     </p>
-    and an inline image:
+    an inline image:
     <img src="https://upload.wikimedia.org/wikipedia/commons/9/9b/Gustav_chocolate.jpg">
+    , and:
+    <svg width="50" height="50">
+      <circle cx="25" cy="25" r="20" fill="green" />
+      <text x="25" y="30" font-size="15" text-anchor="middle" fill="white">SVG</text>
+    </svg>
   </div>
 </canvas>
 
@@ -41,3 +48,4 @@
     observer.observe(canvas, {box: ['device-pixel-content-box']});
   }
 </script>
+
