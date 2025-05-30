@@ -23,17 +23,17 @@
 </canvas>
 
 <script>
+  const ctx = document.getElementById("canvas").getContext("2d");
   onload = () => {
     const observer = new ResizeObserver((entries) => {
       const entry = entries.find((entry) => entry.target === canvas);
       canvas.width = entry.devicePixelContentBoxSize[0].inlineSize;
       canvas.height = entry.devicePixelContentBoxSize[0].blockSize;
 
-      const ctx = document.getElementById("canvas").getContext("2d");
-      const el = document.getElementById("drawElement");
+      ctx.reset();
       ctx.rotate((45 * Math.PI) / 180);
       ctx.translate(200, -125);
-      ctx.drawElement(el, 30, 0);
+      ctx.drawElement(drawElement, 30, 0);
     });
     // See: https://web.dev/articles/device-pixel-content-box
     observer.observe(canvas, {box: ['device-pixel-content-box']});
