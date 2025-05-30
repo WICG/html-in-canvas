@@ -28,7 +28,7 @@
 
   <body>
     <canvas id="gl-canvas" width="600" height="600" layoutsubtree=true>
-      <div id="drawElement" style="width: 300px; height: 300px;" id="d">
+     <div id=drawElement style="width: 500px; height: 500px;">
         Hello world!<br>I'm multi-line, <b>formatted</b>,
         rotated text with emoji (&#128512;), RTL text
         <span dir=rtl>من فارسی صحبت میکنم</span>,
@@ -36,8 +36,13 @@
         <p style="writing-mode: vertical-rl;">
           这是垂直文本
         </p>
-        and an inline image:
+        an inline image:
         <img src="https://upload.wikimedia.org/wikipedia/commons/9/9b/Gustav_chocolate.jpg">
+        , and:
+        <svg width="50" height="50">
+          <circle cx="25" cy="25" r="20" fill="green" />
+          <text x="25" y="30" font-size="15" text-anchor="middle" fill="white">SVG</text>
+        </svg>
       </div>
     </canvas>
     <br>
