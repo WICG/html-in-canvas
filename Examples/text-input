@@ -1,0 +1,54 @@
+<!doctype html>
+<style>
+  canvas {
+    border: 1px solid blue;
+    width: 500px;
+    height: 500px;
+  }
+  img {
+    width: 40px;
+    height: auto;
+  }
+</style>
+
+<canvas id="canvas" layoutsubtree="true">
+  <div id=drawElement style="width: 300px; height: 300px;" >
+  This is a text input:
+   <input id=textInput type=text></input>
+  </div>
+</canvas>
+
+<script>
+  const ctx = document.getElementById("canvas").getContext("2d");
+
+  function draw() {
+    ctx.reset();
+    ctx.drawElement(drawElement, 30, 30);
+  }
+
+  onload = () => {
+    const resizeObserver = new ResizeObserver((entries) => {
+      const entry = entries.find((entry) => entry.target === canvas);
+      canvas.width = entry.devicePixelContentBoxSize[0].inlineSize;
+      canvas.height = entry.devicePixelContentBoxSize[0].blockSize;
+      draw();
+    });
+    // See: https://web.dev/articles/device-pixel-content-box
+    resizeObserver.observe(canvas, {box: ['device-pixel-content-box']});
+
+    canvas.addEventListener('click', () => textInput.focus());
+
+    textInput.addEventListener('keyup', () => {
+      draw();
+    });
+
+    textInput.addEventListener('focus', () => {
+      draw();
+    });
+
+    textInput.addEventListener('blur', () => {
+      draw();
+    });
+  }
+</script>
+
