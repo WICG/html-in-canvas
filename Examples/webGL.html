@@ -188,6 +188,19 @@
       }
     }
 
-    onload = () => main();
+  onload = () => {
+    const canvas = document.querySelector("#gl-canvas");
+
+    const observer = new ResizeObserver((entries) => {
+      const entry = entries.find((entry) => entry.target === canvas);
+      canvas.width = entry.devicePixelContentBoxSize[0].inlineSize;
+      canvas.height = entry.devicePixelContentBoxSize[0].blockSize;
+
+      main();
+    });
+
+    // See: https://web.dev/articles/device-pixel-content-box
+    observer.observe(canvas, {box: ['device-pixel-content-box']});
+  }
   </script>
 </html>
