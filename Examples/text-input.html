@@ -24,9 +24,17 @@
   function draw() {
     ctx.reset();
     ctx.drawElement(drawElement, 30, 30);
+    rect = drawElement.getBoundingClientRect();
+    ctx.setHitTestRegions([
+      {
+        element: drawElement,
+        rect: {x: 30, y: 30, width: rect.width, height: rect.height}
+      }
+    ]);
   }
 
   onload = () => {
+    let current_width, current_height;
     const resizeObserver = new ResizeObserver((entries) => {
       const entry = entries.find((entry) => entry.target === canvas);
       canvas.width = entry.devicePixelContentBoxSize[0].inlineSize;
@@ -34,21 +42,8 @@
       draw();
     });
     // See: https://web.dev/articles/device-pixel-content-box
-    resizeObserver.observe(canvas, {box: ['device-pixel-content-box']});
-
-    canvas.addEventListener('click', () => textInput.focus());
-
-    textInput.addEventListener('keyup', () => {
-      draw();
-    });
-
-    textInput.addEventListener('focus', () => {
-      draw();
-    });
-
-    textInput.addEventListener('blur', () => {
-      draw();
-    });
+    resizeObserver.observe(canvas, {box: ['device-pixel-content-box'],
+      fireOnEveryPaint: true});
   }
 </script>
 
