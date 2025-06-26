@@ -23,12 +23,14 @@
 
   function draw() {
     ctx.reset();
-    ctx.drawElement(drawElement, 30, 30);
+    let x = 30;
+    let y = 30;
+    ctx.drawElement(drawElement, x, y);
     rect = drawElement.getBoundingClientRect();
     ctx.setHitTestRegions([
       {
         element: drawElement,
-        rect: {x: 30, y: 30, width: rect.width, height: rect.height}
+        rect: {x: x, y: y, width: rect.width, height: rect.height}
       }
     ]);
   }
@@ -46,4 +48,5 @@
       fireOnEveryPaint: true});
   }
 </script>
+
 
