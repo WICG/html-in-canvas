@@ -26,7 +26,7 @@ There is no web API to easily render complex layouts of text and other content i
 * the `layoutsubtree` attribute on a `<canvas>` element allows its descendant elements to have layout (*), and causes the direct children of the `<canvas>` to have a stacking context and become a containing block for all descendants. Descendant elements of the `<canvas>` still do not paint or hit-test, and are not discovered by UA algorithms like find-in-page.
 * The `CanvasRenderingContext2D.drawElement(element, x, y)` method renders `element` and its subtree into a 2D canvas at offset x and y, so long as `element` is a direct child of the `<canvas>`. It has no effect if `layoutsubtree` is not specified on the `<canvas>`.
 * The `WebGLRenderingContext.texElement2D(..., element)` method renders `element` into a WebGL texture. It has no effect if `layoutsubtree` is not specified on the `<canvas>`.
-* The `CanvasRenderingContext2D.setHitTestRegions([{element: ., rect: {x: .., y: ..., width: ..., height: ...}, ...])` (and `WebGLRenderingContext.setHitTestRegions(...)`) API takes a list of elements and screen rects indicating where the
+* The `CanvasRenderingContext2D.setHitTestRegions([{element: ., rect: {x: x, y: y, width: ..., height: ...}, ...])` (and `WebGLRenderingContext.setHitTestRegions(...)`) API takes a list of elements and `<canvas>`-relative rects indicating where the
   element paints on screen. These rects are then used to redirect hit tests for mouse and touch events automatically from the `<canvas>` element to the drawn element.
 
 (*) Without `layoutsubtree`, geometry APIs such as `getBoundingClientRect()` on these elements return an empty rect. They do have computed styles, however, and are keyboard-focusable.
