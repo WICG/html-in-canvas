@@ -20,19 +20,30 @@
 
 <script>
   const ctx = document.getElementById("canvas").getContext("2d");
+  var device_scale = new DOMPoint();
 
   function draw() {
     ctx.reset();
-    let x = 30;
-    let y = 30;
-    ctx.drawElement(drawElement, x, y);
-    rect = drawElement.getBoundingClientRect();
-    ctx.setHitTestRegions([
-      {
-        element: drawElement,
-        rect: {x: x, y: y, width: rect.width, height: rect.height}
-      }
-    ]);
+    const draw_location = new DOMPoint(30, 30);
+    ctx.drawElement(drawElement,
+                    draw_location.x * device_scale.x,
+                    draw_location.y * device_scale.y);
+
+    // When drawElement is drawn, the top left is at the top left of its
+    // bounding client rect. That point is then rendered in the canvas offset
+    // by the x and y of the drawElement call. The hit test region should be
+    // relative to that rendered position.
+    // Recompute it in draw() because that is called when the drawElement
+    // has changed.
+    bound = drawElement.getBoundingClientRect();
+    bound.x = draw_location.x * device_scale.x;
+    bound.y = draw_location.y * device_scale.y;
+    bound.width = bound.width * device_scale.x;
+    bound.height = bound.height * device_scale.y;
+    const hit_region = {
+      element: drawElement,
+      rect: bound };
+    ctx.setHitTestRegions([hit_region]);
   }
 
   onload = () => {
@@ -41,6 +52,8 @@
       const entry = entries.find((entry) => entry.target === canvas);
       canvas.width = entry.devicePixelContentBoxSize[0].inlineSize;
       canvas.height = entry.devicePixelContentBoxSize[0].blockSize;
+      device_scale.x = canvas.width / 500;
+      device_scale.y = canvas.height / 500;
       draw();
     });
     // See: https://web.dev/articles/device-pixel-content-box
