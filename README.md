@@ -27,7 +27,7 @@ There is no web API to easily render complex layouts of text and other content i
 * The `CanvasRenderingContext2D.drawElement(element, x, y)` method renders `element` and its subtree into a 2D canvas at offset x and y, so long as `element` is a direct child of the `<canvas>`. It has no effect if `layoutsubtree` is not specified on the `<canvas>`.
 * The `WebGLRenderingContext.texElement2D(..., element)` method renders `element` into a WebGL texture. It has no effect if `layoutsubtree` is not specified on the `<canvas>`.
 * The `CanvasRenderingContext2D.setHitTestRegions([{element: ., rect: {x: x, y: y, width: ..., height: ...}, ...])` (and `WebGLRenderingContext.setHitTestRegions(...)`) API takes a list of elements and `<canvas>`-relative rects indicating where the
-  element paints on screen. These rects are then used to redirect hit tests for mouse and touch events automatically from the `<canvas>` element to the drawn element.
+  element paints relative to the backing buffer of the canvas. These rects are then used to redirect hit tests for mouse and touch events automatically from the `<canvas>` element to the drawn element.
 
 (*) Without `layoutsubtree`, geometry APIs such as `getBoundingClientRect()` on these elements return an empty rect. They do have computed styles, however, and are keyboard-focusable.
 
