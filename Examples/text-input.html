@@ -5,10 +5,6 @@
     width: 500px;
     height: 500px;
   }
-  img {
-    width: 40px;
-    height: auto;
-  }
 </style>
 
 <canvas id="canvas" layoutsubtree="true">
@@ -17,26 +13,29 @@
    <input id=textInput type=text></input>
   </div>
 </canvas>
-
+<div style="width: 300px; height: 300px;" >
+  This is a text input:
+   <input id=textInput type=text></input>
+  </div>
 <script>
   const ctx = document.getElementById("canvas").getContext("2d");
 
   function draw() {
     ctx.reset();
-    let x = 30;
-    let y = 30;
+    let x = 30 * devicePixelRatio;
+    let y = 30 * devicePixelRatio;
     ctx.drawElement(drawElement, x, y);
     rect = drawElement.getBoundingClientRect();
     ctx.setHitTestRegions([
       {
         element: drawElement,
-        rect: {x: x, y: y, width: rect.width, height: rect.height}
+        rect: {x: x, y: y, width: rect.width * devicePixelRatio,
+        height: rect.height * devicePixelRatio}
       }
     ]);
   }
 
   onload = () => {
-    let current_width, current_height;
     const resizeObserver = new ResizeObserver((entries) => {
       const entry = entries.find((entry) => entry.target === canvas);
       canvas.width = entry.devicePixelContentBoxSize[0].inlineSize;
