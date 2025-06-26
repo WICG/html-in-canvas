@@ -75,19 +75,19 @@ interface WebGLRenderingContext {
 
 ## Demos
 
-[See here](Examples/complex-text.html) to see an example of how to use the API. It should render like the following (the blue rectangle indicates the bounds of the `<canvas>`, and the black the element passed to
+### [See here](Examples/complex-text.html) to see an example of how to use the API. It should render like the following (the blue rectangle indicates the bounds of the `<canvas>`, and the black the element passed to
 drawElement). It draws like this:
 
 ![image](https://github.com/user-attachments/assets/88d5200b-176c-4102-a4a0-f5893101b295)
 
-[See here](Examples/webGL.html) for an example of how to use the WebGL `texElement2D` API to populate a GL texture with HTML content.
+### [See here](Examples/webGL.html) for an example of how to use the WebGL `texElement2D` API to populate a GL texture with HTML content.
 The example should render an animated cube, like in the following shapshot. Note how the border box fills the entire face of the cube.
 To adjust that, modify the texture coordinates for rendering the cube and possibly adjust the texture wrap
 parameters. Or, wrap the content in a larger `<div>` and draw the `<div>`.  It draws like this:
 
 ![image](https://github.com/user-attachments/assets/78606b3b-706c-4066-875b-c6245d7ef27f)
 
-[See here](Examples/text-input.html) for an example utilizing the `setHitTestRegions` and `fireOnEveryPaint` APIs to enable use of interactive elements like
+### [See here](Examples/text-input.html) for an example utilizing the `setHitTestRegions` and `fireOnEveryPaint` APIs to enable use of interactive elements like
 `<input>` within a canvas. The output after clicking on the input element and typing in "my input" looks like this:
 
 ![image](https://github.com/user-attachments/assets/ac82ddb5-7a1e-41b0-94d6-1cee678506c7)
