@@ -21,15 +21,20 @@ There is no web API to easily render complex layouts of text and other content i
 * **Composing HTML Elements with Shaders.** A limited set of CSS shaders, such as filter effects, are already available, but there is a desire to use general WebGL shaders with HTML.
 * **HTML Rendering in a 3D Context.** 3D aspects of sites and games need to render rich 2D content into surfaces within a 3D scene.
 
-## Proposed solution: `layoutsubtree`, `drawElement`, and `texElement2D` 
+## Proposed solution: `layoutsubtree`, `drawElement`, `texElement2D` and `setHitTestRegions`
 
 * the `layoutsubtree` attribute on a `<canvas>` element allows its descendant elements to have layout (*), and causes the direct children of the `<canvas>` to have a stacking context and become a containing block for all descendants. Descendant elements of the `<canvas>` still do not paint or hit-test, and are not discovered by UA algorithms like find-in-page.
 * The `CanvasRenderingContext2D.drawElement(element, x, y)` method renders `element` and its subtree into a 2D canvas at offset x and y, so long as `element` is a direct child of the `<canvas>`. It has no effect if `layoutsubtree` is not specified on the `<canvas>`.
 * The `WebGLRenderingContext.texElement2D(..., element)` method renders `element` into a WebGL texture. It has no effect if `layoutsubtree` is not specified on the `<canvas>`.
+  The `CanvasRenderingContext2D.setHitTestRegions` and `WebGLRenderingContext.setHitTestRegions` API takes a list of elements and screen rects indicating where the
+  element paints on screen. These rects used to redirect hit tests for mouse and touch events automatically from the `<canvas>` element to the drawn element.
 
 (*) Without `layoutsubtree`, geometry APIs such as `getBoundingClientRect()` on these elements return an empty rect. They do have computed styles, however, and are keyboard-focusable.
 
 `drawElement(element ...)` takes the CTM (current transform matrix) of the canvas into consideration. The image drawn into the canvas is sized to `element`'s border box size; element outsize that bounds (including ink and layout overflow) are clipped. The `drawElement(element, x, y, dwidth, dheight)` variant resizes the image of `element`'s subtree to `dwidth` and `dheight`.
+
+In an addition, a `fireOnEveryPaint` option is added to `ResizeObserverOptions`, allowing script to be notified whenever the drawn elements might have changed their
+DOM state and the canvas should be redrawn.
 
 The same element may be drawn multiple times.
 
@@ -82,6 +87,8 @@ parameters. Or, wrap the content in a larger `<div>` and draw the `<div>`.
 
 ![image](https://github.com/user-attachments/assets/78606b3b-706c-4066-875b-c6245d7ef27f)
 
+[See here](Examples/text-input.html) for an example utilizing the `setHitTestRegions` and `fireOnEveryPaint` APIs to enable use of interactive elements like
+`<input>` within a canvas.
 
 ## Developer Trial (dev trial) Information
 The HTML-in-Canvas features may be enabled by passing the `--enable-blink-features=CanvasDrawElement` to Chrome Canary versions later than 138.0.7175.0.
