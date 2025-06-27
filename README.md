@@ -87,6 +87,9 @@ parameters. Or, wrap the content in a larger `<div>` and draw the `<div>`.  It d
 
 ![image](https://github.com/user-attachments/assets/78606b3b-706c-4066-875b-c6245d7ef27f)
 
+A demo of the same thing using an experimental extension of [three.js](https://threejs.org/) is [here](https://raw.githack.com/mrdoob/three.js/htmltexture/examples/webgl_materials_texture_html.html). Further instructions and context
+are [here](https://github.com/mrdoob/three.js/pull/31233).
+
 #### [See here](Examples/text-input.html) for an example utilizing the `setHitTestRegions` and `fireOnEveryPaint` APIs to enable use of interactive elements like
 `<input>` within a canvas. The output after clicking on the input element and typing in "my input" looks like this:
 
