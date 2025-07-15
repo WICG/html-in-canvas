@@ -53,12 +53,18 @@ interface CanvasRenderingContext2D {
 
   ...
 
-  [RaisesException]
-  void drawElement(Element element, unrestricted double x, unrestricted double y);
+  dictionary Canvas2DDrawElementOption {
+    boolean allowReadback = false;
+  };
 
   [RaisesException]
   void drawElement(Element element, unrestricted double x, unrestricted double y,
-                   unrestricted double dwidth, unrestricted double dheight);
+                   optional Canvas2DDrawElementOption options = {});
+
+  [RaisesException]
+  void drawElement(Element element, unrestricted double x, unrestricted double y,
+                   unrestricted double dwidth, unrestricted double dheight,
+                   optional Canvas2DDrawElementOption options = {});
 
 ```
 
