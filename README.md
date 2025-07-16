@@ -24,7 +24,7 @@ There is no web API to easily render complex layouts of text and other content i
 ## Proposed solution: `layoutsubtree`, `drawElement`, `texElement2D` and `setHitTestRegions`
 
 * the `layoutsubtree` attribute on a `<canvas>` element allows its descendant elements to have layout (*), and causes the direct children of the `<canvas>` to have a stacking context and become a containing block for all descendants. Descendant elements of the `<canvas>` still do not paint or hit-test, and are not discovered by UA algorithms like find-in-page.
-* The `CanvasRenderingContext2D.drawElement(element, x, y)` method renders `element` and its subtree into a 2D canvas at offset x and y, so long as `element` is a direct child of the `<canvas>`. It has no effect if `layoutsubtree` is not specified on the `<canvas>`.
+* The `CanvasRenderingContext2D.drawElement(element, x, y, options)` method renders `element` and its subtree into a 2D canvas at offset x and y, so long as `element` is a direct child of the `<canvas>`. It has no effect if `layoutsubtree` is not specified on the `<canvas>`. The `options` dictionary, if given, has a single option that preserves user privacy in the drawn content, allowing readback or use in WebGL.
 * The `WebGLRenderingContext.texElement2D(..., element)` method renders `element` into a WebGL texture. It has no effect if `layoutsubtree` is not specified on the `<canvas>`.
 * The `CanvasRenderingContext2D.setHitTestRegions([{element: ., rect: {x: x, y: y, width: ..., height: ...}, ...])` (and `WebGLRenderingContext.setHitTestRegions(...)`) API takes a list of elements and `<canvas>`-relative rects indicating where the
   element paints relative to the backing buffer of the canvas. These rects are then used to redirect hit tests for mouse and touch events automatically from the `<canvas>` element to the drawn element.
@@ -45,20 +45,25 @@ See [Issue#11](https://github.com/WICG/html-in-canvas/issues/11) for an ongoing 
 
 Offscreen canvas contexts and detached canvases are not supported because drawing DOM content when the canvas is not in the DOM poses technical challenges. See [Issue#2](https://github.com/WICG/html-in-canvas/issues/2) for further discussion.
 
-**NOTE**: The current implementation of `drawElement()` and `texElement2D` does not taint the canvas and is not suitable for use outside of local demos. When using this feature in a DevTrial, take steps to avoid leaking private information. See
-[Issue#5](https://github.com/WICG/html-in-canvas/issues/5) for discussion of design options for preserving privacy.
+**NOTE**: The current implementation of `drawElement()` and `texElement2D` does not taint the canvas and is not suitable for use outside of local demos. When using this feature in a DevTrial, take steps to avoid leaking private information. When the work for [privacy preserving painting](https://docs.google.com/document/d/1jrgwsRhcxrrUVvPH8I1ZI0fMCG8r2Rqf8j5tObqMNDU) is complete the `allowReadback` option must be set to `true` when an untainted canvas is required. DevTrial users may wish to start using this option now to avoid disruption when tainting is enabled.
 
 ```idl
 interface CanvasRenderingContext2D {
 
   ...
 
-  [RaisesException]
-  void drawElement(Element element, unrestricted double x, unrestricted double y);
+  dictionary Canvas2DDrawElementOption {
+    boolean allowReadback = false;
+  };
 
   [RaisesException]
   void drawElement(Element element, unrestricted double x, unrestricted double y,
-                   unrestricted double dwidth, unrestricted double dheight);
+                   optional Canvas2DDrawElementOption options = {});
+
+  [RaisesException]
+  void drawElement(Element element, unrestricted double x, unrestricted double y,
+                   unrestricted double dwidth, unrestricted double dheight,
+                   optional Canvas2DDrawElementOption options = {});
 
 ```
 
