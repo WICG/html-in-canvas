@@ -30,9 +30,7 @@
 06.  Do the features in your specification expose information about the
      underlying platform to origins?
      
-     CSS allows authors to indicate that styling specific to the underlying platform should be used for DOM elements like buttons, form controls etc. This information can already be retrieved by Javascript via computed style. We may want to restrict the styling as needed to ensure this doesn't leak any additional information about the platform.
-
-     TODO(schenney) Expand on fingerprinting risks.
+     CSS allows authors to indicate that styling specific to the underlying platform should be used for DOM elements like buttons, form controls etc. This information can already be retrieved by Javascript via computed style. To preserve privacy, this API never paints any content (such as theme colors, spelling markers, or cross-origin iframes or images) which may reveal PII or cross-origin information.
      
 8.  Does this specification allow an origin to send data to the underlying
      platform?
