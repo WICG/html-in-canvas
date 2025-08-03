@@ -45,7 +45,7 @@ See [Issue#11](https://github.com/WICG/html-in-canvas/issues/11) for an ongoing 
 
 Offscreen canvas contexts and detached canvases are not supported because drawing DOM content when the canvas is not in the DOM poses technical challenges. See [Issue#2](https://github.com/WICG/html-in-canvas/issues/2) for further discussion.
 
-**NOTE**: The current implementation of `drawElement()` and `texElement2D` does not taint the canvas and is not suitable for use outside of local demos. When using this feature in a DevTrial, take steps to avoid leaking private information. When the work for [privacy preserving painting](https://docs.google.com/document/d/1jrgwsRhcxrrUVvPH8I1ZI0fMCG8r2Rqf8j5tObqMNDU) is complete the `allowReadback` option must be set to `true` when an untainted canvas is required. DevTrial users may wish to start using this option now to avoid disruption when tainting is enabled.
+**NOTE**: When using this feature in a DevTrial, take steps to avoid leaking private information, as privacy controls are still in-progress. The `allowReadback` option must be set to `true` when an untainted canvas is required; in this mode the content painted into the canvas skips all content which may reveal [PII](https://en.wikipedia.org/wiki/Personal_data)). In WebGL rendering, content which may reveal PII is never painted. DevTrial users may wish to start using this option now to avoid disruption when tainting is enabled.
 
 ```idl
 interface CanvasRenderingContext2D {
@@ -53,7 +53,7 @@ interface CanvasRenderingContext2D {
   ...
 
   dictionary Canvas2DDrawElementOption {
-    boolean allowReadback = false;
+    boolean allowReadback = false; 
   };
 
   [RaisesException]
