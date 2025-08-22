@@ -104,7 +104,7 @@ are [here](https://github.com/mrdoob/three.js/pull/31233).
 The HTML-in-Canvas features may be enabled by passing the `--enable-blink-features=CanvasDrawElement` to Chrome Canary versions later than 138.0.7175.0.
 
 Notes for dev trial usage:
-* The methods were recently renamed: `drawHTMLElement` was previously `drawElement` and `textHTMLElement2D` was formerly `texElement2D`. The rename will land shortly in Chrome Canary. The change was made at developers' request to avoid confusion with existing WebGL methods. The old names will continue to work until at least Chrome 145, but please start migrating content if at all possible.
+* The methods were recently renamed: `drawHTMLElement` was previously `drawElement` and `textHTMLElement2D` was formerly `texElement2D`. The rename will land shortly in Chrome Canary. The change was made at developers' request to avoid confusion with existing WebGL methods. The old names will continue to work until at least Chrome 145.
 * The features are currently under active development and changes to the API may happen at any time, though we make every effort to avoid unnecessary churn.
 * The canvas is now tainted unless the `allowReadback` option is set true. Even then, not all personal information (PII) is currently protected, so take extreme care to avoid leaking PII in any demos. WebGL textures are always privacy preserving, though with the same caveats of incomplete protection at the time of writing.
 * The space of possible HTML content is enormous and only a tiny fraction has been tested with `drawHTMLElement`.

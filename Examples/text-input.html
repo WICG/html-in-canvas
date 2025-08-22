@@ -24,7 +24,11 @@
     ctx.reset();
     let x = 30 * devicePixelRatio;
     let y = 30 * devicePixelRatio;
-    ctx.drawElement(drawElement, x, y);
+    if (typeof ctx.drawHTMLElement === "function") {
+      ctx.drawHTMLElement(drawElement, x, y);
+    } else {
+      ctx.drawElement(drawElement, x, y);
+    }
     rect = drawElement.getBoundingClientRect();
     ctx.setHitTestRegions([
       {

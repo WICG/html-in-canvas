@@ -42,7 +42,11 @@
       ctx.reset();
       ctx.rotate((45 * Math.PI) / 180);
       ctx.translate(200, -125);
-      ctx.drawElement(drawElement, 30, 0);
+      if (typeof ctx.drawHTMLElement === "function") {
+        ctx.drawHTMLElement(drawElement, 30, 0);
+      } else {
+        ctx.drawElement(drawElement, 30, 0);
+      }
     });
     // See: https://web.dev/articles/device-pixel-content-box
     observer.observe(canvas, {box: ['device-pixel-content-box']});
