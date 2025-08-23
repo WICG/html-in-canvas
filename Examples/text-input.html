@@ -13,10 +13,6 @@
    <input id=textInput type=text></input>
   </div>
 </canvas>
-<div style="width: 300px; height: 300px;" >
-  This is a text input:
-   <input id=textInput type=text></input>
-  </div>
 <script>
   const ctx = document.getElementById("canvas").getContext("2d");
 
@@ -24,7 +20,11 @@
     ctx.reset();
     let x = 30 * devicePixelRatio;
     let y = 30 * devicePixelRatio;
-    ctx.drawElement(drawElement, x, y);
+    if (typeof ctx.drawHTMLElement === "function") {
+      ctx.drawHTMLElement(drawElement, x, y);
+    } else {
+      ctx.drawElement(drawElement, x, y);
+    }
     rect = drawElement.getBoundingClientRect();
     ctx.setHitTestRegions([
       {

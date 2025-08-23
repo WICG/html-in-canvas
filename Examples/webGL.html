@@ -14,11 +14,6 @@
       canvas {
         border: 1px solid blue;
       }
-      #drawElementContents {
-        transformf: translateY(100px) translateX(50px) rotateZ(45deg);
-        transform-originf: center; width: 300px;
-        border: 1px solid black;
-      }
       img {
         width: 40px;
         height: auto;
@@ -77,8 +72,14 @@
       const internalFormat = gl.RGBA;
       const srcFormat = gl.RGBA;
       const srcType = gl.UNSIGNED_BYTE;
-      gl.texElement2D(gl.TEXTURE_2D, level, internalFormat,
-                      srcFormat, srcType, drawElement);
+
+      if (typeof gl.texHTMLElement2D === "function") {
+        gl.texHTMLElement2D(gl.TEXTURE_2D, level, internalFormat,
+                            srcFormat, srcType, drawElement);
+      } else {
+        gl.texElement2D(gl.TEXTURE_2D, level, internalFormat,
+                        srcFormat, srcType, drawElement);
+      }
 
       // Linear texture filtering produces better results than mipmap with text.
       gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
