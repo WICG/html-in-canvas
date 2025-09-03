@@ -24,10 +24,9 @@ There is no web API to easily render complex layouts of text and other content i
 ## Proposed solution: `layoutsubtree`, `drawHTMLElement`, `texHTMLElement2D` and `setHitTestRegions`
 
 * The `layoutsubtree` attribute on a `<canvas>` element allows its descendant elements to have layout (*), and causes the direct children of the `<canvas>` to have a stacking context and become a containing block for all descendants. Descendant elements of the `<canvas>` still do not paint or hit-test, and are not discovered by UA algorithms like find-in-page.
-* The `CanvasRenderingContext2D.drawHTMLElement(element, x, y, options)` method renders `element` and its subtree into a 2D canvas at offset x and y, so long as `element` is a direct child of the `<canvas>`. It has no effect if `layoutsubtree` is not specified on the `<canvas>`. The `options` dictionary, if given, has a single option that preserves user privacy in the drawn content, allowing readback or use in WebGL.
+* The `CanvasRenderingContext2D.drawHTMLElement(element, x, y)` method renders `element` and its subtree into a 2D canvas at offset x and y, so long as `element` is a direct child of the `<canvas>`. It has no effect if `layoutsubtree` is not specified on the `<canvas>`.
 * The `WebGLRenderingContext.texHTMLElement2D(..., element)` method renders `element` into a WebGL texture. It has no effect if `layoutsubtree` is not specified on the `<canvas>`.
-* The `CanvasRenderingContext2D.setHitTestRegions([{element: ., rect: {x: x, y: y, width: ..., height: ...}, ...])` (and `WebGLRenderingContext.setHitTestRegions(...)`) API takes a list of elements and `<canvas>`-relative rects indicating where the
-  element paints relative to the backing buffer of the canvas. These rects are then used to redirect hit tests for mouse and touch events automatically from the `<canvas>` element to the drawn element.
+* The `CanvasRenderingContext2D.setHitTestRegions([{element: ., rect: {x: x, y: y, width: ..., height: ...}, ...])` (and `WebGLRenderingContext.setHitTestRegions(...)`) API takes a list of elements and `<canvas>`-relative rects indicating where the element paints relative to the backing buffer of the canvas. These rects are then used to redirect hit tests for mouse and touch events automatically from the `<canvas>` element to the drawn element.
 
 (*) Without `layoutsubtree`, geometry APIs such as `getBoundingClientRect()` on these elements return an empty rect. They do have computed styles, however, and are keyboard-focusable.
 
@@ -44,25 +43,19 @@ See [Issue#11](https://github.com/WICG/html-in-canvas/issues/11) for an ongoing 
 
 Offscreen canvas contexts and detached canvases are not supported because drawing DOM content when the canvas is not in the DOM poses technical challenges. See [Issue#2](https://github.com/WICG/html-in-canvas/issues/2) for further discussion.
 
-**NOTE**: When using this feature in a DevTrial, take steps to avoid leaking private information, as privacy controls are still in-progress. The `allowReadback` option must be set to `true` when an untainted canvas is required; in this mode the content painted into the canvas skips all content which may reveal [PII](https://en.wikipedia.org/wiki/Personal_data)). In WebGL rendering, content which may reveal PII is never painted. DevTrial users may wish to start using this option now to avoid disruption when tainting is enabled.
+**NOTE**: When using this feature in a DevTrial, take steps to avoid leaking private information, as privacy controls to disable painting of [PII](https://en.wikipedia.org/wiki/Personal_data) are still in-progress.
 
 ```idl
 interface CanvasRenderingContext2D {
 
   ...
 
-  dictionary Canvas2DDrawElementOption {
-    boolean allowReadback = false; 
-  };
+  [RaisesException]
+  void drawHTMLElement(Element element, unrestricted double x, unrestricted double y);
 
   [RaisesException]
   void drawHTMLElement(Element element, unrestricted double x, unrestricted double y,
-                       optional Canvas2DDrawElementOption options = {});
-
-  [RaisesException]
-  void drawHTMLElement(Element element, unrestricted double x, unrestricted double y,
-                       unrestricted double dwidth, unrestricted double dheight,
-                       optional Canvas2DDrawElementOption options = {});
+                       unrestricted double dwidth, unrestricted double dheight);
 
 ```
 
@@ -79,8 +72,7 @@ interface WebGLRenderingContext {
 
 ## Demos
 
-#### [See here](Examples/complex-text.html) to see an example of how to use the API. It should render like the following (the blue rectangle indicates the bounds of the `<canvas>`, and the black the element passed to
-drawHTMLElement). It draws like this:
+#### [See here](Examples/complex-text.html) to see an example of how to use the API. It should render like the following (the blue rectangle indicates the bounds of the `<canvas>`, and the black the element passed to drawHTMLElement). It draws like this:
 
 ![image](https://github.com/user-attachments/assets/88d5200b-176c-4102-a4a0-f5893101b295)
 
@@ -94,8 +86,7 @@ parameters. Or, wrap the content in a larger `<div>` and draw the `<div>`.  It d
 A demo of the same thing using an experimental extension of [three.js](https://threejs.org/) is [here](https://raw.githack.com/mrdoob/three.js/htmltexture/examples/webgl_materials_texture_html.html). Further instructions and context
 are [here](https://github.com/mrdoob/three.js/pull/31233).
 
-#### [See here](Examples/text-input.html) for an example utilizing the `setHitTestRegions` and `fireOnEveryPaint` APIs to enable use of interactive elements like
-`<input>` within a canvas. The output after clicking on the input element and typing in "my input" looks like this:
+#### [See here](Examples/text-input.html) for an example utilizing the `setHitTestRegions` and `fireOnEveryPaint` APIs to enable use of interactive elements like `<input>` within a canvas. The output after clicking on the input element and typing in "my input" looks like this:
 
 ![image](https://github.com/user-attachments/assets/ac82ddb5-7a1e-41b0-94d6-1cee678506c7)
 
@@ -105,7 +96,7 @@ The HTML-in-Canvas features may be enabled by passing the `--enable-blink-featur
 Notes for dev trial usage:
 * The methods were recently renamed: `drawHTMLElement` was previously `drawElement` and `texHTMLElement2D` was formerly `texElement2D`. The rename will land shortly in Chrome Canary. The change was made at developers' request to avoid confusion with existing WebGL methods. The old names will continue to work until at least Chrome 145.
 * The features are currently under active development and changes to the API may happen at any time, though we make every effort to avoid unnecessary churn.
-* The canvas is now tainted unless the `allowReadback` option is set true. Even then, not all personal information (PII) is currently protected, so take extreme care to avoid leaking PII in any demos. WebGL textures are always privacy preserving, though with the same caveats of incomplete protection at the time of writing.
+* Not all personal information (PII) is currently prevented from being painted, so take extreme care to avoid leaking PII in any demos.
 * The space of possible HTML content is enormous and only a tiny fraction has been tested with `drawHTMLElement`.
 * Interactive elements (such as links, forms or buttons) can be drawn into the canvas, but are not automatically interactive.
 
