@@ -12,7 +12,7 @@ This proposal is a subset of a [previous proposal](placeElement) covering APIs t
 
 ## Motivation
 
-There is no web API to easily render complex layouts of text and other content into a `<canvas>`. As a result, `<canvas>`-based content suffers in accessibilty, internationalization, performance and quality.
+There is no web API to easily render complex layouts of text and other content into a `<canvas>`. As a result, `<canvas>`-based content suffers in accessibility, internationalization, performance and quality.
 
 ### Use cases
 
@@ -23,7 +23,7 @@ There is no web API to easily render complex layouts of text and other content i
 
 ## Proposed solution: `layoutsubtree`, `drawHTMLElement`, `texHTMLElement2D` and `setHitTestRegions`
 
-* the `layoutsubtree` attribute on a `<canvas>` element allows its descendant elements to have layout (*), and causes the direct children of the `<canvas>` to have a stacking context and become a containing block for all descendants. Descendant elements of the `<canvas>` still do not paint or hit-test, and are not discovered by UA algorithms like find-in-page.
+* The `layoutsubtree` attribute on a `<canvas>` element allows its descendant elements to have layout (*), and causes the direct children of the `<canvas>` to have a stacking context and become a containing block for all descendants. Descendant elements of the `<canvas>` still do not paint or hit-test, and are not discovered by UA algorithms like find-in-page.
 * The `CanvasRenderingContext2D.drawHTMLElement(element, x, y, options)` method renders `element` and its subtree into a 2D canvas at offset x and y, so long as `element` is a direct child of the `<canvas>`. It has no effect if `layoutsubtree` is not specified on the `<canvas>`. The `options` dictionary, if given, has a single option that preserves user privacy in the drawn content, allowing readback or use in WebGL.
 * The `WebGLRenderingContext.texHTMLElement2D(..., element)` method renders `element` into a WebGL texture. It has no effect if `layoutsubtree` is not specified on the `<canvas>`.
 * The `CanvasRenderingContext2D.setHitTestRegions([{element: ., rect: {x: x, y: y, width: ..., height: ...}, ...])` (and `WebGLRenderingContext.setHitTestRegions(...)`) API takes a list of elements and `<canvas>`-relative rects indicating where the
@@ -31,9 +31,9 @@ There is no web API to easily render complex layouts of text and other content i
 
 (*) Without `layoutsubtree`, geometry APIs such as `getBoundingClientRect()` on these elements return an empty rect. They do have computed styles, however, and are keyboard-focusable.
 
-`drawHTMLElement(element ...)` takes the CTM (current transform matrix) of the canvas into consideration. The image drawn into the canvas is sized to `element`'s [`devicePixelContentBox`](https://web.dev/articles/device-pixel-content-box); element outsize that bounds (including ink and layout overflow) are clipped. The `drawHTMLElement(element, x, y, dwidth, dheight)` variant resizes the image of `element`'s subtree to `dwidth` and `dheight`.
+`drawHTMLElement(element ...)` takes the CTM (current transform matrix) of the canvas into consideration. The image drawn into the canvas is sized to `element`'s [`devicePixelContentBox`](https://web.dev/articles/device-pixel-content-box); content outside those bounds (including ink and layout overflow) are clipped. The `drawHTMLElement(element, x, y, dwidth, dheight)` variant resizes the image of `element`'s subtree to `dwidth` and `dheight`.
 
-In an addition, a `fireOnEveryPaint` option is added to `ResizeObserverOptions`, allowing script to be notified whenever any descendants of a `<canvas>` may render differently, so they can be redrawn. The callback to the resize observer will be called at resize observer timing, which is after DOM style and layout, but before paint.
+In addition, a `fireOnEveryPaint` option is added to `ResizeObserverOptions`, allowing script to be notified whenever any descendants of a `<canvas>` may render differently, so they can be redrawn. The callback to the resize observer will be called at resize observer timing, which is after DOM style and layout, but before paint.
 
 The same element may be drawn multiple times.
 
@@ -85,7 +85,7 @@ drawHTMLElement). It draws like this:
 ![image](https://github.com/user-attachments/assets/88d5200b-176c-4102-a4a0-f5893101b295)
 
 #### [See here](Examples/webGL.html) for an example of how to use the WebGL `texHTMLElement2D` API to populate a GL texture with HTML content.
-The example should render an animated cube, like in the following shapshot. Note how the border box fills the entire face of the cube.
+The example should render an animated cube, like in the following snapshot. Note how the border box fills the entire face of the cube.
 To adjust that, modify the texture coordinates for rendering the cube and possibly adjust the texture wrap
 parameters. Or, wrap the content in a larger `<div>` and draw the `<div>`.  It draws like this:
 
@@ -103,7 +103,7 @@ are [here](https://github.com/mrdoob/three.js/pull/31233).
 The HTML-in-Canvas features may be enabled by passing the `--enable-blink-features=CanvasDrawElement` to Chrome Canary versions later than 138.0.7175.0.
 
 Notes for dev trial usage:
-* The methods were recently renamed: `drawHTMLElement` was previously `drawElement` and `textHTMLElement2D` was formerly `texElement2D`. The rename will land shortly in Chrome Canary. The change was made at developers' request to avoid confusion with existing WebGL methods. The old names will continue to work until at least Chrome 145.
+* The methods were recently renamed: `drawHTMLElement` was previously `drawElement` and `texHTMLElement2D` was formerly `texElement2D`. The rename will land shortly in Chrome Canary. The change was made at developers' request to avoid confusion with existing WebGL methods. The old names will continue to work until at least Chrome 145.
 * The features are currently under active development and changes to the API may happen at any time, though we make every effort to avoid unnecessary churn.
 * The canvas is now tainted unless the `allowReadback` option is set true. Even then, not all personal information (PII) is currently protected, so take extreme care to avoid leaking PII in any demos. WebGL textures are always privacy preserving, though with the same caveats of incomplete protection at the time of writing.
 * The space of possible HTML content is enormous and only a tiny fraction has been tested with `drawHTMLElement`.
@@ -112,7 +112,7 @@ Notes for dev trial usage:
 Other known limitations:
 * Cross-origin iframes are not rendered
 
-We are most interesting in feedback on the following topics:
+We are most interested in feedback on the following topics:
 * What content works, and what fails? Which failure modes are most important to fix?
 * Is necessary support missing for some flavors of Canvas rendering contexts? 
 * How does the feature interact with accessibility features? How can accessibility support be improved?
