@@ -90,6 +90,18 @@ are [here](https://github.com/mrdoob/three.js/pull/31233).
 
 ![image](https://github.com/user-attachments/assets/ac82ddb5-7a1e-41b0-94d6-1cee678506c7)
 
+## Privacy-preserving painting
+
+Both painting (via canvas pixel readbacks or timing attacks) and invalidation (via `fireOnEveryPaint`) have the potential to leak sensitive information, and this is prevented by excluding sensitive information when painting. While an exhaustive list cannot be enumerated, sensitive information includes:
+* cross-origin data in [embedded content](https://html.spec.whatwg.org/#embedded-content-category) (e.g., `<iframe>`, `<img>`), [`<url>`](https://drafts.csswg.org/css-values-4/#url-value) references (e.g., `background-image`, `clip-path`), and [SVG](https://svgwg.org/svg2-draft/single-page.html#types-InterfaceSVGURIReference) (e.g., `<use>`).
+* system colors, themes, or preferences.
+* spelling and grammar markers.
+* search text (find-in-page) and text-fragment (fragment url) markers.
+* visited link information.
+* form autofill information not otherwise available to javascript.
+
+SVG's `<foreignObject>` can be combined with data uri images and canvas to access the pixel data of HTML content ([example](https://jsfiddle.net/progers/qhawnyeu)), and implementations currently have mitigations to prevent leaking sensitive content. As an example, an `<input>` with a spelling error is still painted, but any indication of spelling errors, which could expose the user's spelling dictionary, is not painted. Similar mitigations should be used for `drawHTML`, but need to be expanded to cover additional cases.
+
 ## Developer Trial (dev trial) Information
 The HTML-in-Canvas features may be enabled by passing the `--enable-blink-features=CanvasDrawElement` to Chrome Canary versions later than 138.0.7175.0.
 
