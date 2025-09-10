@@ -1,9 +1,7 @@
 01.  What information might this feature expose to Web sites or other parties,
      and for what purposes is that exposure necessary?
      
-     No new information will be exposed to the site. This feature enables rendering content which is already in the Document to the canvas surface.
-
-     TODO(schenney) Add information about tainting, and how to allow non-tainting. Maybe just link to the PII section below.
+     No new information will be exposed to the site. This feature only enables drawing information that will not expose security or privacy information.
      
 02.  Do features in your specification expose the minimum amount of information
      necessary to enable their intended uses?
@@ -14,9 +12,7 @@
      personally-identifiable information (PII), or information derived from
      them?
      
-     Since the feature renders pixels from DOM elements into 3D contexts, those pixels can now be accessed by script. This requires ensuring that no PII is present in those pixels, for example different styles for visited links, spell check etc. The algorithm for painting an element into a texture will be hardened to ensure no such data is leaked.
-
-     TODO(schenney) This needs expansion.
+     Since the feature renders pixels from DOM elements into canvas, those pixels can now be accessed by script. This requires ensuring that no PII is present in those pixels, for example different styles for visited links, spell check etc. Disabling painting of this information also prevents revealing invalidation information via the repaint callback (the `fireOnEveryPaint` option added to ResizeObserver). See [privacy-preserving-painting](https://github.com/WICG/html-in-canvas/tree/main?tab=readme-ov-file#privacy-preserving-painting) for additional details.
      
 04.  How do the features in your specification deal with sensitive information?
      
@@ -30,7 +26,7 @@
 06.  Do the features in your specification expose information about the
      underlying platform to origins?
      
-     CSS allows authors to indicate that styling specific to the underlying platform should be used for DOM elements like buttons, form controls etc. This information can already be retrieved by Javascript via computed style. To preserve privacy, this API never paints any content (such as theme colors, spelling markers, or cross-origin iframes or images) which may reveal PII or cross-origin information.
+     Similar to #3, the painting of information revealing information about the underlying platform (e.g., form autofill) is disabled. See [privacy-preserving-painting](https://github.com/WICG/html-in-canvas/tree/main?tab=readme-ov-file#privacy-preserving-painting) for additional details.
      
 8.  Does this specification allow an origin to send data to the underlying
      platform?
@@ -64,8 +60,6 @@
      third-party contexts?
      
      There is no difference in behaviour.
-
-     TODO(schenney) We should always taint in thid-party contexts.
      
 15.  How do the features in this specification work in the context of a browser’s
      Private Browsing or Incognito mode?
