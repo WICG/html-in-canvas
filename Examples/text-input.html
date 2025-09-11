@@ -20,8 +20,8 @@
     ctx.reset();
     let x = 30 * devicePixelRatio;
     let y = 30 * devicePixelRatio;
-    if (typeof ctx.drawHTML === "function") {
-      ctx.drawHTML(drawElement, x, y);
+    if (typeof ctx.drawElementImage === "function") {
+      ctx.drawElementImage(drawElement, x, y);
     } else {
       ctx.drawElement(drawElement, x, y);
     }
