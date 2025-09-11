@@ -42,8 +42,8 @@
       ctx.reset();
       ctx.rotate((45 * Math.PI) / 180);
       ctx.translate(200, -125);
-      if (typeof ctx.drawHTML === "function") {
-        ctx.drawHTML(drawElement, 30, 0);
+      if (typeof ctx.drawElementImage === "function") {
+        ctx.drawElementImage(drawElement, 30, 0);
       } else {
         ctx.drawElement(drawElement, 30, 0);
       }
