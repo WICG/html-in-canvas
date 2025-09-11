@@ -73,9 +73,9 @@
       const srcFormat = gl.RGBA;
       const srcType = gl.UNSIGNED_BYTE;
 
-      if (typeof gl.texHTML2D === "function") {
-        gl.texHTML2D(gl.TEXTURE_2D, level, internalFormat,
-                     srcFormat, srcType, drawElement);
+      if (typeof gl.texElementImage2D === "function") {
+        gl.texElementImage2D(gl.TEXTURE_2D, level, internalFormat,
+                             srcFormat, srcType, drawElement);
       } else {
         gl.texElement2D(gl.TEXTURE_2D, level, internalFormat,
                         srcFormat, srcType, drawElement);
