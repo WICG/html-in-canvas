@@ -21,16 +21,16 @@ There is no web API to easily render complex layouts of text and other content i
 * **Composing HTML Elements with Shaders.** A limited set of CSS shaders, such as filter effects, are already available, but there is a desire to use general WebGL shaders with HTML.
 * **HTML Rendering in a 3D Context.** 3D aspects of sites and games need to render rich 2D content into surfaces within a 3D scene.
 
-## Proposed solution: `layoutsubtree`, `drawHTML`, `texHTML2D` and `setHitTestRegions`
+## Proposed solution: `layoutsubtree`, `drawElementImage`/`texElementImage2D`, `fireOnEveryPaint`, and `setHitTestRegions`
 
 * The `layoutsubtree` attribute on a `<canvas>` element allows its descendant elements to have layout (*), and causes the direct children of the `<canvas>` to have a stacking context and become a containing block for all descendants. Descendant elements of the `<canvas>` still do not paint or hit-test, and are not discovered by UA algorithms like find-in-page.
-* The `CanvasRenderingContext2D.drawHTML(element, x, y)` method renders `element` and its subtree into a 2D canvas at offset x and y, so long as `element` is a direct child of the `<canvas>`. It has no effect if `layoutsubtree` is not specified on the `<canvas>`.
-* The `WebGLRenderingContext.texHTML2D(..., element)` method renders `element` into a WebGL texture. It has no effect if `layoutsubtree` is not specified on the `<canvas>`.
+* The `CanvasRenderingContext2D.drawElementImage(element, x, y)` method renders `element` and its subtree into a 2D canvas at offset x and y, so long as `element` is a direct child of the `<canvas>`. It has no effect if `layoutsubtree` is not specified on the `<canvas>`.
+* The `WebGLRenderingContext.texElementImage2D(..., element)` method renders `element` into a WebGL texture. It has no effect if `layoutsubtree` is not specified on the `<canvas>`.
 * The `CanvasRenderingContext2D.setHitTestRegions([{element: ., rect: {x: x, y: y, width: ..., height: ...}, ...])` (and `WebGLRenderingContext.setHitTestRegions(...)`) API takes a list of elements and `<canvas>`-relative rects indicating where the element paints relative to the backing buffer of the canvas. These rects are then used to redirect hit tests for mouse and touch events automatically from the `<canvas>` element to the drawn element.
 
 (*) Without `layoutsubtree`, geometry APIs such as `getBoundingClientRect()` on these elements return an empty rect. They do have computed styles, however, and are keyboard-focusable.
 
-`drawHTML(element ...)` takes the CTM (current transform matrix) of the canvas into consideration. The image drawn into the canvas is sized to `element`'s [`devicePixelContentBox`](https://web.dev/articles/device-pixel-content-box); content outside those bounds (including ink and layout overflow) are clipped. The `drawHTML(element, x, y, dwidth, dheight)` variant resizes the image of `element`'s subtree to `dwidth` and `dheight`.
+`drawElementImage(element ...)` takes the CTM (current transform matrix) of the canvas into consideration. The image drawn into the canvas is sized to `element`'s [`devicePixelContentBox`](https://web.dev/articles/device-pixel-content-box); content outside those bounds (including ink and layout overflow) are clipped. The `drawElementImage(element, x, y, dwidth, dheight)` variant resizes the image of `element`'s subtree to `dwidth` and `dheight`.
 
 In addition, a `fireOnEveryPaint` option is added to `ResizeObserverOptions`, allowing script to be notified whenever any descendants of a `<canvas>` may render differently, so they can be redrawn. The callback to the resize observer will be called at resize observer timing, which is after DOM style and layout, but before paint.
 
@@ -51,10 +51,10 @@ interface CanvasRenderingContext2D {
   ...
 
   [RaisesException]
-  void drawHTML(Element element, unrestricted double x, unrestricted double y);
+  void drawElementImage(Element element, unrestricted double x, unrestricted double y);
 
   [RaisesException]
-  void drawHTML(Element element, unrestricted double x, unrestricted double y,
+  void drawElementImage(Element element, unrestricted double x, unrestricted double y,
                        unrestricted double dwidth, unrestricted double dheight);
 
 ```
@@ -65,18 +65,18 @@ interface WebGLRenderingContext {
   ...
 
   [RaisesException]
-    void texHTML2D(GLenum target, GLint level, GLint internalformat,
+    void texElementImage2D(GLenum target, GLint level, GLint internalformat,
                           GLenum format, GLenum type, Element element);
 
 ```
 
 ## Demos
 
-#### [See here](Examples/complex-text.html) to see an example of how to use the API. It should render like the following (the blue rectangle indicates the bounds of the `<canvas>`, and the black the element passed to drawHTML). It draws like this:
+#### [See here](Examples/complex-text.html) to see an example of how to use the API. It should render like the following (the blue rectangle indicates the bounds of the `<canvas>`, and the black the element passed to drawElementImage). It draws like this:
 
 ![image](https://github.com/user-attachments/assets/88d5200b-176c-4102-a4a0-f5893101b295)
 
-#### [See here](Examples/webGL.html) for an example of how to use the WebGL `texHTML2D` API to populate a GL texture with HTML content.
+#### [See here](Examples/webGL.html) for an example of how to use the WebGL `texElementImage2D` API to populate a GL texture with HTML content.
 The example should render an animated cube, like in the following snapshot. Note how the border box fills the entire face of the cube.
 To adjust that, modify the texture coordinates for rendering the cube and possibly adjust the texture wrap
 parameters. Or, wrap the content in a larger `<div>` and draw the `<div>`.  It draws like this:
@@ -100,16 +100,16 @@ Both painting (via canvas pixel readbacks or timing attacks) and invalidation (v
 * visited link information.
 * form autofill information not otherwise available to javascript.
 
-SVG's `<foreignObject>` can be combined with data uri images and canvas to access the pixel data of HTML content ([example](https://jsfiddle.net/progers/qhawnyeu)), and implementations currently have mitigations to prevent leaking sensitive content. As an example, an `<input>` with a spelling error is still painted, but any indication of spelling errors, which could expose the user's spelling dictionary, is not painted. Similar mitigations should be used for `drawHTML`, but need to be expanded to cover additional cases.
+SVG's `<foreignObject>` can be combined with data uri images and canvas to access the pixel data of HTML content ([example](https://jsfiddle.net/progers/qhawnyeu)), and implementations currently have mitigations to prevent leaking sensitive content. As an example, an `<input>` with a spelling error is still painted, but any indication of spelling errors, which could expose the user's spelling dictionary, is not painted. Similar mitigations should be used for `drawElementImage`, but need to be expanded to cover additional cases.
 
 ## Developer Trial (dev trial) Information
 The HTML-in-Canvas features may be enabled by passing the `--enable-blink-features=CanvasDrawElement` to Chrome Canary versions later than 138.0.7175.0.
 
 Notes for dev trial usage:
-* The methods were recently renamed: `drawHTML` was previously `drawElement` and `texHTML2D` was formerly `texElement2D`. The rename will land shortly in Chrome Canary. The change was made at developers' request to avoid confusion with existing WebGL methods. The old names will continue to work until at least Chrome 145.
+* The methods were recently renamed: `drawElementImage` was previously `drawElement` and `texElementImage2D` was formerly `texElement2D`. The rename will land shortly in Chrome Canary. The change was made at developers' request to avoid confusion with existing WebGL methods. The old names will continue to work until at least Chrome 145.
 * The features are currently under active development and changes to the API may happen at any time, though we make every effort to avoid unnecessary churn.
 * Not all personal information (PII) is currently prevented from being painted, so take extreme care to avoid leaking PII in any demos.
-* The space of possible HTML content is enormous and only a tiny fraction has been tested with `drawHTML`.
+* The space of possible HTML content is enormous and only a tiny fraction has been tested with `drawElementImage`.
 * Interactive elements (such as links, forms or buttons) can be drawn into the canvas, but are not automatically interactive.
 
 Other known limitations:
