@@ -166,12 +166,12 @@ function drawScene(gl, programInfo, buffers, texture, cubeRotation) {
 
   // Create a perspective matrix, a special matrix that is
   // used to simulate the distortion of perspective in a camera.
-  // Our field of view is 45 degrees, with a width/height
+  // Our field of view is 35 degrees, with a width/height
   // ratio that matches the display size of the canvas
   // and we only want to see objects between 0.1 units
   // and 100 units away from the camera.
 
-  const fieldOfView = (45 * Math.PI) / 180; // in radians
+  const fieldOfView = (35 * Math.PI) / 180; // in radians
   const aspect = gl.canvas.clientWidth / gl.canvas.clientHeight;
   const zNear = 0.1;
   const zFar = 100.0;

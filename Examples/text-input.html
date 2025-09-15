@@ -1,26 +1,61 @@
 <!doctype html>
+<meta charset="utf-8" />
+<title>Demo of interactive content in canvas</title>
+
 <style>
   canvas {
     border: 1px solid blue;
-    width: 500px;
-    height: 500px;
+    width: 638px;
+    height: 318px;
+  }
+  form p {
+    margin: 6px;
   }
 </style>
 
-<canvas id="canvas" layoutsubtree="true">
-  <div id=drawElement style="width: 300px; height: 300px;" >
-  This is a text input:
-   <input id=textInput type=text></input>
+<canvas id="canvas" width="638" height="318" layoutsubtree="true">
+  <div id=drawElement style="width: 578px; height: 318;" >
+    <form id="demo-form" action="#" method="get">
+      <fieldset>
+        <legend>🚀 Spaceship Control Panel</legend>
+        <p>
+          <label for="shipName">Ship Name:</label>
+          <input type="text" id="shipName" value="The 'Canvas' Voyager">
+        </p>
+        <p>
+          <input type="checkbox" id="hyperdrive" checked>
+          <label for="hyperdrive">Engage Hyperdrive</label>
+        </p>
+        <fieldset>
+          <legend>Target System</legend>
+          <p>
+            <input type="radio" id="alpha" name="system" value="alpha" checked>
+            <label for="alpha">Alpha Centauri</label>
+          </p>
+          <p>
+            <input type="radio" id="beta" name="system" value="beta">
+            <label for="beta">Betelgeuse</label>
+          </p>
+        </fieldset>
+        <p>
+          <label for="shieldLevel">Shield Strength:</label>
+          <input type="range" id="shieldLevel" min="0" max="100" value="75">
+        </p>
+        <p style="text-align: right; margin: 0;">
+          <button type="submit">Launch!</button>
+        </p>
+      </fieldset>
+    </form>
   </div>
 </canvas>
 <script>
-  const ctx = document.getElementById("canvas").getContext("2d");
+  const ctx = document.getElementById('canvas').getContext('2d');
 
   function draw() {
     ctx.reset();
     let x = 30 * devicePixelRatio;
     let y = 30 * devicePixelRatio;
-    if (typeof ctx.drawElementImage === "function") {
+    if (typeof ctx.drawElementImage === 'function') {
       ctx.drawElementImage(drawElement, x, y);
     } else {
       ctx.drawElement(drawElement, x, y);

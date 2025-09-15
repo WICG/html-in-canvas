@@ -72,23 +72,21 @@ interface WebGLRenderingContext {
 
 ## Demos
 
-#### [See here](Examples/complex-text.html) to see an example of how to use the API. It should render like the following (the blue rectangle indicates the bounds of the `<canvas>`, and the black the element passed to drawElementImage). It draws like this:
+#### [See here](Examples/complex-text.html) to see an example of how to use the `drawElementImage` API.
 
-![image](https://github.com/user-attachments/assets/88d5200b-176c-4102-a4a0-f5893101b295)
+<img width="640" height="320" alt="complex-text" src="https://github.com/user-attachments/assets/3ef73e0f-9119-49de-bf84-dfb3a4f5d77c" />
 
 #### [See here](Examples/webGL.html) for an example of how to use the WebGL `texElementImage2D` API to populate a GL texture with HTML content.
-The example should render an animated cube, like in the following snapshot. Note how the border box fills the entire face of the cube.
-To adjust that, modify the texture coordinates for rendering the cube and possibly adjust the texture wrap
-parameters. Or, wrap the content in a larger `<div>` and draw the `<div>`.  It draws like this:
 
-![image](https://github.com/user-attachments/assets/78606b3b-706c-4066-875b-c6245d7ef27f)
+<img width="640" height="320" alt="webgl" src="https://github.com/user-attachments/assets/689fefe3-56d9-4ae9-b386-32a01ebb0117" />
 
-A demo of the same thing using an experimental extension of [three.js](https://threejs.org/) is [here](https://raw.githack.com/mrdoob/three.js/htmltexture/examples/webgl_materials_texture_html.html). Further instructions and context
-are [here](https://github.com/mrdoob/three.js/pull/31233).
+A demo of the same thing using an experimental extension of [three.js](https://threejs.org/) is [here](https://raw.githack.com/mrdoob/three.js/htmltexture/examples/webgl_materials_texture_html.html). Further instructions and context are [here](https://github.com/mrdoob/three.js/pull/31233).
 
-#### [See here](Examples/text-input.html) for an example utilizing the `setHitTestRegions` and `fireOnEveryPaint` APIs to enable use of interactive elements like `<input>` within a canvas. The output after clicking on the input element and typing in "my input" looks like this:
+#### [See here](Examples/text-input.html) for an example of interactive content in canvas.
 
-![image](https://github.com/user-attachments/assets/ac82ddb5-7a1e-41b0-94d6-1cee678506c7)
+This example uses the `setHitTestRegions` API to forward input to a form element drawn with `drawElementImage`. The `fireOnEveryPaint` resize observer option is used to update the canvas as needed. The effect is a fully interactive form in canvas.
+
+<img width="640" height="320" alt="text-input" src="https://github.com/user-attachments/assets/be2d098f-17ae-4982-a0f9-a069e3c2d1d5" />
 
 ## Privacy-preserving painting
 
@@ -117,7 +115,7 @@ Other known limitations:
 
 We are most interested in feedback on the following topics:
 * What content works, and what fails? Which failure modes are most important to fix?
-* Is necessary support missing for some flavors of Canvas rendering contexts? 
+* Is necessary support missing for some flavors of Canvas rendering contexts?
 * How does the feature interact with accessibility features? How can accessibility support be improved?
 
 Please file bugs or design issues [here](https://github.com/WICG/html-in-canvas/issues/new).
