@@ -82,9 +82,11 @@ interface WebGLRenderingContext {
 
 A demo of the same thing using an experimental extension of [three.js](https://threejs.org/) is [here](https://raw.githack.com/mrdoob/three.js/htmltexture/examples/webgl_materials_texture_html.html). Further instructions and context are [here](https://github.com/mrdoob/three.js/pull/31233).
 
-#### [See here](Examples/text-input.html) for an example utilizing the `setHitTestRegions` and `fireOnEveryPaint` APIs to enable use of interactive elements like `<input>` within a canvas.
+#### [See here](Examples/text-input.html) for an example of interactive content in canvas.
 
-<img width="640" height="320" alt="text-input" src="https://github.com/user-attachments/assets/a590c4e4-da25-4ac6-bd12-2a4747091258" />
+This example uses the `setHitTestRegions` API to forward input to a form element drawn with `drawElementImage`. The `fireOnEveryPaint` resize observer option is used to update the canvas as needed. The effect is a fully interactive form in canvas.
+
+<img width="640" height="320" alt="text-input" src="https://github.com/user-attachments/assets/be2d098f-17ae-4982-a0f9-a069e3c2d1d5" />
 
 ## Privacy-preserving painting
 
