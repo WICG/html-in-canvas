@@ -1,26 +1,27 @@
 <!doctype html>
+<meta charset="utf-8" />
 <style>
   canvas {
     border: 1px solid blue;
-    width: 500px;
-    height: 500px;
+    width: 638px;
+    height: 318px;
   }
 </style>
 
-<canvas id="canvas" layoutsubtree="true">
+<canvas id="canvas" width="638" height="318" layoutsubtree="true">
   <div id=drawElement style="width: 300px; height: 300px;" >
   This is a text input:
    <input id=textInput type=text></input>
   </div>
 </canvas>
 <script>
-  const ctx = document.getElementById("canvas").getContext("2d");
+  const ctx = document.getElementById('canvas').getContext('2d');
 
   function draw() {
     ctx.reset();
     let x = 30 * devicePixelRatio;
     let y = 30 * devicePixelRatio;
-    if (typeof ctx.drawElementImage === "function") {
+    if (typeof ctx.drawElementImage === 'function') {
       ctx.drawElementImage(drawElement, x, y);
     } else {
       ctx.drawElement(drawElement, x, y);

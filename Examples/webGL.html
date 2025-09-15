@@ -1,212 +1,189 @@
 <!doctype html>
-<html>
-  <head>
-    <meta charset="utf-8" />
-    <title>WebGL DrawElement Demo</title>
-    <script
-      src="https://cdnjs.cloudflare.com/ajax/libs/gl-matrix/2.8.1/gl-matrix-min.js"
-      integrity="sha512-zhHQR0/H5SEBL3Wn6yYSaTTZej12z0hVZKOv3TwCUXT1z5qeqGcXJLLrbERYRScEDDpYIJhPC1fk31gqR783iQ=="
-      crossorigin="anonymous"
-      defer>
-    </script>
-    <script src="webGLSetup.js"></script>
-    <style>
-      canvas {
-        border: 1px solid blue;
-      }
-      img {
-        width: 40px;
-        height: auto;
-      }
-    </style>
-  </head>
-
-  <body>
-    <canvas id="gl-canvas" width="600" height="600" layoutsubtree=true>
-     <div id=drawElement style="width: 500px; height: 500px;">
-        Hello world!<br>I'm multi-line, <b>formatted</b>,
-        rotated text with emoji (&#128512;), RTL text
-        <span dir=rtl>من فارسی صحبت میکنم</span>,
-        vertical text,
-        <p style="writing-mode: vertical-rl;">
-          这是垂直文本
-        </p>
-        an inline image:
-        <img src="https://upload.wikimedia.org/wikipedia/commons/9/9b/Gustav_chocolate.jpg">
-        , and:
-        <svg width="50" height="50">
-          <circle cx="25" cy="25" r="20" fill="green" />
-          <text x="25" y="30" font-size="15" text-anchor="middle" fill="white">SVG</text>
-        </svg>
-      </div>
-    </canvas>
-    <br>
-    <button type="button" onclick="toggleAnimation()">Stop Animation</button>
-  </body>
-  <script>
-    let cubeRotation = 0.0;
-    let currentTime = 0;
-    let deltaTime = 0;
-    let animating = true;
-    let render_context = null;
-
-    function toggleAnimation() {
-      if (animating) {
-        animating = false;
-      } else {
-        animating = true;
-        currentTime = performance.now() * 0.001
-        requestAnimationFrame(render);
-      }
-    }
-
-    //
-    // Initialize a texture and load an image.
-    // When the image finished loading copy it into the texture.
-    //
-    function loadTexture(gl) {
-      const texture = gl.createTexture();
-      gl.bindTexture(gl.TEXTURE_2D, texture);
-
-      const level = 0;
-      const internalFormat = gl.RGBA;
-      const srcFormat = gl.RGBA;
-      const srcType = gl.UNSIGNED_BYTE;
-
-      if (typeof gl.texElementImage2D === "function") {
-        gl.texElementImage2D(gl.TEXTURE_2D, level, internalFormat,
-                             srcFormat, srcType, drawElement);
-      } else {
-        gl.texElement2D(gl.TEXTURE_2D, level, internalFormat,
-                        srcFormat, srcType, drawElement);
-      }
-
-      // Linear texture filtering produces better results than mipmap with text.
-      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
-      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
-      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
-
-      return texture;
-    }
-
-    // Draw the scene repeatedly
-    function render() {
-      if (animating) {
-        let new_time = performance.now() * 0.001; // convert to seconds
-        deltaTime = new_time - currentTime;
-        currentTime = new_time;
-      }
-
-      if (render_context === null) {
-        return;
-      }
-
-      drawScene(render_context.gl,
-                render_context.program,
-                render_context.buffers,
-                render_context.texture,
-                cubeRotation);
-
-      if (animating) {
-        cubeRotation += deltaTime;
-        requestAnimationFrame(render);
-      }
-    }
-
-    function main() {
-      const canvas = document.querySelector("#gl-canvas");
-      // Initialize the GL context
-      const gl = canvas.getContext("webgl2");
-
-      // Only continue if WebGL is available and working
-      if (gl === null) {
-        alert(
-          "Unable to initialize WebGL. Your browser or machine may not support it.",
-        );
-        return;
-      }
-
-      // Vertex shader program
-      const vsSource = `
-        attribute vec4 aVertexPosition;
-        attribute vec2 aTextureCoord;
-
-        uniform mat4 uModelViewMatrix;
-        uniform mat4 uProjectionMatrix;
-
-        varying highp vec2 vTextureCoord;
-
-        void main(void) {
-          gl_Position = uProjectionMatrix * uModelViewMatrix * aVertexPosition;
-          vTextureCoord = aTextureCoord;
-        }
-      `;
-
-      // Fragment shader program
-      const fsSource = `
-        varying highp vec2 vTextureCoord;
-
-        uniform sampler2D uSampler;
-
-        void main(void) {
-          gl_FragColor = texture2D(uSampler, vTextureCoord);
-        }
-      `;
-
-      // Initialize a shader program; this is where all the lighting
-      // for the vertices and so forth is established.
-      const shaderProgram = initShaderProgram(gl, vsSource, fsSource);
-
-      // Collect all the info needed to use the shader program.
-      // Look up which attribute our shader program is using
-      // for aVertexPosition and look up uniform locations.
-      const programInfo = {
-        program: shaderProgram,
-        attribLocations: {
-          vertexPosition: gl.getAttribLocation(shaderProgram, "aVertexPosition"),
-          textureCoord: gl.getAttribLocation(shaderProgram, "aTextureCoord"),
-        },
-        uniformLocations: {
-          projectionMatrix: gl.getUniformLocation(shaderProgram, "uProjectionMatrix"),
-          modelViewMatrix: gl.getUniformLocation(shaderProgram, "uModelViewMatrix"),
-          uSampler: gl.getUniformLocation(shaderProgram, "uSampler"),
-        },
-      };
-
-      const buffers = initBuffers(gl);
-
-      // Load texture
-      const texture = loadTexture(gl);
-      // Flip image pixels into the bottom-to-top order that WebGL expects.
-      gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
-
-      render_context = {
-        gl: gl,
-        program: programInfo,
-        buffers: buffers,
-        texture:texture,
-      };
-
-      if (animating) {
-        requestAnimationFrame(render);
-      } else {
-        render();
-      }
-    }
-
-  onload = () => {
-    const canvas = document.querySelector("#gl-canvas");
-
-    const observer = new ResizeObserver((entries) => {
-      const entry = entries.find((entry) => entry.target === canvas);
-      canvas.width = entry.devicePixelContentBoxSize[0].inlineSize;
-      canvas.height = entry.devicePixelContentBoxSize[0].blockSize;
-
-      main();
-    });
-
-    // See: https://web.dev/articles/device-pixel-content-box
-    observer.observe(canvas, {box: ['device-pixel-content-box']});
+<meta charset="utf-8" />
+<script
+  src="https://cdnjs.cloudflare.com/ajax/libs/gl-matrix/2.8.1/gl-matrix-min.js"
+  integrity="sha512-zhHQR0/H5SEBL3Wn6yYSaTTZej12z0hVZKOv3TwCUXT1z5qeqGcXJLLrbERYRScEDDpYIJhPC1fk31gqR783iQ=="
+  crossorigin="anonymous"
+  defer>
+</script>
+<script src="webGLSetup.js"></script>
+<style>
+  canvas {
+    border: 1px solid blue;
+    width: 638px;
+    height: 318px;
   }
-  </script>
-</html>
+  #drawElement {
+    border: 1px solid blue;
+    width: 400px;
+    height: 400px;
+    padding: 10px;
+  }
+</style>
+
+<canvas id="gl-canvas" width="638" height="318" layoutsubtree="true">
+  <div id="drawElement">
+    Hello world!<br>I'm multi-line, <b>formatted</b>,
+    rotated text with emoji (&#128512;), RTL text
+    <span dir=rtl>من فارسی صحبت میکنم</span>,
+    vertical text,
+    <p style="writing-mode: vertical-rl;">
+      这是垂直文本
+    </p>
+    an inline image (<img width="150" src="wolf.jpg">), and
+    <svg width="50" height="50">
+      <circle cx="25" cy="25" r="20" fill="green" />
+      <text x="25" y="30" font-size="15" text-anchor="middle" fill="#fff">
+        SVG
+      </text>
+    </svg>!
+  </div>
+</canvas>
+
+<script>
+  let cubeRotation = 0.0;
+  let currentTime = 0;
+  let deltaTime = 0;
+  let render_context = null;
+
+  //
+  // Initialize a texture and load an image.
+  // When the image finished loading copy it into the texture.
+  //
+  function loadTexture(gl) {
+    const texture = gl.createTexture();
+    gl.bindTexture(gl.TEXTURE_2D, texture);
+
+    const level = 0;
+    const internalFormat = gl.RGBA;
+    const srcFormat = gl.RGBA;
+    const srcType = gl.UNSIGNED_BYTE;
+
+    if (typeof gl.texElementImage2D === 'function') {
+      gl.texElementImage2D(gl.TEXTURE_2D, level, internalFormat,
+                            srcFormat, srcType, drawElement);
+    } else {
+      gl.texElement2D(gl.TEXTURE_2D, level, internalFormat,
+                      srcFormat, srcType, drawElement);
+    }
+
+    // Linear texture filtering produces better results than mipmap with text.
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+
+    return texture;
+  }
+
+  // Draw the scene repeatedly
+  function render() {
+    let new_time = performance.now() * 0.001; // convert to seconds
+    deltaTime = new_time - currentTime;
+    currentTime = new_time;
+
+    if (render_context === null) {
+      return;
+    }
+
+    drawScene(render_context.gl,
+              render_context.program,
+              render_context.buffers,
+              render_context.texture,
+              cubeRotation);
+
+    cubeRotation += deltaTime;
+    requestAnimationFrame(render);
+  }
+
+  function main() {
+    const canvas = document.querySelector('#gl-canvas');
+    // Initialize the GL context
+    const gl = canvas.getContext('webgl2');
+
+    // Only continue if WebGL is available and working
+    if (gl === null) {
+      alert(
+        'Unable to initialize WebGL. Your browser or machine may not support it.',
+      );
+      return;
+    }
+
+    // Vertex shader program
+    const vsSource = `
+      attribute vec4 aVertexPosition;
+      attribute vec2 aTextureCoord;
+
+      uniform mat4 uModelViewMatrix;
+      uniform mat4 uProjectionMatrix;
+
+      varying highp vec2 vTextureCoord;
+
+      void main(void) {
+        gl_Position = uProjectionMatrix * uModelViewMatrix * aVertexPosition;
+        vTextureCoord = aTextureCoord;
+      }
+    `;
+
+    // Fragment shader program
+    const fsSource = `
+      varying highp vec2 vTextureCoord;
+
+      uniform sampler2D uSampler;
+
+      void main(void) {
+        gl_FragColor = texture2D(uSampler, vTextureCoord);
+      }
+    `;
+
+    // Initialize a shader program; this is where all the lighting
+    // for the vertices and so forth is established.
+    const shaderProgram = initShaderProgram(gl, vsSource, fsSource);
+
+    // Collect all the info needed to use the shader program.
+    // Look up which attribute our shader program is using
+    // for aVertexPosition and look up uniform locations.
+    const programInfo = {
+      program: shaderProgram,
+      attribLocations: {
+        vertexPosition: gl.getAttribLocation(shaderProgram, 'aVertexPosition'),
+        textureCoord: gl.getAttribLocation(shaderProgram, 'aTextureCoord'),
+      },
+      uniformLocations: {
+        projectionMatrix: gl.getUniformLocation(shaderProgram, 'uProjectionMatrix'),
+        modelViewMatrix: gl.getUniformLocation(shaderProgram, 'uModelViewMatrix'),
+        uSampler: gl.getUniformLocation(shaderProgram, 'uSampler'),
+      },
+    };
+
+    const buffers = initBuffers(gl);
+
+    // Load texture
+    const texture = loadTexture(gl);
+    // Flip image pixels into the bottom-to-top order that WebGL expects.
+    gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
+
+    render_context = {
+      gl: gl,
+      program: programInfo,
+      buffers: buffers,
+      texture:texture,
+    };
+
+    requestAnimationFrame(render);
+  }
+
+onload = () => {
+  const canvas = document.querySelector('#gl-canvas');
+
+  const observer = new ResizeObserver((entries) => {
+    const entry = entries.find((entry) => entry.target === canvas);
+    canvas.width = entry.devicePixelContentBoxSize[0].inlineSize;
+    canvas.height = entry.devicePixelContentBoxSize[0].blockSize;
+
+    main();
+  });
+
+  // See: https://web.dev/articles/device-pixel-content-box
+  observer.observe(canvas, {box: ['device-pixel-content-box']});
+}
+</script>

@@ -1,19 +1,15 @@
 <!doctype html>
+<meta charset="utf-8" />
 <style>
   canvas {
     border: 1px solid blue;
-    width: 700px;
-    height: 500px;
-  }
-  img {
-    width: 40px;
-    height: auto;
+    width: 638px;
+    height: 318px;
   }
 </style>
 
-
-<canvas id="canvas" layoutsubtree="true">
-  <div id=drawElement style="width: 500px; height: 500px;">
+<canvas id="canvas" width="638" height="318" layoutsubtree="true">
+  <div id="drawElement" style="width: 550px;">
     Hello world!<br>I'm multi-line, <b>formatted</b>,
     rotated text with emoji (&#128512;), RTL text
     <span dir=rtl>من فارسی صحبت میکنم</span>,
@@ -21,18 +17,18 @@
     <p style="writing-mode: vertical-rl;">
       这是垂直文本
     </p>
-    an inline image:
-    <img src="https://upload.wikimedia.org/wikipedia/commons/9/9b/Gustav_chocolate.jpg">
-    , and:
+    an inline image (<img width="150" src="wolf.jpg">), and
     <svg width="50" height="50">
       <circle cx="25" cy="25" r="20" fill="green" />
-      <text x="25" y="30" font-size="15" text-anchor="middle" fill="white">SVG</text>
-    </svg>
+      <text x="25" y="30" font-size="15" text-anchor="middle" fill="#fff">
+        SVG
+      </text>
+    </svg>!
   </div>
 </canvas>
 
 <script>
-  const ctx = document.getElementById("canvas").getContext("2d");
+  const ctx = document.getElementById('canvas').getContext('2d');
   onload = () => {
     const observer = new ResizeObserver((entries) => {
       const entry = entries.find((entry) => entry.target === canvas);
@@ -40,16 +36,16 @@
       canvas.height = entry.devicePixelContentBoxSize[0].blockSize;
 
       ctx.reset();
-      ctx.rotate((45 * Math.PI) / 180);
-      ctx.translate(200, -125);
-      if (typeof ctx.drawElementImage === "function") {
-        ctx.drawElementImage(drawElement, 30, 0);
+      ctx.rotate((15 * Math.PI) / 180);
+      let x = 80 * devicePixelRatio;
+      let y = -20 * devicePixelRatio;
+      if (typeof ctx.drawElementImage === 'function') {
+        ctx.drawElementImage(drawElement, x, y);
       } else {
-        ctx.drawElement(drawElement, 30, 0);
+        ctx.drawElement(drawElement, x, y);
       }
     });
     // See: https://web.dev/articles/device-pixel-content-box
     observer.observe(canvas, {box: ['device-pixel-content-box']});
   }
 </script>
-
