@@ -1,4 +1,4 @@
-# **NOTE: the placeElement proposal is currently not being worked on. [See drawElement instead]([url](https://github.com/WICG/html-in-canvas/blob/main/README.md)).**
+# **NOTE: the placeElement proposal is currently not being worked on. [See drawElement instead](https://github.com/WICG/html-in-canvas/blob/main/README.md).**
 
  # HTML-in-Canvas
 
