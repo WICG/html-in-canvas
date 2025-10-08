@@ -43,8 +43,6 @@ See [Issue#11](https://github.com/WICG/html-in-canvas/issues/11) for an ongoing 
 
 Offscreen canvas contexts and detached canvases are not supported because drawing DOM content when the canvas is not in the DOM poses technical challenges. See [Issue#2](https://github.com/WICG/html-in-canvas/issues/2) for further discussion.
 
-**NOTE**: When using this feature in a DevTrial, take steps to avoid leaking private information, as privacy controls to disable painting of [PII](https://en.wikipedia.org/wiki/Personal_data) are still in-progress.
-
 ```idl
 interface CanvasRenderingContext2D {
 
