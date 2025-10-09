@@ -1,7 +1,4 @@
-# **NOTE: the placeElement proposal is currently not being worked on. [See drawElement instead](https://github.com/WICG/html-in-canvas/blob/main/README.md).**
-
- # HTML-in-Canvas
-
+# HTML-in-Canvas
 
 We propose new HTML Canvas APIs for rendering HTML content into the canvas for Canvas 2D and WebGL.
 
@@ -45,6 +42,8 @@ The descendant elements of the `<canvas>` are considered fallback content used t
 See [Issue#11](https://github.com/WICG/html-in-canvas/issues/11) for an ongoing discussion of accessibility concerns.
 
 Offscreen canvas contexts and detached canvases are not supported because drawing DOM content when the canvas is not in the DOM poses technical challenges. See [Issue#2](https://github.com/WICG/html-in-canvas/issues/2) for further discussion.
+
+**NOTE**: When using this feature in a DevTrial, take steps to avoid leaking private information, as privacy controls to disable painting of [PII](https://en.wikipedia.org/wiki/Personal_data) are still in-progress.
 
 ```idl
 interface CanvasRenderingContext2D {
