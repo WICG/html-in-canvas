@@ -4,7 +4,7 @@ We propose new HTML Canvas APIs for rendering HTML content into the canvas for C
 
 ## Status
 
-**Authors:** [Stephen Chenney](mailto:schenney@igalia.com), [Chris Harrelson](mailto:chrishtr@google.com), [Khushal Sagar](mailto:khushalsagar@google.com), [Vladimir Levin](mailto:vmpstr@chromium.org), [Fernando Serboncini](mailto:fserb@chromium.org)
+**Authors:** [Philip Rogers](mailto:pdr@google.com), [Stephen Chenney](mailto:schenney@igalia.com), [Chris Harrelson](mailto:chrishtr@google.com), [Khushal Sagar](mailto:khushalsagar@google.com), [Vladimir Levin](mailto:vmpstr@chromium.org), [Fernando Serboncini](mailto:fserb@chromium.org)
 
 **Champions:** [Stephen Chenney](mailto:schenney@igalia.com), [Chris Harrelson](mailto:chrishtr@google.com)
 
