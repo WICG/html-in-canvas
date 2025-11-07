@@ -30,7 +30,7 @@ There is no web API to easily render complex layouts of text and other content i
 
 (*) Without `layoutsubtree`, geometry APIs such as `getBoundingClientRect()` on these elements return an empty rect. They do have computed styles, however, and are keyboard-focusable.
 
-`drawElementImage(element ...)` takes the CTM (current transform matrix) of the canvas into consideration. The image drawn into the canvas is sized to `element`'s [`devicePixelContentBox`](https://web.dev/articles/device-pixel-content-box); content outside those bounds (including ink and layout overflow) are clipped. The `drawElementImage(element, x, y, dwidth, dheight)` variant resizes the image of `element`'s subtree to `dwidth` and `dheight`.
+`drawElementImage(element ...)` takes the CTM (current transform matrix) of the canvas into consideration. Any drawn element is implicitly treated as having the CSS property `contain:paint`; overflowing content (including both layout and ink overflow) will be clipped to the element's content box. The optional `dwidth` and `dheight` arguments specify a destination rect in canvas coordinates to which the element will be scaled. If omitted, the element will have the same size and proportion when drawn to the canvas as it would have were it rendered outside the canvas.
 
 In addition, a `fireOnEveryPaint` option is added to `ResizeObserverOptions`, allowing script to be notified whenever any descendants of a `<canvas>` may render differently, so they can be redrawn. The callback to the resize observer will be called at resize observer timing, which is after DOM style and layout, but before paint.
 
