@@ -11,7 +11,7 @@
 </style>
 
 <canvas id="canvas" width="638" height="318" layoutsubtree="true">
-  <div id="drawElement" style="width: 550px;">
+  <div id="drawElement" style="width: 550px;" inert>
     Hello world!<br>I'm multi-line, <b>formatted</b>,
     rotated text with emoji (&#128512;), RTL text
     <span dir=rtl>من فارسی صحبت میکنم</span>,
@@ -41,11 +41,7 @@
       ctx.rotate((15 * Math.PI) / 180);
       let x = 80 * devicePixelRatio;
       let y = -20 * devicePixelRatio;
-      if (typeof ctx.drawElementImage === 'function') {
-        ctx.drawElementImage(drawElement, x, y);
-      } else {
-        ctx.drawElement(drawElement, x, y);
-      }
+      ctx.drawElementImage(drawElement, x, y);
     });
     // See: https://web.dev/articles/device-pixel-content-box
     observer.observe(canvas, {box: ['device-pixel-content-box']});
