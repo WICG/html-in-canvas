@@ -23,7 +23,7 @@
 </style>
 
 <canvas id="gl-canvas" width="638" height="318" layoutsubtree="true">
-  <div id="drawElement">
+  <div id="drawElement" inert>
     Hello world!<br>I'm multi-line, <b>formatted</b>,
     rotated text with emoji (&#128512;), RTL text
     <span dir=rtl>من فارسی صحبت میکنم</span>,
@@ -60,13 +60,8 @@
     const srcFormat = gl.RGBA;
     const srcType = gl.UNSIGNED_BYTE;
 
-    if (typeof gl.texElementImage2D === 'function') {
-      gl.texElementImage2D(gl.TEXTURE_2D, level, internalFormat,
+    gl.texElementImage2D(gl.TEXTURE_2D, level, internalFormat,
                             srcFormat, srcType, drawElement);
-    } else {
-      gl.texElement2D(gl.TEXTURE_2D, level, internalFormat,
-                      srcFormat, srcType, drawElement);
-    }
 
     // Linear texture filtering produces better results than mipmap with text.
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);

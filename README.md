@@ -21,12 +21,11 @@ There is no web API to easily render complex layouts of text and other content i
 * **Composing HTML Elements with Shaders.** A limited set of CSS shaders, such as filter effects, are already available, but there is a desire to use general WebGL shaders with HTML.
 * **HTML Rendering in a 3D Context.** 3D aspects of sites and games need to render rich 2D content into surfaces within a 3D scene.
 
-## Proposed solution: `layoutsubtree`, `drawElementImage`/`texElementImage2D`, `fireOnEveryPaint`, and `setHitTestRegions`
+## Proposed solution: `layoutsubtree`, `drawElementImage`/`texElementImage2D`, and `fireOnEveryPaint`
 
-* The `layoutsubtree` attribute on a `<canvas>` element allows its descendant elements to have layout (*), and causes the direct children of the `<canvas>` to have a stacking context and become a containing block for all descendants. Descendant elements of the `<canvas>` still do not paint or hit-test, and are not discovered by UA algorithms like find-in-page.
+* The `layoutsubtree` attribute on a `<canvas>` element allows its descendant elements to have layout (*), participate in hit testing, accessibility, etc, and causes the direct children of the `<canvas>` to have a stacking context and become a containing block for all descendants. Descendant elements of the `<canvas>` still do not paint.
 * The `CanvasRenderingContext2D.drawElementImage(element, x, y)` method renders `element` and its subtree into a 2D canvas at offset x and y, so long as `element` is a direct child of the `<canvas>`. It has no effect if `layoutsubtree` is not specified on the `<canvas>`.
 * The `WebGLRenderingContext.texElementImage2D(..., element)` method renders `element` into a WebGL texture. It has no effect if `layoutsubtree` is not specified on the `<canvas>`.
-* The `CanvasRenderingContext2D.setHitTestRegions([{element: ., rect: {x: x, y: y, width: ..., height: ...}, ...])` (and `WebGLRenderingContext.setHitTestRegions(...)`) API takes a list of elements and `<canvas>`-relative rects indicating where the element paints relative to the backing buffer of the canvas. These rects are then used to redirect hit tests for mouse and touch events automatically from the `<canvas>` element to the drawn element.
 
 (*) Without `layoutsubtree`, geometry APIs such as `getBoundingClientRect()` on these elements return an empty rect. They do have computed styles, however, and are keyboard-focusable.
 
@@ -84,7 +83,7 @@ A demo of the same thing using an experimental extension of [three.js](https://t
 
 #### [See here](Examples/text-input.html) for an example of interactive content in canvas.
 
-This example uses the `setHitTestRegions` API to forward input to a form element drawn with `drawElementImage`. The `fireOnEveryPaint` resize observer option is used to update the canvas as needed. The effect is a fully interactive form in canvas.
+The `fireOnEveryPaint` resize observer option is used to update the canvas as needed. The effect is a fully interactive form in canvas.
 
 <img width="640" height="320" alt="text-input" src="https://github.com/user-attachments/assets/be2d098f-17ae-4982-a0f9-a069e3c2d1d5" />
 

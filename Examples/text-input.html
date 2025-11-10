@@ -53,21 +53,10 @@
 
   function draw() {
     ctx.reset();
-    let x = 30 * devicePixelRatio;
-    let y = 30 * devicePixelRatio;
-    if (typeof ctx.drawElementImage === 'function') {
-      ctx.drawElementImage(drawElement, x, y);
-    } else {
-      ctx.drawElement(drawElement, x, y);
-    }
-    rect = drawElement.getBoundingClientRect();
-    ctx.setHitTestRegions([
-      {
-        element: drawElement,
-        rect: {x: x, y: y, width: rect.width * devicePixelRatio,
-        height: rect.height * devicePixelRatio}
-      }
-    ]);
+    let x = 30;
+    let y = 30
+    ctx.drawElementImage(drawElement, x * devicePixelRatio, y * devicePixelRatio);
+    drawElement.style.transform = `translate(${x}px, ${y}px)`;
   }
 
   onload = () => {
