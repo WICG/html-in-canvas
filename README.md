@@ -21,24 +21,15 @@ There is no web API to easily render complex layouts of text and other content i
 * **Composing HTML Elements with Shaders.** A limited set of CSS shaders, such as filter effects, are already available, but there is a desire to use general WebGL shaders with HTML.
 * **HTML Rendering in a 3D Context.** 3D aspects of sites and games need to render rich 2D content into surfaces within a 3D scene.
 
-## Proposed solution: `layoutsubtree`, `drawElementImage`/`texElementImage2D`, and `fireOnEveryPaint`
+## Proposed solution: `layoutsubtree`, `drawElementImage`, and `fireOnEveryPaint`
 
-* The `layoutsubtree` attribute on a `<canvas>` element allows its descendant elements to have layout (*), participate in hit testing, accessibility, etc, and causes the direct children of the `<canvas>` to have a stacking context and become a containing block for all descendants. Descendant elements of the `<canvas>` still do not paint.
-* The `CanvasRenderingContext2D.drawElementImage(element, x, y)` method renders `element` and its subtree into a 2D canvas at offset x and y, so long as `element` is a direct child of the `<canvas>`. It has no effect if `layoutsubtree` is not specified on the `<canvas>`.
-* The `WebGLRenderingContext.texElementImage2D(..., element)` method renders `element` into a WebGL texture. It has no effect if `layoutsubtree` is not specified on the `<canvas>`.
-
-(*) Without `layoutsubtree`, geometry APIs such as `getBoundingClientRect()` on these elements return an empty rect. They do have computed styles, however, and are keyboard-focusable.
-
-`drawElementImage(element ...)` takes the CTM (current transform matrix) of the canvas into consideration. Any drawn element is implicitly treated as having the CSS property `contain:paint`; overflowing content (including both layout and ink overflow) will be clipped to the element's content box. The optional `dwidth` and `dheight` arguments specify a destination rect in canvas coordinates to which the element will be scaled. If omitted, the element will have the same size and proportion when drawn to the canvas as it would have were it rendered outside the canvas.
-
-In addition, a `fireOnEveryPaint` option is added to `ResizeObserverOptions`, allowing script to be notified whenever any descendants of a `<canvas>` may render differently, so they can be redrawn. The callback to the resize observer will be called at resize observer timing, which is after DOM style and layout, but before paint.
-
-The same element may be drawn multiple times.
+* The `layoutsubtree` attribute on a `<canvas>` element opts-in canvas descendants to have layout and participate in hit testing. To aid in rendering, this attribute also causes the direct children of the `<canvas>` to have a stacking context, become a containing block for all descendants, and have paint containment.
+* The `CanvasRenderingContext2D.drawElementImage(element, x, y, width, height)` method renders `element` and its subtree into a 2D canvas at offset x and y. `layoutsubtree` must be specified on the `<canvas>`, and the `element` must be a direct child of the `<canvas>`. The current transform matrix of the canvas into consideration. Tranform properties on the element are ignored, but other effects are rendered, with overflowing content (including both layout and ink overflow) being clipped to the element's content box. The optional width/height arguments specify a destination rect in canvas coordinates to which the element will be scaled. If omitted, the element will have the same size and proportion when drawn to the canvas as it would have were it rendered outside the canvas. For WebGL/WebGPU, similar `WebGLRenderingContext.texElementImage2D` and `copyElementImageToTexture` functions are added.
+* A `fireOnEveryPaint` option is added to `ResizeObserverOptions`, allowing script to be notified whenever any descendants of a `<canvas>` may render differently, so they can be redrawn. The callback to the resize observer will be called at resize observer timing, which is after DOM style and layout, but before paint.
 
 Once drawn, the resulting canvas image is static. Subsequent changes to the element will not be reflected in the canvas, so the element must be explicitly redrawn if an author wishes to see the changes.
 
-The descendant elements of the `<canvas>` are considered fallback content used to provide accessibility information.
-See [Issue#11](https://github.com/WICG/html-in-canvas/issues/11) for an ongoing discussion of accessibility concerns.
+Descendants of a `<canvas>` with `layoutsubtree` are automatically hit testable, and this approach encourages authors to keep their drawn content in sync with the DOM, ensuring accessibility is up-to-date. CSS transform can be used to control hit testing, as well as features like anchor positioning and intersection observer. See [Issue#11](https://github.com/WICG/html-in-canvas/issues/11) for an ongoing discussion of accessibility concerns.
 
 Offscreen canvas contexts and detached canvases are not supported because drawing DOM content when the canvas is not in the DOM poses technical challenges. See [Issue#2](https://github.com/WICG/html-in-canvas/issues/2) for further discussion.
 
