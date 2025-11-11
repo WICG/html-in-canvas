@@ -11,8 +11,9 @@
 </style>
 
 <canvas id="canvas" width="638" height="318" layoutsubtree="true">
-  <div id="drawElement" style="width: 550px;" inert>
-    Hello world!<br>I'm multi-line, <b>formatted</b>,
+  <div id="drawElement" style="width: 550px;">
+    Hello from <a href="https://github.com/WICG/html-in-canvas">html-in-canvas</a>!
+    <br>I'm multi-line, <b>formatted</b>,
     rotated text with emoji (&#128512;), RTL text
     <span dir=rtl>من فارسی صحبت میکنم</span>,
     vertical text,
@@ -39,11 +40,15 @@
 
       ctx.reset();
       ctx.rotate((15 * Math.PI) / 180);
-      let x = 80 * devicePixelRatio;
-      let y = -20 * devicePixelRatio;
-      ctx.drawElementImage(drawElement, x, y);
+      ctx.translate(80 * devicePixelRatio, -20 * devicePixelRatio);
+      ctx.drawElementImage(drawElement, 0, 0);
+
+      drawElement.style.transformOrigin = '0 0';
+      drawElement.style.transform =
+        `scale(${1/devicePixelRatio}) ${ctx.getTransform().toString()} scale(${devicePixelRatio})`;
     });
     // See: https://web.dev/articles/device-pixel-content-box
-    observer.observe(canvas, {box: ['device-pixel-content-box']});
+    observer.observe(canvas, {box: ['device-pixel-content-box'],
+      fireOnEveryPaint: true});
   }
 </script>
