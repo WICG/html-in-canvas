@@ -11,7 +11,7 @@
 </style>
 
 <canvas id="canvas" width="638" height="318" layoutsubtree="true">
-  <div id="drawElement" style="width: 550px;">
+  <div id="draw_element" style="width: 550px;">
     Hello from <a href="https://github.com/WICG/html-in-canvas">html-in-canvas</a>!
     <br>I'm multi-line, <b>formatted</b>,
     rotated text with emoji (&#128512;), RTL text
@@ -33,22 +33,17 @@
 <script>
   const ctx = document.getElementById('canvas').getContext('2d');
   onload = () => {
-    const observer = new ResizeObserver((entries) => {
-      const entry = entries.find((entry) => entry.target === canvas);
+    const observer = new ResizeObserver(([entry]) => {
       canvas.width = entry.devicePixelContentBoxSize[0].inlineSize;
       canvas.height = entry.devicePixelContentBoxSize[0].blockSize;
 
       ctx.reset();
       ctx.rotate((15 * Math.PI) / 180);
       ctx.translate(80 * devicePixelRatio, -20 * devicePixelRatio);
-      ctx.drawElementImage(drawElement, 0, 0);
+      let transform = ctx.drawElementImage(draw_element, 0, 0);
 
-      drawElement.style.transformOrigin = '0 0';
-      drawElement.style.transform =
-        `scale(${1/devicePixelRatio}) ${ctx.getTransform().toString()} scale(${devicePixelRatio})`;
+      draw_element.style.transform = transform.toString();
     });
-    // See: https://web.dev/articles/device-pixel-content-box
-    observer.observe(canvas, {box: ['device-pixel-content-box'],
-      fireOnEveryPaint: true});
+    observer.observe(canvas, {box: ['device-pixel-content-box'], fireOnEveryPaint: true});
   }
 </script>
