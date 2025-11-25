@@ -43,7 +43,7 @@ Similar methods are added for 3D contexts: `WebGLRenderingContext.texElementImag
 A `fireOnEveryPaint` option is added to `ResizeObserverOptions`. This allows script to be notified whenever descendants of a `<canvas>` may render differently and may need to be re-drawn. The callback runs at Resize Observer timing (after DOM style/layout, but before paint).
 
 ### Synchronization
-It is essential for hit testing, intersection observer, and hit testing that the DOM position is kept in sync with the position of the drawn image.
+It is essential for hit testing, intersection observer, and accessibility that the DOM position is kept in sync with the position of the drawn image.
 
 To assist with this, `drawElementImage` returns a `DOMMatrix` which can be applied to the DOM element's `transform` style to make the DOM position match the drawn position. There is no explicit current transform matrix in WebGL/WebGPU, so the `getElementTransform(element, draw_transform)` helper method is provided to make it easy to adjust a provided `DOMMatrix` transform so that it can be applied to the element's `transform` style to make the DOM position match the drawn position.
 
