@@ -14,7 +14,7 @@
 </style>
 
 <canvas id="canvas" width="638" height="318" layoutsubtree="true">
-  <div id=drawElement style="width: 578px" >
+  <div id=draw_element style="width: 578px" >
     <form id="demo-form" action="#" method="get">
       <fieldset>
         <legend>🚀 Spaceship Control Panel</legend>
@@ -51,25 +51,14 @@
 <script>
   const ctx = document.getElementById('canvas').getContext('2d');
 
-  function draw() {
-    ctx.reset();
-    let x = 30;
-    let y = 30
-    ctx.drawElementImage(drawElement, x * devicePixelRatio, y * devicePixelRatio);
-    drawElement.style.transform = `translate(${x}px, ${y}px)`;
-  }
+  const observer = new ResizeObserver(([entry]) => {
+    canvas.width = entry.devicePixelContentBoxSize[0].inlineSize;
+    canvas.height = entry.devicePixelContentBoxSize[0].blockSize;
 
-  onload = () => {
-    const resizeObserver = new ResizeObserver((entries) => {
-      const entry = entries.find((entry) => entry.target === canvas);
-      canvas.width = entry.devicePixelContentBoxSize[0].inlineSize;
-      canvas.height = entry.devicePixelContentBoxSize[0].blockSize;
-      draw();
-    });
-    // See: https://web.dev/articles/device-pixel-content-box
-    resizeObserver.observe(canvas, {box: ['device-pixel-content-box'],
-      fireOnEveryPaint: true});
-  }
+    let x = canvas.width / 25;
+    let y = canvas.height / 25;
+    let transform = ctx.drawElementImage(draw_element, x, y);
+    draw_element.style.transform = transform.toString();
+  });
+  observer.observe(canvas, {box: 'device-pixel-content-box', fireOnEveryPaint: true});
 </script>
-
-
