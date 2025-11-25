@@ -6,7 +6,7 @@ This is a proposal for using 2D and 3D `<canvas>` to customize the rendering of 
 
 This is a living explainer which is continuously updated as we receive feedback.
 
-This is implemented behind a flag in Chromium and can be enabled with [chrome://flags/#canvas-draw-element](chrome://flags/#canvas-draw-element).
+The APIs described here are implemented behind a flag in Chromium and can be enabled with [chrome://flags/#canvas-draw-element](chrome://flags/#canvas-draw-element).
 
 ## Motivation
 
@@ -27,14 +27,14 @@ The solution introduces three main primitives: an attribute to opt-in canvas ele
 The `layoutsubtree` attribute on a `<canvas>` element opts in canvas descendants to have layout and participate in hit testing. It causes the direct children of the `<canvas>` to have a stacking context, become a containing block for all descendants, and have paint containment.
 
 ### 2. `drawElementImage` (and WebGL/WebGPU equivalents)
-The `drawElementImage` method renders a DOM element and its subtree into the canvas.
+The `drawElementImage(element)` method renders the DOM `element` and its subtree into the canvas.
 
 **Requirements & Constraints:**
 * `layoutsubtree` must be specified on the `<canvas>`.
 * The `element` must be a direct child of the `<canvas>`.
-* **Transforms:** The canvas's current transformation matrix is applied. CSS transforms on the source `element` are **ignored** for drawing (but still apply to hit testing/accessibility, see below).
+* **Transforms:** The canvas's current transformation matrix is applied when drawing into the canvas. CSS transforms on the source `element` are **ignored** for drawing (but still apply to hit testing/accessibility, see below).
 * **Clipping:** Overflowing content (both layout and ink overflow) is clipped to the element's content box.
-* **Sizing:** The optional `width`/`height` arguments specify a destination rect in canvas coordinates. If omitted, the element is drawn at its intrinsic size.
+* **Sizing:** The optional `width`/`height` arguments specify a destination rect in canvas coordinates. If omitted, the `width`/`height` arguments default to sizing the element so that it has the same on-screen size and proportion in canvas coordinates as it does outside the canvas.
 
 **WebGL/WebGPU Support:**
 Similar methods are added for 3D contexts: `WebGLRenderingContext.texElementImage2D` and `copyElementImageToTexture`.
@@ -43,7 +43,7 @@ Similar methods are added for 3D contexts: `WebGLRenderingContext.texElementImag
 A `fireOnEveryPaint` option is added to `ResizeObserverOptions`. This allows script to be notified whenever descendants of a `<canvas>` may render differently and may need to be re-drawn. The callback runs at Resize Observer timing (after DOM style/layout, but before paint).
 
 ### Synchronization
-Once drawn, the canvas image is static. Authors must explicitly redraw the element to reflect subsequent changes. To assist with syncing the DOM position with the drawn image (essential for accessibility and hit testing), `drawElementImage` returns a `DOMMatrix` which can be applied to the DOM element's `transform` style to make the layout position match the drawn position. The `getElementTransform` API is a helper to return the same `transform` for WebGL/WebGPU cases.
+Once drawn, the canvas image is static. Authors must explicitly redraw the element to reflect subsequent changes. To assist with syncing the DOM position with the drawn image (essential for accessibility and hit testing), `drawElementImage` returns a `DOMMatrix` which can be applied to the DOM element's `transform` style to make the layout position match the drawn position. There is no explicit current transform matrix in WebGL/WebGPU, so the `getElementTransform(element, draw_transform)` helper method is provided to make it easy to adjust a provided `DOMMatrix` transform so that it can be applied to the DOM element's `transform` style to make the layout position match the drawn position.
 
 ### Basic Example
 
