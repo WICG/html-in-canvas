@@ -51,9 +51,9 @@ To assist with this, `drawElementImage` returns a `DOMMatrix` which can be appli
 
 <img width="205" height="36" alt="a screenshot showing a form element with a blinking cursor" src="https://github.com/user-attachments/assets/44fb3162-d179-4e0f-bc51-d1161f756513" />
 
-```
+```html
 <canvas id="canvas" style="width: 200px; height: 200px;" layoutsubtree>
-  <div id="form">
+  <div id="form_element">
     name: <input>
   </div>
 </canvas>
@@ -65,9 +65,8 @@ To assist with this, `drawElementImage` returns a `DOMMatrix` which can be appli
     canvas.width = entry.devicePixelContentBoxSize[0].inlineSize;
     canvas.height = entry.devicePixelContentBoxSize[0].blockSize;
 
-    ctx.reset();
-    let transform = ctx.drawElementImage(form, 0, 0);
-    form.style.transform = transform.toString();
+    let transform = ctx.drawElementImage(form_element, 0, 0);
+    form_element.style.transform = transform.toString();
   });
   observer.observe(canvas, {box: ['device-pixel-content-box'], fireOnEveryPaint: true});
 </script>
@@ -78,6 +77,7 @@ To assist with this, `drawElementImage` returns a `DOMMatrix` which can be appli
 ```idl
 interface HTMLCanvasElement {
   attribute boolean layoutSubtree;
+
   [RaisesException]
   DOMMatrix getElementTransform(Element element, DOMMatrix draw_transform);
 }
