@@ -21,7 +21,7 @@ There is no web API to easily render complex layouts of text and other content i
 
 ## Proposed solution
 
-The solution introduces three main primitives: an attribute to opt-in canvas elements, methods to draw them, and an observer to handle updates.
+The solution introduces three main primitives: an attribute to opt-in canvas elements, methods to draw child elements into the canvas, and an observer to handle updates.
 
 ### 1. The `layoutsubtree` attribute
 The `layoutsubtree` attribute on a `<canvas>` element opts in canvas descendants to have layout and participate in hit testing. It causes the direct children of the `<canvas>` to have a stacking context, become a containing block for all descendants, and have paint containment.
@@ -43,7 +43,9 @@ Similar methods are added for 3D contexts: `WebGLRenderingContext.texElementImag
 A `fireOnEveryPaint` option is added to `ResizeObserverOptions`. This allows script to be notified whenever descendants of a `<canvas>` may render differently and may need to be re-drawn. The callback runs at Resize Observer timing (after DOM style/layout, but before paint).
 
 ### Synchronization
-Once drawn, the canvas image is static. Authors must explicitly redraw the element to reflect subsequent changes. To assist with syncing the DOM position with the drawn image (essential for accessibility and hit testing), `drawElementImage` returns a `DOMMatrix` which can be applied to the DOM element's `transform` style to make the layout position match the drawn position. There is no explicit current transform matrix in WebGL/WebGPU, so the `getElementTransform(element, draw_transform)` helper method is provided to make it easy to adjust a provided `DOMMatrix` transform so that it can be applied to the DOM element's `transform` style to make the layout position match the drawn position.
+It is essential for hit testing, intersection observer, and hit testing that the DOM position is kept in sync with the position of the drawn image.
+
+To assist with this, `drawElementImage` returns a `DOMMatrix` which can be applied to the DOM element's `transform` style to make the DOM position match the drawn position. There is no explicit current transform matrix in WebGL/WebGPU, so the `getElementTransform(element, draw_transform)` helper method is provided to make it easy to adjust a provided `DOMMatrix` transform so that it can be applied to the element's `transform` style to make the DOM position match the drawn position.
 
 ### Basic Example
 
