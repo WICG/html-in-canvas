@@ -47,7 +47,9 @@ Browser features like hit testing, intersection observer, and accessibility rely
 
 <details>
 <summary>Caculating a CSS transform to match a drawn location</summary>
-  The the general formula for the CSS transform is: $$T_{\text{origin}}^{-1} \cdot S_{\text{css} \to \text{grid}}^{-1} \cdot T_{\text{draw}} \cdot S_{\text{css} \to \text{grid}} \cdot T_{\text{origin}} $$
+  The the general formula for the CSS transform is:
+  
+  <div align="center">$$T_{\text{origin}}^{-1} \cdot S_{\text{css} \to \text{grid}}^{-1} \cdot T_{\text{draw}} \cdot S_{\text{css} \to \text{grid}} \cdot T_{\text{origin}} $$</div>
 
 Where:
 
