@@ -27,7 +27,7 @@ The solution introduces three main primitives: an attribute to opt-in canvas ele
 The `layoutsubtree` attribute on a `<canvas>` element opts in canvas descendants to have layout and participate in hit testing. It causes the direct children of the `<canvas>` to have a stacking context, become a containing block for all descendants, and have paint containment.
 
 ### 2. `drawElementImage` (and WebGL/WebGPU equivalents)
-The `drawElementImage(element)` method renders the DOM `element` and its subtree into the canvas.
+The `drawElementImage(element)` method renders the DOM `element` and its subtree into the canvas, and returns a transform that can be applied to the `transform` property on `element` to align it's DOM location with its drawn location.
 
 **Requirements & Constraints:**
 * `layoutsubtree` must be specified on the `<canvas>`.
@@ -44,9 +44,24 @@ Similar methods are added for 3D contexts: `WebGLRenderingContext.texElementImag
 A `fireOnEveryPaint` option is added to `ResizeObserverOptions`. This allows script to be notified whenever descendants of a `<canvas>` may render differently and may need to be re-drawn. The callback runs at Resize Observer timing (after DOM style/layout, but before paint).
 
 ### Synchronization
-It is essential for hit testing, intersection observer, and accessibility that the DOM position is kept in sync with the position of the drawn image.
+Browser features like hit testing, intersection observer, and accessibility rely on an element's DOM location. To ensure these work, the element's `transform` property should be updated so that the DOM location matches the drawn location.
 
-To assist with this, `drawElementImage` returns a `DOMMatrix` which can be applied to the DOM element's `transform` style to make the DOM position match the drawn position. There is no explicit current transform matrix in WebGL/WebGPU, so the `getElementTransform(element, draw_transform)` helper method is provided to make it easy to adjust a provided `DOMMatrix` transform so that it can be applied to the element's `transform` style to make the DOM position match the drawn position.
+<details>
+<summary>Caculating a CSS transform to match a drawn location</summary>
+  The the general formula for the CSS transform is:
+  
+  <div align="center">$$T_{\text{origin}}^{-1} \cdot S_{\text{css} \to \text{grid}}^{-1} \cdot T_{\text{draw}} \cdot S_{\text{css} \to \text{grid}} \cdot T_{\text{origin}} $$</div>
+
+Where:
+
+* $$T_{\text{draw}}$$: Transform used to draw the element in the canvas grid coordinate system.
+  For `drawElementImage`, this is $$CTM \cdot T_{(\text{x}, \text{y})} \cdot S_{(\text{destScale})}$$, where $$CTM$$ is the Current Transformation Matrix, $$T_{(\text{x}, \text{y})}$$ is a translation from the x and y attributes, and $$S_{(\text{destScale})}$$ is a scale from the width and height attributes. 
+* $$T_{\text{origin}}$$: Translation matrix of the element's computed `transform-origin`.
+* $$S_{\text{css} \to \text{grid}}$$: Scaling matrix converting CSS pixels to Canvas Grid pixels.
+</details>
+
+To assist with synchronization, `drawElementImage` returns the CSS transform which can be applied to the element to keep it's location synchronized. For 3D contexts, the `getElementTransform(element, draw_transform)` helper method is provided which returns the CSS transform, provided a general transformation matrix.
+
 
 ### Basic Example
 
