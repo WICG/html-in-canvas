@@ -32,7 +32,8 @@ The `drawElementImage(element)` method renders the DOM `element` and its subtree
 **Requirements & Constraints:**
 * `layoutsubtree` must be specified on the `<canvas>`.
 * The `element` must be a direct child of the `<canvas>`.
-* **Transforms:** The canvas's current transformation matrix is applied when drawing into the canvas. CSS transforms on the source `element` are **ignored** for drawing (but still apply to hit testing/accessibility, see below).
+* The `element` must generate boxes (i.e., not `display: none`).
+* **Transforms:** The canvas's current transformation matrix is applied when drawing into the canvas. CSS transforms on the source `element` are **ignored** for drawing (but continue to affect hit testing/accessibility, see below).
 * **Clipping:** Overflowing content (both layout and ink overflow) is clipped to the element's border box.
 * **Sizing:** The optional `width`/`height` arguments specify a destination rect in canvas coordinates. If omitted, the `width`/`height` arguments default to sizing the element so that it has the same on-screen size and proportion in canvas coordinates as it does outside the canvas.
 
