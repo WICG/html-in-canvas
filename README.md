@@ -94,27 +94,22 @@ To assist with synchronization, `drawElementImage` returns the CSS transform whi
 interface HTMLCanvasElement {
   attribute boolean layoutSubtree;
 
-  [RaisesException]
   DOMMatrix getElementTransform(Element element, DOMMatrix draw_transform);
 }
 
 interface CanvasRenderingContext2D {
-  [RaisesException]
   DOMMatrix drawElementImage(Element element, unrestricted double x, unrestricted double y);
 
-  [RaisesException]
   DOMMatrix drawElementImage(Element element, unrestricted double x, unrestricted double y,
                              unrestricted double dwidth, unrestricted double dheight);
 };
 
 interface WebGLRenderingContext {
-  [RaisesException]
   void texElementImage2D(GLenum target, GLint level, GLint internalformat,
                         GLenum format, GLenum type, Element element);
 };
 
 interface GPUQueue {
-  [RaisesException]
   void copyElementImageToTexture(Element source, GPUImageCopyTextureTagged destination);
 }
 
