@@ -21,7 +21,7 @@ There is no web API to easily render complex layouts of text and other content i
 
 ### Requirements
 
-* **Threaded.** Scrolling and painting should be responsive even with a congested main thread.
+* **Optionally threaded.** It should be possible to use HTML-in-Canvas with OffscreenCanvas so that scrolling and painting remains responsive with a congested main thread. It should also be possible to use the canvas APIs on the main thread where this is preferred.
 * **No frame delay.** It should be possible to paint the element in the same frame as it would be presented to the user when not using HTML-in-Canvas.
 
 ## Proposed solution
