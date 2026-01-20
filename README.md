@@ -122,7 +122,7 @@ onmessage = ({data}) => {
 
 ```idl
 partial interface HTMLCanvasElement {
-  attribute boolean layoutsubtree;
+  [CEReactions, Reflect] attribute boolean layoutSubtree;
 
   // Fired when element images are drawn. Provides the transform needed to
   // update the element's location to match the drawn location.
@@ -146,16 +146,17 @@ dictionary DrawElementImageSyncEventInit : EventInit {
   required DOMMatrix transform;
 };
 
-[Exposed=DedicatedWorker]
-interface ElementImage : EventTarget {
+[Exposed=(Window,Worker)]
+interface ElementImage {
   // width and height, in canvas grid coordinates.
-  readonly attribute unsigned long width;
-  readonly attribute unsigned long height;
+  readonly attribute double width;
+  readonly attribute double height;
 
+  // value of `id` attribute on element, or the empty string
   readonly attribute DOMString id;
 };
 
-[Exposed=DedicatedWorker]
+[Exposed=(Window,Worker)]
 interface RenderElementImagesEvent : Event {
   constructor(DOMString type, optional RenderElementImagesEventInit eventInitDict);
 
@@ -163,7 +164,7 @@ interface RenderElementImagesEvent : Event {
   readonly attribute DOMHighResTimeStamp time;
 
   // List of the element images which have changed.
-  readonly attribute sequence<ElementImage> changedElementImages;
+  readonly attribute FrozenArray<ElementImage> changedElementImages;
 };
 
 dictionary RenderElementImagesEventInit : EventInit {
@@ -171,33 +172,40 @@ dictionary RenderElementImagesEventInit : EventInit {
   sequence<ElementImage> changedElementImages = [];
 };
 
-partial interface OffscreenCanvas {
+// APIs for getting the list available ElementImage objects and being notified
+// of changes to that list.
+interface mixin CanvasElementImages {
   // Triggered automatically when element images have changed, or when the canvas
   // has resized.
-  [Exposed=DedicatedWorker] attribute EventHandler onrenderelementimages;
+  attribute EventHandler onrenderelementimages;
 
-  // Requests that `onrenderelementimages` is called on the next frame, regardless of
+  // Requests that `renderelementimages` be fired on the next frame, regardless of
   // whether any element images have changed. This supports an optional raf-loop
-  // pattern where `onrenderelementimages` is called on every frame.
-  [Exposed=DedicatedWorker] void requestRender();
+  // pattern where `renderelementimages` is fired on every frame.
+  void requestRender();
 
-  // List of all element images. Updated just prior to `onrenderelementimages` firing.
-  [Exposed=DedicatedWorker] readonly attribute sequence<ElementImage> elementImages;
+  // List of all element images. Updated just prior to `renderelementimages` firing.
+  readonly attribute FrozenArray<ElementImage> elementImages;
 };
 
-partial interface OffscreenCanvasRenderingContext2D {
-  [RaisesException, Exposed=DedicatedWorker]
+HTMLCanvasElement includes CanvasElementImages;
+OffscreenCanvas includes CanvasElementImages;
+
+// APIs for drawing elements (via ElementImage)
+interface mixin CanvasDrawElementImage {
   void drawElementImage(ElementImage image,
                         unrestricted double x,
                         unrestricted double y);
 
-  [RaisesException, Exposed=DedicatedWorker]
   void drawElementImage(ElementImage image,
                         unrestricted double x,
                         unrestricted double y,
                         unrestricted double width,
                         unrestricted double height);
 };
+
+CanvasRenderingContext2D includes CanvasDrawElementImage;
+OffscreenCanvasRenderingContext2D includes CanvasDrawElementImage;
 ```
 
 ## Demos
