@@ -27,7 +27,7 @@ The solution introduces three main primitives: an attribute to opt-in canvas ele
 The `layoutsubtree` attribute on a `<canvas>` element opts in canvas descendants to have layout and participate in hit testing. It causes the direct children of the `<canvas>` to have a stacking context, become a containing block for all descendants, and have paint containment.
 
 ### 2. `drawElementImage` (and WebGL/WebGPU equivalents)
-The `drawElementImage(element)` method records a placeholder for the DOM `element` and its subtree into the canvas, and returns a transform that can be applied to the `transform` property on `element` to align it's DOM location with its drawn location. The placeholder is replaced by the element's appearance when the element is next shown to the user.
+The `drawElementImage()` method records a placeholder for the DOM `element` and its subtree into the canvas, and returns a transform that can be applied to `element.style.transform` to align its DOM location with its drawn location. The placeholder is replaced by the element's appearance when the element is next shown to the user.
 
 **Requirements & Constraints:**
 * `layoutsubtree` must be specified on the `<canvas>`.
@@ -36,7 +36,7 @@ The `drawElementImage(element)` method records a placeholder for the DOM `elemen
 * **Transforms:** The canvas's current transformation matrix is applied when drawing into the canvas. CSS transforms on the source `element` are **ignored** for drawing (but continue to affect hit testing/accessibility, see below).
 * **Clipping:** Overflowing content (both layout and ink overflow) is clipped to the element's border box.
 * **Sizing:** The optional `width`/`height` arguments specify a destination rect in canvas coordinates. If omitted, the `width`/`height` arguments default to sizing the element so that it has the same on-screen size and proportion in canvas coordinates as it does outside the canvas.
-* Pixel Readback: If canvas pixels are synchronously read back (e.g., via `getImageData`) before the element is shown to the user, placeholders will appear blank.
+* **Pixel Readback:** The placeholders are replaced by the rendering of elements after [updating rendering](https://html.spec.whatwg.org/#update-the-rendering). If canvas pixels are synchronously read back (e.g., via `getImageData()`) before the element's rendering is updated, placeholders will appear blank.
 
 **WebGL/WebGPU Support:**
 Similar methods are added for 3D contexts: `WebGLRenderingContext.texElementImage2D` and `copyElementImageToTexture`.
