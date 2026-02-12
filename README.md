@@ -163,6 +163,12 @@ We are most interested in feedback on the following topics:
 
 Please file bugs or design issues [here](https://github.com/WICG/html-in-canvas/issues/new).
 
+## Future considerations: auto-updating canvas for threaded effects
+
+To support threaded effects such as scrolling and animations, we are considering a future "auto-updating canvas" mode.
+
+In this model, the 2D command buffer is retained and re-played following every scroll or animation update. This allows the canvas to re-rasterize with updated placeholders that incorporate threaded scroll and animations, without needing to block on script. This would enable visual effects that stay perfectly in sync with native scrolling, independent of the main thread. While this design is viable for 2D contexts, compatibility with WebGL and WebGPU needs investigation.
+
 ## Other documents
 
 * [Security and Privacy Questionnaire](./security-privacy-questionnaire.md)
