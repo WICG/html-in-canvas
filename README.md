@@ -24,7 +24,7 @@ There is no web API to easily render complex layouts of text and other content i
 The solution introduces three main primitives: an attribute to opt-in canvas elements, methods to draw child elements into the canvas, and an event which fires to handle updates.
 
 ### 1. The `layoutsubtree` attribute
-The `layoutsubtree` attribute on a `<canvas>` element opts in canvas descendants to layout and participate in hit testing. It causes the direct children of the `<canvas>` to have a stacking context, become a containing block for all descendants, and have paint containment. Canvas element children behave as if they are visible, but their rendering is not visible to the user.
+The `layoutsubtree` attribute on a `<canvas>` element opts in canvas descendants to layout and participate in hit testing. It causes the direct children of the `<canvas>` to have a stacking context, become a containing block for all descendants, and have paint containment. Canvas element children behave as if they are visible, but their rendering is not visible to the user unless and until they are explicitly drawn into the canvas via a call to `drawElementImage()` (see below).
 
 ### 2. `drawElementImage` (and WebGL/WebGPU equivalents)
 The `drawElementImage()` method draws a child of the canvas into the canvas, and returns a transform that can be applied to `element.style.transform` to align its DOM location with its drawn location. The child's rendering is taken from the last [updating the rendering](https://html.spec.whatwg.org/#update-the-rendering) step.
@@ -41,7 +41,7 @@ The `drawElementImage()` method draws a child of the canvas into the canvas, and
 Similar methods are added for 3D contexts: `WebGLRenderingContext.texElementImage2D` and `copyElementImageToTexture`.
 
 ### 3. The `onpaint` event
-An `onpaint` event is added to `canvas` and fires if the rendering of any canvas children has changed. This event fires just after intersection observer steps have run during [update-the-rendering](https://html.spec.whatwg.org/#update-the-rendering). The event contains a list of the canvas children which have changed. Because CSS transforms on canvas children are ignored for rendering, changing the transform does not cause `onpaint` to fire, preventing an infinite loop.
+An `onpaint` event is added to `canvas` and fires if the rendering of any canvas children has changed. This event fires just after intersection observer steps have run during [update-the-rendering](https://html.spec.whatwg.org/#update-the-rendering). The event contains a list of the canvas children which have changed. Because CSS transforms on canvas children are ignored for rendering, changing the transform does not cause `onpaint` to fire in the next frame.
 
 To support application patterns which update every frame, a new `requestPaint()` function is added which will cause `onpaint` to fire once, even if no children have changed (analagous to `requestAnimationFrame()`).
 
@@ -57,7 +57,7 @@ Browser features like hit testing, intersection observer, and accessibility rely
 Where:
 
 * $$T_{\text{draw}}$$: Transform used to draw the element in the canvas grid coordinate system.
-  For `drawElementImage`, this is $$CTM \cdot T_{(\text{x}, \text{y})} \cdot S_{(\text{destScale})}$$, where $$CTM$$ is the Current Transformation Matrix, $$T_{(\text{x}, \text{y})}$$ is a translation from the x and y arguments, and $$S_{(\text{destScale})}$$ is a scale from the width and height attributes. 
+  For `drawElementImage`, this is $$CTM \cdot T_{(\text{x}, \text{y})} \cdot S_{(\text{destScale})}$$, where $$CTM$$ is the Current Transformation Matrix, $$T_{(\text{x}, \text{y})}$$ is a translation from the x and y arguments, and $$S_{(\text{destScale})}$$ is a scale from the width and height arguments. 
 * $$T_{\text{origin}}$$: Translation matrix of the element's computed `transform-origin`.
 * $$S_{\text{css} \to \text{grid}}$$: Scaling matrix converting CSS pixels to Canvas Grid pixels.
 </details>
@@ -178,7 +178,7 @@ Please file bugs or design issues [here](https://github.com/WICG/html-in-canvas/
 
 * [Threaded html-in-canvas](https://docs.google.com/document/d/1TWe6HP7HMn6y-XnNKppIhgf9FtuXJ6LPgenJJxZDjzg/edit?tab=t.0): to support threaded effects, we explored a model where canvas children "snapshots" are sent to a worker thread. In response to threaded scrolling and animations, the worker thread could then render the most up-to-date rendering of the snapshots into OffscreenCanvas. This model requires that javascript can be synchronously called on scroll and animation updates, which is infeasible in some browser implementations.
 
-* [Placeholders design](https://docs.google.com/document/d/1am5i0T0AUe8E1xCUWWjKguD9dbAykiHlRj72zny32co/edit?usp=sharing&resourcekey=0-sbqHt_e4lWkwDAIFgti-LQ): to be more compatible with browser implementations that cannot capture an element's rendering outside the main rendering update, we explored a model where `drawElementImage` records a placeholder representing how an element will look on the next rendering update. When the next rendering update occurs, the placeholders would then be replaced with the actual rendering. This model can be implemented with 2D canvas by buffering the canvas commands until the [updating the rendering](https://html.spec.whatwg.org/#update-the-rendering) step. This model is incompatible with WebGL because there is no mechanism for buffering these commands because some WebGL APIs (e.g., `getError()`) require flushing the buffer before the placeholders can be updated with the element's rendering.
+* [Placeholders design](https://docs.google.com/document/d/1YaHCxYqE4uQc4-UTWo4a5pHt2I2MutlwJtsnj5ljEkM/edit?usp=sharing): to be more compatible with browser implementations that cannot capture an element's rendering outside the main rendering update, we explored a model where `drawElementImage` records a placeholder representing how an element will look on the next rendering update. When the next rendering update occurs, the placeholders would then be replaced with the actual rendering. This model can be implemented with 2D canvas by buffering the canvas commands until the [updating the rendering](https://html.spec.whatwg.org/#update-the-rendering) step. This model is incompatible with WebGL because common WebGL APIs (e.g., `getError()`) require flushing the buffer before the placeholders can be updated with the element's rendering.
 
 ## Future considerations: auto-updating canvas for threaded effects
 
