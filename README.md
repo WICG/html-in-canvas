@@ -30,9 +30,9 @@ The `layoutsubtree` attribute on a `<canvas>` element opts in canvas descendants
 The `drawElementImage()` method draws a child of the canvas into the canvas, and returns a transform that can be applied to `element.style.transform` to align its DOM location with its drawn location. The child's rendering is taken from the most recent [updating the rendering](https://html.spec.whatwg.org/#update-the-rendering) step.
 
 **Requirements & Constraints:**
-* `layoutsubtree` must be specified on the `<canvas>` in the last rendering update.
-* The `element` must be a direct child of the `<canvas>` in the last rendering update.
-* The `element` must have generated boxes (i.e., not `display: none`) in the last rendering update.
+* `layoutsubtree` must be specified on the `<canvas>` in the most recent rendering update.
+* The `element` must be a direct child of the `<canvas>` in the most recent rendering update.
+* The `element` must have generated boxes (i.e., not `display: none`) in the most recent rendering update.
 * **Transforms:** The canvas's current transformation matrix is applied when drawing into the canvas. CSS transforms on the source `element` are **ignored** for drawing (but continue to affect hit testing/accessibility, see below).
 * **Clipping:** Overflowing content (both layout and ink overflow) is clipped to the element's border box.
 * **Sizing:** The optional `width`/`height` arguments specify a destination rect in canvas coordinates. If omitted, the `width`/`height` arguments default to sizing the element so that it has the same on-screen size and proportion in canvas coordinates as it does outside the canvas.
@@ -176,9 +176,9 @@ Please file bugs or design issues [here](https://github.com/WICG/html-in-canvas/
 
 ## Alternatives considered
 
-* [Threaded html-in-canvas](https://docs.google.com/document/d/1TWe6HP7HMn6y-XnNKppIhgf9FtuXJ6LPgenJJxZDjzg/edit?tab=t.0): to support threaded effects, we explored a model where canvas children "snapshots" are sent to a worker thread. In response to threaded scrolling and animations, the worker thread could then render the most up-to-date rendering of the snapshots into OffscreenCanvas. This model requires that javascript can be synchronously called on scroll and animation updates, which is infeasible in some browser implementations.
+* [Threaded design](https://docs.google.com/document/d/1TWe6HP7HMn6y-XnNKppIhgf9FtuXJ6LPgenJJxZDjzg/edit?tab=t.0). To support threaded effects, we explored a model where canvas children "snapshots" are sent to a worker thread. In response to threaded scrolling and animations, the worker thread could then render the most up-to-date rendering of the snapshots into OffscreenCanvas. This model requires that javascript can be synchronously called on scroll and animation updates, which is difficult for architectures that perform threaded scroll updates in a restricted process.
 
-* [Placeholders design](https://docs.google.com/document/d/1YaHCxYqE4uQc4-UTWo4a5pHt2I2MutlwJtsnj5ljEkM/edit?usp=sharing): to be more compatible with browser implementations that cannot capture an element's rendering outside the main rendering update, we explored a model where `drawElementImage` records a placeholder representing how an element will look on the next rendering update. When the next rendering update occurs, the placeholders would then be replaced with the actual rendering. This model can be implemented with 2D canvas by buffering the canvas commands until the [updating the rendering](https://html.spec.whatwg.org/#update-the-rendering) step. This model is incompatible with WebGL because common WebGL APIs (e.g., `getError()`) require flushing the buffer before the placeholders can be updated with the element's rendering.
+* [Placeholder design](https://docs.google.com/document/d/1YaHCxYqE4uQc4-UTWo4a5pHt2I2MutlwJtsnj5ljEkM/edit?usp=sharing). Some architectures cannot capture an element's rendering outside the main rendering update, so we explored a model where `drawElementImage` records a placeholder representing how an element will look on the next rendering update. When the next rendering update occurs, the placeholders would then be replaced with the actual rendering. This model can be implemented with 2D canvas by buffering the canvas commands until the [updating the rendering](https://html.spec.whatwg.org/#update-the-rendering) step. Canvas operations such as `getImageData` require synchronous flushing of the canvas command buffer and would need to show blank or stale data for the placeholders. This is problematic for WebGL because so many APIs require flushing (e.g., `getError()`).
 
 ## Future considerations: auto-updating canvas for threaded effects
 
