@@ -119,14 +119,10 @@ interface GPUQueue {
 interface PaintEvent : Event {
   constructor(DOMString type, optional PaintEventInit eventInitDict);
 
-  // Same timestamp as RequestAnimationFrame.
-  readonly attribute DOMHighResTimeStamp time;
-
   readonly attribute FrozenArray<Element> changed;
 };
 
 dictionary PaintEventInit : EventInit {
-  DOMHighResTimeStamp time = 0;
   sequence<Element> changed = [];
 };
 ```
