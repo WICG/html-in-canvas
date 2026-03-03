@@ -1,0 +1,396 @@
+<!doctype html>
+<meta charset="utf-8" />
+<title>WebGL Billboard Example</title>
+<style>
+  body {
+    margin: 0;
+    overflow: hidden;
+    background: #222;
+    color: white;
+    font-family: sans-serif;
+  }
+
+  canvas {
+    display: block;
+    width: 100vw;
+    height: 100vh;
+  }
+
+  #info {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    pointer-events: none;
+  }
+</style>
+<div id="info">
+  Arrow Keys: Look Around<br>
+  WASD: Move Camera<br>
+</div>
+<canvas id="gl-canvas" layoutsubtree="true">
+  <div id="draw_element">
+    <div class="ui-panel">
+      <h2>Simple Control</h2>
+      <label>Slider: <input type="range" min="0" max="100"></label>
+      <label>Input: <input type="text" value="Hello WebGL"></label>
+      <div>Emojis: 😀 🚀 🎨 💻</div>
+    </div>
+  </div>
+</canvas>
+
+<style>
+  #draw_element {
+    width: 512px;
+    height: 512px;
+    background: transparent;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+
+  .ui-panel {
+    background: white;
+    color: darkred;
+    padding: 20px;
+    font-size: 20px;
+    border: 5px solid red;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    transition: all 0.3s ease;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    .ui-panel {
+      background: #1a1a2e;
+      color: #00f0ff;
+      border-color: #00f0ff;
+      box-shadow: 0 0 15px #00f0ff;
+    }
+
+    .ui-panel input[type="text"] {
+      background: #16213e;
+      color: #00f0ff;
+      border: 1px solid #00f0ff;
+    }
+  }
+</style>
+
+<!-- gl-matrix for vector/matrix math -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gl-matrix/2.8.1/gl-matrix-min.js"></script>
+
+<script>
+  // Use globals from gl-matrix script
+  // const { mat4, vec3, quat } = glMatrix;
+
+  const canvas = document.getElementById('gl-canvas');
+  const gl = canvas.getContext('webgl2');
+
+                    const draw_element = document.getElementById('draw_element');
+
+  if (!gl) {
+    alert('WebGL2 not supported');
+  }
+
+  // Shader Sources
+  const vsSource = `#version 300 es
+layout(location = 0) in vec4 aPosition;
+layout(location = 1) in vec2 aTexCoord;
+
+uniform mat4 uModelViewMatrix;
+uniform mat4 uProjectionMatrix;
+
+out vec2 vTexCoord;
+
+void main() {
+  gl_Position = uProjectionMatrix * uModelViewMatrix * aPosition;
+  vTexCoord = aTexCoord;
+}
+`;
+
+  const fsSource = `#version 300 es
+precision highp float;
+
+in vec2 vTexCoord;
+uniform sampler2D uSampler;
+uniform vec4 uColor;
+uniform bool uUseTexture;
+
+out vec4 fragColor;
+
+void main() {
+  if (uUseTexture) {
+    fragColor = texture(uSampler, vTexCoord);
+  } else {
+    fragColor = uColor;
+  }
+}
+`;
+
+  // Initialize Shader Program
+  function createShader(gl, type, source) {
+    const shader = gl.createShader(type);
+    gl.shaderSource(shader, source);
+    gl.compileShader(shader);
+    if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
+      console.error(gl.getShaderInfoLog(shader));
+      gl.deleteShader(shader);
+      return null;
+    }
+    return shader;
+  }
+
+  const vertexShader = createShader(gl, gl.VERTEX_SHADER, vsSource);
+  const fragmentShader = createShader(gl, gl.FRAGMENT_SHADER, fsSource);
+  const program = gl.createProgram();
+                    gl.attachShader(program, vertexShader);
+  gl.attachShader(program, fragmentShader);
+  gl.linkProgram(program);
+
+  if (!gl.getProgramParameter(program, gl.LINK_STATUS)) {
+    console.error(gl.getProgramInfoLog(program));
+  }
+
+  const programInfo = {
+    program: program,
+    attribs: {
+      position: gl.getAttribLocation(program, 'aPosition'),
+      texCoord: gl.getAttribLocation(program, 'aTexCoord'),
+    },
+    uniforms: {
+      projection: gl.getUniformLocation(program, 'uProjectionMatrix'),
+      modelView: gl.getUniformLocation(program, 'uModelViewMatrix'),
+      sampler: gl.getUniformLocation(program, 'uSampler'),
+      color: gl.getUniformLocation(program, 'uColor'),
+      useTexture: gl.getUniformLocation(program, 'uUseTexture'),
+    },
+  };
+
+  // Buffers
+  // Quad (Unit size, centered at origin)
+  const positions = new Float32Array([
+    -0.5, 0.5, 0.0,
+    0.5, 0.5, 0.0,
+    -0.5, -0.5, 0.0,
+    0.5, -0.5, 0.0,
+  ]);
+
+  const texCoords = new Float32Array([
+    0.0, 0.0,
+    1.0, 0.0,
+    0.0, 1.0,
+    1.0, 1.0,
+  ]);
+
+  const positionBuffer = gl.createBuffer();
+  gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
+  gl.bufferData(gl.ARRAY_BUFFER, positions, gl.STATIC_DRAW);
+
+  const texCoordBuffer = gl.createBuffer();
+  gl.bindBuffer(gl.ARRAY_BUFFER, texCoordBuffer);
+  gl.bufferData(gl.ARRAY_BUFFER, texCoords, gl.STATIC_DRAW);
+
+  // Vertex Array Object
+  const vao = gl.createVertexArray();
+  gl.bindVertexArray(vao);
+
+  gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
+  gl.enableVertexAttribArray(programInfo.attribs.position);
+  gl.vertexAttribPointer(programInfo.attribs.position, 3, gl.FLOAT, false, 0, 0);
+
+  gl.bindBuffer(gl.ARRAY_BUFFER, texCoordBuffer);
+  gl.enableVertexAttribArray(programInfo.attribs.texCoord);
+  gl.vertexAttribPointer(programInfo.attribs.texCoord, 2, gl.FLOAT, false, 0, 0);
+
+                    // Texture Initialization (HTML Element)
+  const texture = gl.createTexture();
+  gl.bindTexture(gl.TEXTURE_2D, texture);
+
+  // Set parameters
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+
+  // Initial load (blank or initial state) -> we will update in loop
+  // But let's init with empty first to avoid warnings if any
+  gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 512, 512, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
+
+  // Flip Y for WebGL - disabling as it causes inversion with current UV mapping
+  // gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
+  // No need for premultiplied alpha usually unless we have transparency issues, but let's stick to defaults.
+  // Actually, HTML elements often have premultiplied alpha. 
+  gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, true);
+
+
+  // Camera State
+  const camera = {
+    position: vec3.fromValues(0, 1, 5),
+    rotation: vec3.fromValues(0, 0, 0), // Pitch, Yaw, Roll
+  };
+
+  const keys = {};
+  window.addEventListener('keydown', (e) => keys[e.code] = true);
+  window.addEventListener('keyup', (e) => keys[e.code] = false);
+
+  // Loop
+  let lastTime = 0;
+  function render(time) {
+    time *= 0.001;
+    const deltaTime = time - lastTime;
+    lastTime = time;
+
+    // Update Texture and Transform (Moved to after matrix calculation)
+
+    // Update Camera
+    const speed = 5.0 * deltaTime;
+    const rotSpeed = 2.0 * deltaTime;
+
+    // Arrow Keys: Look (Rotate)
+    if (keys['ArrowLeft']) camera.rotation[1] += rotSpeed;
+    if (keys['ArrowRight']) camera.rotation[1] -= rotSpeed;
+    if (keys['ArrowUp']) camera.rotation[0] += rotSpeed;
+    if (keys['ArrowDown']) camera.rotation[0] -= rotSpeed;
+
+    // WASD: Move
+    const forward = vec3.fromValues(Math.sin(camera.rotation[1]), 0, -Math.cos(camera.rotation[1])); // Simple XZ movement
+    const right = vec3.fromValues(Math.cos(camera.rotation[1]), 0, Math.sin(camera.rotation[1]));
+
+    // Setup vectors for movement
+    const fwd = vec3.fromValues(-Math.sin(camera.rotation[1]), 0, -Math.cos(camera.rotation[1]));
+    const strafe = vec3.fromValues(Math.cos(camera.rotation[1]), 0, -Math.sin(camera.rotation[1]));
+
+    if (keys['KeyW']) {
+      camera.position[0] += fwd[0] * speed;
+      camera.position[2] += fwd[2] * speed;
+    }
+    if (keys['KeyS']) {
+      camera.position[0] -= fwd[0] * speed;
+      camera.position[2] -= fwd[2] * speed;
+    }
+    if (keys['KeyA']) {
+      camera.position[0] -= strafe[0] * speed;
+      camera.position[2] -= strafe[2] * speed;
+    }
+    if (keys['KeyD']) {
+      camera.position[0] += strafe[0] * speed;
+      camera.position[2] += strafe[2] * speed;
+    }
+
+
+    // Resize Canvas
+    if (canvas.width !== canvas.clientWidth || canvas.height !== canvas.clientHeight) {
+      canvas.width = canvas.clientWidth;
+      canvas.height = canvas.clientHeight;
+      gl.viewport(0, 0, canvas.width, canvas.height);
+    }
+
+    // Clear
+    gl.clearColor(0.1, 0.1, 0.1, 1.0);
+    gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+    gl.enable(gl.DEPTH_TEST);
+    // gl.enable(gl.BLEND);
+    // gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA); // For transparency if needed
+
+    // Projection
+    const projectionMatrix = mat4.create();
+    mat4.perspective(projectionMatrix, 45 * Math.PI / 180, canvas.width / canvas.height, 0.1, 100.0);
+
+    // View
+    const viewMatrix = mat4.create();
+    mat4.rotateX(viewMatrix, viewMatrix, -camera.rotation[0]); // Pitch
+    mat4.rotateY(viewMatrix, viewMatrix, -camera.rotation[1]); // Yaw
+    mat4.translate(viewMatrix, viewMatrix, vec3.negate(vec3.create(), camera.position));
+
+    gl.useProgram(programInfo.program);
+    gl.uniformMatrix4fv(programInfo.uniforms.projection, false, projectionMatrix);
+
+    gl.bindVertexArray(vao);
+
+    // Draw Floor (Grid of quads or just a large quad)
+    const modelViewMatrix = mat4.create();
+    mat4.copy(modelViewMatrix, viewMatrix);
+
+    // Floor (Large Green Quad)
+    const floorMatrix = mat4.clone(modelViewMatrix);
+    mat4.translate(floorMatrix, floorMatrix, [0, -1, 0]);
+    mat4.rotateX(floorMatrix, floorMatrix, -Math.PI / 2);
+    mat4.scale(floorMatrix, floorMatrix, [20, 20, 1]);
+    gl.uniformMatrix4fv(programInfo.uniforms.modelView, false, floorMatrix);
+    gl.uniform4f(programInfo.uniforms.color, 0.2, 0.2, 0.2, 1.0); // Darker floor
+    gl.uniform1i(programInfo.uniforms.useTexture, 0); // Color mode
+    gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+
+    // Draw Billboard
+    const billboardMatrix = mat4.clone(modelViewMatrix);
+    mat4.translate(billboardMatrix, billboardMatrix, [3, 2, -5]); // Lift it up a bit
+    mat4.scale(billboardMatrix, billboardMatrix, [4, 4, 1]); // Make it square-ish matching 512x512
+
+    // Apply Element Transform
+    // 1. Compute MVP for the billboard
+    const mvp = mat4.create();
+    mat4.multiply(mvp, projectionMatrix, billboardMatrix);
+
+    // 2. Adjust for 0..1 to -0.5..0.5 mapping (Texture Space to Quad Space)
+    // We want input (0,0) -> (-0.5, 0.5) and (1,1) -> (0.5, -0.5)
+    // Matrix: Translate(-0.5, 0.5, 0) * Scale(1, -1, 1)
+    const adjustment = mat4.create();
+    mat4.translate(adjustment, adjustment, [-0.5, 0.5, 0]);
+    mat4.scale(adjustment, adjustment, [1, -1, 1]);
+
+    const finalDrawTransform = mat4.create();
+    mat4.multiply(finalDrawTransform, mvp, adjustment);
+
+    if (canvas.getElementTransform) {
+      // 1. Convert the MVP matrix (gl-matrix Float32Array) to a DOMMatrix
+      const mvpDOM = new DOMMatrix(Array.from(mvp));
+
+      // 2. Element CSS pixels -> WebGL Model Space
+      //    Element is 512x512. Quad geometry is -0.5 to 0.5 (size 1).
+      //    Map: (0,0) -> (-0.5, 0.5) and (512,512) -> (0.5, -0.5)
+      const width = draw_element.offsetWidth;
+      const height = draw_element.offsetHeight;
+
+      const toGLModel = new DOMMatrix()
+        // Scale pixels to 1 unit, flip Y (CSS down, GL up)
+        .scale(1 / width, -1 / height, 1)
+        // Center the origin: (0,0) becomes (-width/2, -height/2) before scaling
+        .translate(-width / 2, -height / 2);
+
+      // 3. WebGL Clip Space -> Canvas CSS pixels (Viewport Transform)
+      //    Clip (-1..1) -> Canvas (0..w, 0..h)
+      const toCSSViewport = new DOMMatrix()
+        // Move center (0,0) to center of canvas
+        .translate(canvas.width / 2, canvas.height / 2)
+        // Scale normalized clip (-1..1) to viewport size
+        .scale(canvas.width / 2, -canvas.height / 2, 1);
+
+      // 4. Combine: Viewport * MVP * Model
+      const finalTransform = toCSSViewport.multiply(mvpDOM).multiply(toGLModel);
+
+      const transform = canvas.getElementTransform(draw_element, finalTransform);
+      if (transform) {
+        draw_element.style.transform = transform.toString();
+      }
+    }
+
+    // Update Texture
+    if (gl.texElementImage2D) {
+      gl.activeTexture(gl.TEXTURE0);
+      gl.bindTexture(gl.TEXTURE_2D, texture);
+      gl.texElementImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, draw_element);
+    }
+    
+    gl.uniformMatrix4fv(programInfo.uniforms.modelView, false, billboardMatrix);
+    gl.uniform1i(programInfo.uniforms.useTexture, 1); // Texture mode
+    gl.activeTexture(gl.TEXTURE0);
+    gl.bindTexture(gl.TEXTURE_2D, texture);
+    gl.uniform1i(programInfo.uniforms.sampler, 0);
+
+    gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+
+    requestAnimationFrame(render);
+  }
+
+  requestAnimationFrame(render);
+</script>
