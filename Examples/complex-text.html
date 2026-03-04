@@ -31,19 +31,19 @@
 </canvas>
 
 <script>
-  const ctx = document.getElementById('canvas').getContext('2d');
-  onload = () => {
-    const observer = new ResizeObserver(([entry]) => {
-      canvas.width = entry.devicePixelContentBoxSize[0].inlineSize;
-      canvas.height = entry.devicePixelContentBoxSize[0].blockSize;
-
-      ctx.reset();
-      ctx.rotate((15 * Math.PI) / 180);
-      ctx.translate(80 * devicePixelRatio, -20 * devicePixelRatio);
-      let transform = ctx.drawElementImage(draw_element, 0, 0);
-
-      draw_element.style.transform = transform.toString();
-    });
-    observer.observe(canvas, {box: 'device-pixel-content-box', fireOnEveryPaint: true});
+  const canvas = document.getElementById('canvas');
+  const ctx = canvas.getContext('2d');
+  canvas.onpaint = (event) => {
+    ctx.reset();
+    ctx.rotate((15 * Math.PI) / 180);
+    ctx.translate(80 * devicePixelRatio, -20 * devicePixelRatio);
+    let transform = ctx.drawElementImage(draw_element, 0, 0);
+    draw_element.style.transform = transform.toString();
   }
+
+  const observer = new ResizeObserver(([entry]) => {
+    canvas.width = entry.devicePixelContentBoxSize[0].inlineSize;
+    canvas.height = entry.devicePixelContentBoxSize[0].blockSize;
+  });
+  observer.observe(canvas, {box: 'device-pixel-content-box'});
 </script>

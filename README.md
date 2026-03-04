@@ -51,13 +51,13 @@ Browser features like hit testing, intersection observer, and accessibility rely
 <details>
 <summary>Calculating a CSS transform to match a drawn location</summary>
   The general formula for the CSS transform is:
-  
+
   <div align="center">$$T_{\text{origin}}^{-1} \cdot S_{\text{css} \to \text{grid}}^{-1} \cdot T_{\text{draw}} \cdot S_{\text{css} \to \text{grid}} \cdot T_{\text{origin}} $$</div>
 
 Where:
 
 * $$T_{\text{draw}}$$: Transform used to draw the element in the canvas grid coordinate system.
-  For `drawElementImage`, this is $$CTM \cdot T_{(\text{x}, \text{y})} \cdot S_{(\text{destScale})}$$, where $$CTM$$ is the Current Transformation Matrix, $$T_{(\text{x}, \text{y})}$$ is a translation from the x and y arguments, and $$S_{(\text{destScale})}$$ is a scale from the width and height arguments. 
+  For `drawElementImage`, this is $$CTM \cdot T_{(\text{x}, \text{y})} \cdot S_{(\text{destScale})}$$, where $$CTM$$ is the Current Transformation Matrix, $$T_{(\text{x}, \text{y})}$$ is a translation from the x and y arguments, and $$S_{(\text{destScale})}$$ is a scale from the width and height arguments.
 * $$T_{\text{origin}}$$: Translation matrix of the element's computed `transform-origin`.
 * $$S_{\text{css} \to \text{grid}}$$: Scaling matrix converting CSS pixels to Canvas Grid pixels.
 </details>
@@ -131,21 +131,15 @@ dictionary PaintEventInit : EventInit {
 
 #### [See here](Examples/complex-text.html) for a demo using the `drawElementImage` API to draw rotated complex text.
 
-TODO: Update this example to use the new `onpaint` function.
-
 <img width="640" height="320" alt="screenshot showing rotated, complex text drawn into canvas" src="https://github.com/user-attachments/assets/3ef73e0f-9119-49de-bf84-dfb3a4f5d77c" />
 
 #### [See here](Examples/webGL.html) for a demo using the WebGL `texElementImage2D` API to draw HTML onto a 3D cube.
-
-TODO: Update this example to use the new `onpaint` function.
 
 <img width="640" height="320" alt="screenshot showing html content on a 3D cube" src="https://github.com/user-attachments/assets/689fefe3-56d9-4ae9-b386-32a01ebb0117" />
 
 A demo of the same thing using an experimental extension of [three.js](https://threejs.org/) is [here](https://raw.githack.com/mrdoob/three.js/htmltexture/examples/webgl_materials_texture_html.html). Further instructions and context are [here](https://github.com/mrdoob/three.js/pull/31233).
 
 #### [See here](Examples/text-input.html) for a demo of interactive content in canvas.
-
-TODO: Update this example to use the new `onpaint` function.
 
 <img width="640" height="320" alt="screenshot showing a form drawn into canvas" src="https://github.com/user-attachments/assets/be2d098f-17ae-4982-a0f9-a069e3c2d1d5" />
 

@@ -171,14 +171,14 @@
 
   onload = () => {
     const canvas = document.querySelector('#gl-canvas');
+    canvas.onpaint = () => {
+      main();
+    }
 
     const observer = new ResizeObserver(([entry]) => {
       canvas.width = entry.devicePixelContentBoxSize[0].inlineSize;
       canvas.height = entry.devicePixelContentBoxSize[0].blockSize;
-
-      main();
     });
-
     observer.observe(canvas, {box: 'device-pixel-content-box'});
   }
 </script>

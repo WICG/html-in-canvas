@@ -49,16 +49,19 @@
   </div>
 </canvas>
 <script>
-  const ctx = document.getElementById('canvas').getContext('2d');
-
-  const observer = new ResizeObserver(([entry]) => {
-    canvas.width = entry.devicePixelContentBoxSize[0].inlineSize;
-    canvas.height = entry.devicePixelContentBoxSize[0].blockSize;
-
+  const canvas = document.getElementById('canvas');
+  const ctx = canvas.getContext('2d');
+  canvas.onpaint = (event) => {
+    ctx.reset();
     let x = canvas.width / 25;
     let y = canvas.height / 25;
     let transform = ctx.drawElementImage(draw_element, x, y);
     draw_element.style.transform = transform.toString();
+  }
+
+  const observer = new ResizeObserver(([entry]) => {
+    canvas.width = entry.devicePixelContentBoxSize[0].inlineSize;
+    canvas.height = entry.devicePixelContentBoxSize[0].blockSize;
   });
-  observer.observe(canvas, {box: 'device-pixel-content-box', fireOnEveryPaint: true});
+  observer.observe(canvas, {box: 'device-pixel-content-box'});
 </script>
