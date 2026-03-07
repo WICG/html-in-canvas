@@ -27,7 +27,7 @@ The solution introduces three main primitives: an attribute to opt-in canvas ele
 The `layoutsubtree` attribute on a `<canvas>` element opts in canvas descendants to layout and participate in hit testing. It causes the direct children of the `<canvas>` to have a stacking context, become a containing block for all descendants, and have paint containment. Canvas element children behave as if they are visible, but their rendering is not visible to the user unless and until they are explicitly drawn into the canvas via a call to `drawElementImage()` (see below).
 
 ### 2. `drawElementImage` (and WebGL/WebGPU equivalents)
-The `drawElementImage()` method draws a child of the canvas into the canvas, and returns a transform that can be applied to `element.style.transform` to align its DOM location with its drawn location. The child's rendering is taken from the most recent [updating the rendering](https://html.spec.whatwg.org/#update-the-rendering) step.
+The `drawElementImage()` method draws a child of the canvas into the canvas, and returns a transform that can be applied to `element.style.transform` to align its DOM location with its drawn location. A snapshot of the rendering of all children of the canvas is recorded just prior to the `onpaint` event. When called during `onpaint`, `drawElementImage()` will draw the child as it would appear in the current frame. When called outside `onpaint`, the previous frame's snapshot is used. An exception is thrown if `drawElementImage()` is called with a child before an initial snapshot has been recorded.
 
 **Requirements & Constraints:**
 * `layoutsubtree` must be specified on the `<canvas>` in the most recent rendering update.
