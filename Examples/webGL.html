@@ -174,6 +174,7 @@
     canvas.onpaint = () => {
       main();
     }
+    canvas.requestPaint();
 
     const observer = new ResizeObserver(([entry]) => {
       canvas.width = entry.devicePixelContentBoxSize[0].inlineSize;
