@@ -27,7 +27,7 @@ The solution introduces three main primitives: an attribute to opt-in canvas ele
 The `layoutsubtree` attribute on a `<canvas>` element opts in canvas descendants to layout and participate in hit testing. It causes the direct children of the `<canvas>` to have a stacking context, become a containing block for all descendants, and have paint containment. Canvas element children behave as if they are visible, but their rendering is not visible to the user unless and until they are explicitly drawn into the canvas via a call to `drawElementImage()` (see below).
 
 ### 2. `drawElementImage` (and WebGL/WebGPU equivalents)
-The `drawElementImage()` method draws a child of the canvas into the canvas, and returns a transform that can be applied to `element.style.transform` to align its DOM location with its drawn location. A snapshot of the rendering of all children of the canvas is recorded just prior to the `onpaint` event. When called during `onpaint`, `drawElementImage()` will draw the child as it would appear in the current frame. When called outside `onpaint`, the previous frame's snapshot is used. An exception is thrown if `drawElementImage()` is called with a child before an initial snapshot has been recorded.
+The `drawElementImage()` method draws a child of the canvas into the canvas, and returns a transform that can be applied to `element.style.transform` to align its DOM location with its drawn location. A snapshot of the rendering of all children of the canvas is recorded just prior to the `paint` event. When called during the `paint` event, `drawElementImage()` will draw the child as it would appear in the current frame. When called outside the `paint` event, the previous frame's snapshot is used. An exception is thrown if `drawElementImage()` is called with a child before an initial snapshot has been recorded.
 
 **Requirements & Constraints:**
 * `layoutsubtree` must be specified on the `<canvas>` in the most recent rendering update.
@@ -40,10 +40,10 @@ The `drawElementImage()` method draws a child of the canvas into the canvas, and
 **WebGL/WebGPU Support:**
 Similar methods are added for 3D contexts: `WebGLRenderingContext.texElementImage2D` and `copyElementImageToTexture`.
 
-### 3. The `onpaint` event
-An `onpaint` event is added to `canvas` and fires if the rendering of any canvas children has changed. This event fires just after intersection observer steps have run during [update-the-rendering](https://html.spec.whatwg.org/#update-the-rendering). The event contains a list of the canvas children which have changed. Because CSS transforms on canvas children are ignored for rendering, changing the transform does not cause `onpaint` to fire in the next frame.
+### 3. The `paint` event
+A `paint` event is added to `canvas` and fires if the rendering of any canvas children has changed. This event fires just after intersection observer steps have run during [update-the-rendering](https://html.spec.whatwg.org/#update-the-rendering). The event contains a list of the canvas children which have changed. Because CSS transforms on canvas children are ignored for rendering, changing the transform does not cause the `paint` event to fire in the next frame.
 
-To support application patterns which update every frame, a new `requestPaint()` function is added which will cause `onpaint` to fire once, even if no children have changed (analagous to `requestAnimationFrame()`).
+To support application patterns which update every frame, a new `requestPaint()` function is added which will cause the `paint` event to fire once, even if no children have changed (analagous to `requestAnimationFrame()`).
 
 ### Synchronization
 Browser features like hit testing, intersection observer, and accessibility rely on an element's DOM location. To ensure these work, the element's `transform` property should be updated so that the DOM location matches the drawn location.
