@@ -39,7 +39,8 @@
     ctx.translate(80 * devicePixelRatio, -20 * devicePixelRatio);
     let transform = ctx.drawElementImage(draw_element, 0, 0);
     draw_element.style.transform = transform.toString();
-  }
+  };
+  canvas.requestPaint(); // Request an initial paint event.
 
   const observer = new ResizeObserver(([entry]) => {
     canvas.width = entry.devicePixelContentBoxSize[0].inlineSize;

@@ -57,7 +57,8 @@
     let y = canvas.height / 25;
     let transform = ctx.drawElementImage(draw_element, x, y);
     draw_element.style.transform = transform.toString();
-  }
+  };
+  canvas.requestPaint(); // Request an initial paint event.
 
   const observer = new ResizeObserver(([entry]) => {
     canvas.width = entry.devicePixelContentBoxSize[0].inlineSize;

@@ -67,7 +67,8 @@
 
       angle += slice;
     }
-  }
+  };
+  canvas.requestPaint(); // Request an initial paint event.
 
   // Setup a resize observer to resize the canvas in response to dpr changes.
   new ResizeObserver(([entry]) => {
