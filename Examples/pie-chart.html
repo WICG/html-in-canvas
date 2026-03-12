@@ -1,0 +1,78 @@
+<!doctype html>
+<meta charset="utf-8" />
+<title>Pie chart</title>
+
+<style>
+  .pie {
+    width: 250px;
+    height: 250px;
+  }
+  .pie .label {
+    text-align: center;
+    max-width: 40%;
+    font-family: sans-serif;
+  }
+  .pie .label .val {
+    display: block;
+    font-size: xx-large;
+    font-weight: bold;
+  }
+</style>
+
+<canvas layoutsubtree class="pie" role="list" aria-label="Pie Chart">
+  <div class="label" role="listitem" tabindex="0" data-val="0.45" data-color="tomato">
+    <span class="val">45%</span>Apple
+  </div>
+  <div class="label" role="listitem" tabindex="0" data-val="0.35" data-color="cornflowerblue">
+    <span class="val">35%</span>Blackberry / Bramble
+  </div>
+  <div class="label" role="listitem" tabindex="0" data-val="0.20" data-color="gold">
+    <span class="val">20%</span>Durian
+  </div>
+</canvas>
+
+<script>
+  const canvas = document.querySelector('canvas');
+  const ctx = canvas.getContext('2d');
+
+  canvas.onpaint = () => {
+    ctx.reset();
+
+    // 1. Center the coordinate system.
+    const radius = Math.min(canvas.width, canvas.height) / 2;
+    ctx.translate(radius, radius);
+
+    let angle = 0;
+    for (const label of canvas.children) {
+      const slice = Number(label.dataset.val) * Math.PI * 2;
+
+      // 2. Draw the wedge.
+      const grad = ctx.createRadialGradient(0, 0, 0, 0, 0, radius);
+      grad.addColorStop(0, `color-mix(${label.dataset.color}, white 40%)`);
+      grad.addColorStop(1, label.dataset.color);
+      ctx.fillStyle = grad;
+      ctx.beginPath();
+      ctx.moveTo(0, 0);
+      ctx.arc(0, 0, radius, angle, angle + slice);
+      ctx.fill();
+
+      // 3. Draw the label element, and update its transform.
+      const mid = angle + slice / 2;
+      const label_width = label.offsetWidth * devicePixelRatio;
+      const label_height = label.offsetHeight * devicePixelRatio;
+      const x = Math.cos(mid) * radius * 0.60 - label_width / 2;
+      const y = Math.sin(mid) * radius * 0.60 - label_height / 2;
+      const transform = ctx.drawElementImage(label, x, y);
+      label.style.transform = transform;
+
+      angle += slice;
+    }
+  }
+
+  // Setup a resize observer to resize the canvas in response to dpr changes.
+  new ResizeObserver(([entry]) => {
+    const box = entry.devicePixelContentBoxSize[0];
+    canvas.width = box.inlineSize;
+    canvas.height = box.blockSize;
+  }).observe(canvas, {box: ['device-pixel-content-box']});
+</script>
