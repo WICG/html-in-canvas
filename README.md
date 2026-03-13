@@ -185,6 +185,7 @@ In this model, `drawElementImage` records a placeholder representing the latest 
 * [Philip Rogers](mailto:pdr@chromium.org)
 * [Stephen Chenney](mailto:schenney@igalia.com)
 * [Chris Harrelson](mailto:chrishtr@chromium.org)
+* [Philip Jägenstedt](mailto:foolip@chromium.org)
 * [Khushal Sagar](mailto:khushalsagar@chromium.org)
 * [Vladimir Levin](mailto:vmpstr@chromium.org)
 * [Fernando Serboncini](mailto:fserb@chromium.org)
