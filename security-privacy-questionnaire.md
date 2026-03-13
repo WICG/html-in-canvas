@@ -1,7 +1,7 @@
 01.  What information might this feature expose to Web sites or other parties,
      and for what purposes is that exposure necessary?
      
-     No new information will be exposed to the site. This feature only enables drawing information that will not expose security or privacy information.
+     A design requirement is to not expose any new security information, and to limit the amount of new privacy information (see: [Privacy-preserving painting](https://github.com/WICG/html-in-canvas?tab=readme-ov-file#privacy-preserving-painting). Form control information is already exposed to javascript, but this new API will expose some additional information to enable interactivity, such as the caret blink rate.
      
 02.  Do features in your specification expose the minimum amount of information
      necessary to enable their intended uses?
@@ -12,11 +12,11 @@
      personally-identifiable information (PII), or information derived from
      them?
      
-     Since the feature renders pixels from DOM elements into canvas, those pixels can now be accessed by script. This requires ensuring that no PII is present in those pixels, for example different styles for visited links, spell check etc. Disabling painting of this information also prevents revealing invalidation information via the repaint callback (the `fireOnEveryPaint` option added to ResizeObserver). See [privacy-preserving-painting](https://github.com/WICG/html-in-canvas/tree/main?tab=readme-ov-file#privacy-preserving-painting) for additional details.
+     Since the feature renders pixels from DOM elements into canvas, those pixels can now be accessed by script. This requires ensuring that no PII is present in those pixels, for example different styles for visited links, spell check etc. Disabling painting of this information also prevents revealing invalidation information via the `paint` event. See [privacy-preserving-painting](https://github.com/WICG/html-in-canvas/tree/main?tab=readme-ov-file#privacy-preserving-painting) for additional details.
      
 04.  How do the features in your specification deal with sensitive information?
      
-     See answer above, the feature ensures no sensitive user information on the DOM content is available when painting it into a texture which will be accessible to script.
+     See answer above, the feature ensures no new security information is revealed, and limits new privacy-sensitive information.
 
 05.  Do the features in your specification introduce new state for an origin
      that persists across browsing sessions?
@@ -26,7 +26,7 @@
 06.  Do the features in your specification expose information about the
      underlying platform to origins?
      
-     Similar to #3, the painting of information revealing information about the underlying platform (e.g., form autofill) is disabled. See [privacy-preserving-painting](https://github.com/WICG/html-in-canvas/tree/main?tab=readme-ov-file#privacy-preserving-painting) for additional details.
+     Similar to #1, the painting of information revealing information about the underlying platform (e.g., form autofill) is disabled, but some new platform information is revealed for interactivity, such as the caret blink rate. See [privacy-preserving-painting](https://github.com/WICG/html-in-canvas/tree/main?tab=readme-ov-file#privacy-preserving-painting) for additional details.
      
 8.  Does this specification allow an origin to send data to the underlying
      platform?
