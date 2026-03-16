@@ -129,17 +129,17 @@ dictionary PaintEventInit : EventInit {
 
 ## Demos
 
-#### [See here](Examples/complex-text.html) for a demo using the `drawElementImage` API to draw rotated complex text.
+#### [Live demo](https://wicg.github.io/html-in-canvas/Examples/complex-text.html) ([source](Examples/complex-text.html)) using the `drawElementImage` API to draw rotated complex text.
 
 <img width="640" height="320" alt="screenshot showing rotated, complex text drawn into canvas" src="https://github.com/user-attachments/assets/3ef73e0f-9119-49de-bf84-dfb3a4f5d77c" />
 
-#### [See here](Examples/webGL.html) for a demo using the WebGL `texElementImage2D` API to draw HTML onto a 3D cube.
+#### [Live demo](https://wicg.github.io/html-in-canvas/Examples/webGL.html) ([source](Examples/webGL.html)) using the WebGL `texElementImage2D` API to draw HTML onto a 3D cube.
 
 <img width="640" height="320" alt="screenshot showing html content on a 3D cube" src="https://github.com/user-attachments/assets/689fefe3-56d9-4ae9-b386-32a01ebb0117" />
 
 A demo of the same thing using an experimental extension of [three.js](https://threejs.org/) is [here](https://raw.githack.com/mrdoob/three.js/htmltexture/examples/webgl_materials_texture_html.html). Further instructions and context are [here](https://github.com/mrdoob/three.js/pull/31233).
 
-#### [See here](Examples/text-input.html) for a demo of interactive content in canvas.
+#### [Live demo](https://wicg.github.io/html-in-canvas/Examples/text-input.html) ([source](Examples/text-input.html)) of interactive content in canvas.
 
 <img width="640" height="320" alt="screenshot showing a form drawn into canvas" src="https://github.com/user-attachments/assets/be2d098f-17ae-4982-a0f9-a069e3c2d1d5" />
 
