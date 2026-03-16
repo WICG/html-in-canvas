@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Jelly slider</title>
+</head>
+<body>
+<style>
+  #slider {
+    cursor: grab;
+    width: 75%;
+    height: 12.5%;
+    opacity: 0;
+  }
+  #value {
+    text-align: right;
+    height: 12.5%;
+    width: 75%;
+    color: white;
+    font-size: 80px;
+    font-family: monospace;
+    font-weight: bold;
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+  }
+</style>
+
+<canvas layoutsubtree>
+  <input id="slider" type="range" min="0" max="100" step="1" />
+  <div id="value" inert="true"></div>
+</canvas>
+<div id="attribution">
+  This is based on Software Mansion's <a href="https://github.com/software-mansion/TypeGPU/tree/main/apps/typegpu-docs/src/examples/rendering/jelly-slider" target="_blank">Jelly Slider</a>, which was inspired by the work of <a href="https://x.com/cerpow/status/1964953851603358112" target="_blank">Voicu Apostol</a>.
+</div>
+
+<script type="module" src="/index.ts"></script>
+</body>
+</html>
