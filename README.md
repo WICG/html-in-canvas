@@ -146,7 +146,7 @@ partial interface HTMLCanvasElement {
 
   void requestPaint();
 
-  DOMMatrix getElementTransform(Element element, DOMMatrix drawTransform);
+  DOMMatrix getElementTransform((Element or ElementImage) element, DOMMatrix drawTransform);
 };
 
 partial interface OffscreenCanvas {
@@ -154,7 +154,7 @@ partial interface OffscreenCanvas {
 
   void requestPaint();
 
-  DOMMatrix getElementTransform(Element element, DOMMatrix drawTransform);
+  DOMMatrix getElementTransform((Element or ElementImage) element, DOMMatrix drawTransform);
 };
 
 partial interface CanvasRenderingContext2D {
@@ -268,4 +268,3 @@ In this model, `drawElementImage` records a placeholder representing the latest 
 * [Khushal Sagar](mailto:khushalsagar@chromium.org)
 * [Vladimir Levin](mailto:vmpstr@chromium.org)
 * [Fernando Serboncini](mailto:fserb@chromium.org)
-* [Philip Jägenstedt](mailto:foolip@chromium.org)
