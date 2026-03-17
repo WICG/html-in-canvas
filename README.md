@@ -41,11 +41,14 @@ The `drawElementImage()` method draws a child of the canvas into the canvas, and
 Similar methods are added for 3D contexts: `WebGLRenderingContext.texElementImage2D` and `copyElementImageToTexture`.
 
 ### 3. The `paint` event
-A `paint` event is added to `canvas` and fires if the rendering of any canvas children has changed. This event fires just after intersection observer steps have run during [update-the-rendering](https://html.spec.whatwg.org/#update-the-rendering). The event contains a list of the canvas children which have changed. Because CSS transforms on canvas children are ignored for rendering, changing the transform does not cause the `paint` event to fire in the next frame.
+A `paint` event is added to `canvas` elements and fires if the rendering of any canvas children has changed. This event fires just after intersection observer steps have run during [update-the-rendering](https://html.spec.whatwg.org/#update-the-rendering). The event contains a list of the canvas children which have changed. Because CSS transforms on canvas children are ignored for rendering, changing the transform does not cause the `paint` event to fire in the next frame.
 
 To support application patterns which update every frame, a new `requestPaint()` function is added which will cause the `paint` event to fire once, even if no children have changed (analagous to `requestAnimationFrame()`).
 
+The `paint` event also fires for `OffscreenCanvas` (main thread or worker) after the canvas element children have been prepared for rendering.
+
 ### Synchronization
+
 Browser features like hit testing, intersection observer, and accessibility rely on an element's DOM location. To ensure these work, the element's `transform` property should be updated so that the DOM location matches the drawn location.
 
 <details>
@@ -62,8 +65,9 @@ Where:
 * $$S_{\text{css} \to \text{grid}}$$: Scaling matrix converting CSS pixels to Canvas Grid pixels.
 </details>
 
-To assist with synchronization, `drawElementImage` returns the CSS transform which can be applied to the element to keep it's location synchronized. For 3D contexts, the `getElementTransform(element, draw_transform)` helper method is provided which returns the CSS transform, provided a general transformation matrix.
+To assist with synchronization, `drawElementImage()` returns the CSS transform which can be applied to the element to keep its location synchronized. For 3D contexts, the `getElementTransform(element, drawTransform)` helper method is provided which returns the CSS transform, provided a general transformation matrix.
 
+The transform used to draw the element on the worker thread needs to be synced back to the DOM, and can simply be `postMessage()`'d back to the main thread.
 
 ### Basic Example
 
@@ -87,43 +91,119 @@ To assist with synchronization, `drawElementImage` returns the CSS transform whi
 </script>
 ```
 
+### OffscreenCanvas Example
+
+In this example, `OffscreenCanvas` in a worker is used. The `canvas` child elements are represented as `ElementImage` objects in the `paint` event, and are distinguished by their IDs.
+
+```html
+<!DOCTYPE html>
+<canvas id="canvas" style="width: 300px; height: 200px;" layoutsubtree>
+  <div id="label">enter your fullname:</div>
+  <input id="input">
+</canvas>
+
+<script>
+  // 1. Setup worker thread.
+  const worker = new Worker("worker.js");
+
+  // 2. Transfer control to the worker.
+  const offscreen = canvas.transferControlToOffscreen();
+  worker.postMessage({ canvas: offscreen }, [offscreen]);
+
+  // 3. Synchronize the element's CSS transform to match its drawn location.
+  worker.onmessage = (data) => {
+    document.getElementById(data.id).style.transform = data.transform.toString();
+  };
+</script>
+```
+
+`worker.js`:
+
+```javascript
+onmessage = ({data}) => {
+  const ctx = data.canvas.getContext('2d');
+  data.canvas.onpaint = (event) => {
+    const changedLabel = event.changedElements.find(item => item.id === 'label');
+    if (changedLabel) {
+      let transform = ctx.drawElementImage(changedLabel, 0, 0);
+      self.postMessage({id: 'label', transform: transform});
+    }
+    const changedInput = event.changedElements.find(item => item.id === 'input');
+    if (changedInput) {
+      let transform = ctx.drawElementImage(changedInput, 0, 100);
+      self.postMessage({id: 'input', transform: transform});    }
+  };
+};
+```
+
 ### IDL changes
 
 ```idl
-interface HTMLCanvasElement {
-  attribute boolean layoutSubtree;
+partial interface HTMLCanvasElement {
+  [CEReactions, Reflect] attribute boolean layoutSubtree;
 
   attribute EventHandler onpaint;
 
   void requestPaint();
 
-  DOMMatrix getElementTransform(Element element, DOMMatrix draw_transform);
-}
+  DOMMatrix getElementTransform((Element or ElementImage) element, DOMMatrix drawTransform);
+};
 
-interface CanvasRenderingContext2D {
-  DOMMatrix drawElementImage(Element element, unrestricted double x, unrestricted double y);
+partial interface OffscreenCanvas {
+  attribute EventHandler onpaint;
 
-  DOMMatrix drawElementImage(Element element, unrestricted double x, unrestricted double y,
+  void requestPaint();
+
+  DOMMatrix getElementTransform((Element or ElementImage) element, DOMMatrix drawTransform);
+};
+
+partial interface CanvasRenderingContext2D {
+  DOMMatrix drawElementImage((Element or ElementImage) element,
+                             unrestricted double x, unrestricted double y);
+
+  DOMMatrix drawElementImage((Element or ElementImage) element,
+                             unrestricted double x, unrestricted double y,
                              unrestricted double dwidth, unrestricted double dheight);
 };
 
-interface WebGLRenderingContext {
-  void texElementImage2D(GLenum target, GLint level, GLint internalformat,
-                        GLenum format, GLenum type, Element element);
+partial interface OffscreenCanvasRenderingContext2D {
+  DOMMatrix drawElementImage((Element or ElementImage) element,
+                             unrestricted double x, unrestricted double y);
+
+  DOMMatrix drawElementImage((Element or ElementImage) element,
+                             unrestricted double x, unrestricted double y,
+                             unrestricted double dwidth, unrestricted double dheight);
 };
 
-interface GPUQueue {
-  void copyElementImageToTexture(Element source, GPUImageCopyTextureTagged destination);
+partial interface WebGLRenderingContext {
+  void texElementImage2D(GLenum target, GLint level, GLint internalformat,
+                        GLenum format, GLenum type, (Element or ElementImage) element);
+};
+
+partial interface GPUQueue {
+  void copyElementImageToTexture((Element or ElementImage) source,
+                                 GPUImageCopyTextureTagged destination);
 }
 
+[Exposed=(Window,Worker)]
 interface PaintEvent : Event {
   constructor(DOMString type, optional PaintEventInit eventInitDict);
 
-  readonly attribute FrozenArray<Element> changed;
+  readonly attribute FrozenArray<Element or ElementImage> changedElements;
 };
 
 dictionary PaintEventInit : EventInit {
-  sequence<Element> changed = [];
+  sequence<Element or ElementImage> changedElements = [];
+};
+
+[Exposed=(Window,Worker)]
+interface ElementImage {
+  // dimensions in device pixels
+  readonly attribute unsigned long width;
+  readonly attribute unsigned long height;
+
+  // value of `id` attribute on element, or the empty string
+  readonly attribute DOMString id;
 };
 ```
 
