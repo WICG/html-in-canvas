@@ -1,0 +1,29 @@
+{
+    "name": "typegpu-example-sandbox",
+    "private": true,
+    "version": "0.0.0",
+    "type": "module",
+    "scripts": {
+      "dev": "vite",
+      "build": "tsc && vite build",
+      "preview": "vite preview"
+    },
+    "devDependencies": {
+      "typescript": "npm:tsover@^5.9.11",
+      "vite": "^6.1.1",
+      "@webgpu/types": "^0.1.66",
+      "@types/three": "^0.181.0"
+    },
+    "dependencies": {
+      "typegpu": "^0.10.2",
+      "unplugin-typegpu": "^0.10.1",
+      "wgpu-matrix": "^3.4.0",
+      "@loaders.gl/core": "^4.3.4",
+      "@loaders.gl/obj": "^4.3.4",
+      "three": "^0.181.0",
+      "@typegpu/noise": "0.10.0",
+      "@typegpu/color": "0.10.0",
+      "@typegpu/sdf": "0.10.0",
+      "@typegpu/three": "0.10.1"
+    }
+}
