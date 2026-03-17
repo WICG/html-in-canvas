@@ -198,9 +198,9 @@ dictionary PaintEventInit : EventInit {
 
 [Exposed=(Window,Worker)]
 interface ElementImage {
-  // width and height, in canvas grid coordinates.
-  readonly attribute double width;
-  readonly attribute double height;
+  // dimensions in device pixels
+  readonly attribute unsigned long width;
+  readonly attribute unsigned long height;
 
   // value of `id` attribute on element, or the empty string
   readonly attribute DOMString id;
