@@ -116,7 +116,7 @@ const filteringSampler = root['~unstable'].createSampler({
 
 const camera = new CameraController(
   root,
-  d.vec3f(0.024, 2.7, 1.9),
+  d.vec3f(0, 2.7, 1.9),
   d.vec3f(0, 0, 0),
   d.vec3f(0, 1, 0),
   Math.PI / 4,
