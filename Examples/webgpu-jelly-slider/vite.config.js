@@ -10,5 +10,10 @@ export default defineConfig(({ command }) => {
     base: command === 'build'
       ? '/html-in-canvas/Examples/webgpu-jelly-slider/'
       : '/',
+
+    // Added to resolve the top-level await build error
+    build: {
+      target: 'esnext'
+    }
   };
 });
