@@ -233,15 +233,19 @@ A demo of the same thing using an experimental extension of [three.js](https://t
 
 ## Privacy-preserving painting
 
-Both painting (via canvas pixel readbacks or timing attacks) and invalidation (via `onpaint`) have the potential to leak sensitive information, and this is prevented by excluding sensitive information when painting. While an exhaustive list cannot be enumerated, sensitive information includes:
+The drawElementImage() method and any other methods that draw element image snapshots, as well as the paint event, must not reveal any security- or privacy-sensitive information that isn't otherwise observable to author code.
+
+Both painting (via canvas pixel readbacks or timing attacks) and invalidation (via `onpaint`) have the potential to leak sensitive information, and this is prevented by excluding sensitive information when painting. Sensitive information includes:
 * Cross-origin data in [embedded content](https://html.spec.whatwg.org/#embedded-content-category) (e.g., `<iframe>`, `<img>`), [`<url>`](https://drafts.csswg.org/css-values-4/#url-value) references (e.g., `background-image`, `clip-path`), and [SVG](https://svgwg.org/svg2-draft/single-page.html#types-InterfaceSVGURIReference) (e.g., `<use>`). Note that same-origin iframes would still paint, but cross-origin content in them would not.
 * System colors, themes, or preferences.
 * Spelling and grammar markers.
-* Search text (find-in-page) and text-fragment (fragment url) markers.
 * Visited link information.
-* Form autofill information not otherwise available to javascript.
+* Pending form autofill information not otherwise available to javascript.
 
-SVG's `<foreignObject>` can be combined with data uri images and canvas to access the pixel data of HTML content ([example](https://jsfiddle.net/progers/qhawnyeu)), and implementations currently have mitigations to prevent leaking sensitive content. As an example, an `<input>` with a spelling error is still painted, but any indication of spelling errors, which could expose the user's spelling dictionary, is not painted. Similar mitigations should be used for `drawElementImage`, but need to be expanded to cover additional cases.
+The following new information is not considered sensitive:
+* Search text (find-in-page) and text-fragment (fragment url) markers.
+* Form element appearance.
+* Caret blink rate.
 
 ## Developer Trial (dev trial) Information
 The HTML-in-Canvas features may be enabled with [chrome://flags/#canvas-draw-element](chrome://flags/#canvas-draw-element) in Chrome Canary.
