@@ -67,11 +67,36 @@ const sliderElement = document.getElementById('slider') as HTMLInputElement;
 const valueElement = document.getElementById('value') as HTMLDivElement;
 
 const valueRawTexture = root.device.createTexture({
-  size: [512, 128, 1],
+  size: [width, height, 1],
   format: 'rgba8unorm',
   usage: GPUTextureUsage.TEXTURE_BINDING | GPUTextureUsage.COPY_DST | GPUTextureUsage.RENDER_ATTACHMENT
 });
 const valueTextureView = valueRawTexture.createView();
+
+// Return a number from 0...100 as a string Zero percent...One hundred percent.
+function getPercentString(n: number): string {
+  if (n === 100) return "One-hundred %";
+
+  const ones: string[] = [
+    "Zero", "One", "Two", "Three", "Four", "Five", "Six", "Seven", "Eight", "Nine",
+    "Ten", "Eleven", "Twelve", "Thirteen", "Fourteen", "Fifteen", "Sixteen", "Seventeen", "Eighteen", "Nineteen"
+  ];
+
+  const tens: string[] = [
+    "", "", "Twenty", "Thirty", "Forty", "Fifty", "Sixty", "Seventy", "Eighty", "Ninety"
+  ];
+
+  // Handle 0 through 19
+  if (n < 20) {
+    return `${ones[n]} %`;
+  }
+
+  // Handle 20 through 99
+  const tensWord: string = tens[Math.floor(n / 10)];
+  const onesWord: string = n % 10 === 0 ? "" : `-${ones[n % 10].toLowerCase()}`;
+
+  return `${tensWord}${onesWord} %`;
+}
 
 let targetMouseX = 0.9;
 let currentMouseX = 0.9;
@@ -79,10 +104,10 @@ let currentMouseX = 0.9;
 sliderElement.addEventListener('input', () => {
   const t = Number(sliderElement.value) / 100.0;
   targetMouseX = t * 1.9 - 1.0;
-  valueElement.textContent = sliderElement.value + '%';
+  valueElement.textContent = getPercentString(Number(sliderElement.value));
   (canvas as any).requestPaint();
 });
-valueElement.textContent = sliderElement.value + '%';
+valueElement.textContent = getPercentString(Number(sliderElement.value));
 
 const filteringSampler = root['~unstable'].createSampler({
   magFilter: 'linear',
@@ -492,7 +517,7 @@ const rayMarchNoJelly = (rayOrigin: d.v3f, rayDirection: d.v3f) => {
 const renderPercentageOnGround = (hitPosition: d.v3f, center: d.v3f) => {
   'use gpu';
 
-  const textWidth = 0.38;
+  const textWidth = 1.9;
   const textHeight = 0.33;
 
   if (
@@ -531,7 +556,7 @@ const renderBackground = (
 
   const percentageSample = renderPercentageOnGround(
     hitPosition,
-    d.vec3f(0.72, 0, 0),
+    d.vec3f(0, 0, 0),
   );
 
   let highlights = d.f32();
@@ -742,7 +767,7 @@ function createBindGroups() {
 }
 
 (canvas as any).onpaint = () => {
-  (root.device.queue as any).copyElementImageToTexture(valueElement, 512, 128, { texture: valueRawTexture });
+  (root.device.queue as any).copyElementImageToTexture(valueElement, width, height, { texture: valueRawTexture });
 
   // TODO(pdr): Calculate this correctly using `getElementTransform`. For now,
   // the transform is just hard-coded.
