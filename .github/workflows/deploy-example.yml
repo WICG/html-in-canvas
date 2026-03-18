@@ -40,7 +40,10 @@ jobs:
           source: ./
           destination: ./_site
 
-      - run: cp -R ./Examples/webgpu-jelly-slider/dist/* ./_site/Examples/webgpu-jelly-slider/
+      # Take ownership of the folder from Docker's root user, then copy!
+      - run: |
+          sudo chown -R runner ./_site
+          cp -R ./Examples/webgpu-jelly-slider/dist/* ./_site/Examples/webgpu-jelly-slider/
 
       - uses: actions/upload-pages-artifact@v3
         with:
