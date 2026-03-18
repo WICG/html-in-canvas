@@ -73,16 +73,41 @@ const valueRawTexture = root.device.createTexture({
 });
 const valueTextureView = valueRawTexture.createView();
 
+// Return a number from 0...100 as a string Zero percent...One hundred percent.
+function getPercentString(n: number): string {
+  if (n === 100) return "One hundred percent";
+
+  const ones: string[] = [
+    "Zero", "One", "Two", "Three", "Four", "Five", "Six", "Seven", "Eight", "Nine",
+    "Ten", "Eleven", "Twelve", "Thirteen", "Fourteen", "Fifteen", "Sixteen", "Seventeen", "Eighteen", "Nineteen"
+  ];
+
+  const tens: string[] = [
+    "", "", "Twenty", "Thirty", "Forty", "Fifty", "Sixty", "Seventy", "Eighty", "Ninety"
+  ];
+
+  // Handle 0 through 19
+  if (n < 20) {
+    return `${ones[n]} percent`;
+  }
+
+  // Handle 20 through 99
+  const tensWord: string = tens[Math.floor(n / 10)];
+  const onesWord: string = n % 10 === 0 ? "" : ` ${ones[n % 10].toLowerCase()}`;
+
+  return `${tensWord}${onesWord} percent`;
+}
+
 let targetMouseX = 0.9;
 let currentMouseX = 0.9;
 
 sliderElement.addEventListener('input', () => {
   const t = Number(sliderElement.value) / 100.0;
   targetMouseX = t * 1.9 - 1.0;
-  valueElement.textContent = sliderElement.value + '%';
+  valueElement.textContent = getPercentString(Number(sliderElement.value));
   (canvas as any).requestPaint();
 });
-valueElement.textContent = sliderElement.value + '%';
+valueElement.textContent = getPercentString(Number(sliderElement.value));
 
 const filteringSampler = root['~unstable'].createSampler({
   magFilter: 'linear',
