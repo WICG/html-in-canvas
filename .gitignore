@@ -3,3 +3,6 @@
 
 # Node dependencies
 node_modules/
+
+# Production
+dist/
