@@ -39,10 +39,11 @@
     ctx.reset();
 
     // 1. Center the coordinate system.
-    const radius = Math.min(canvas.width, canvas.height) / 2;
-    ctx.translate(radius, radius);
+    const radius = 0.95 * Math.min(canvas.width, canvas.height) / 2;
+    ctx.translate(canvas.width / 2, canvas.height / 2);
 
     let angle = 0;
+    let focusedPath = null;
     for (const label of canvas.children) {
       const slice = Number(label.dataset.val) * Math.PI * 2;
 
@@ -51,10 +52,13 @@
       grad.addColorStop(0, `color-mix(${label.dataset.color}, white 40%)`);
       grad.addColorStop(1, label.dataset.color);
       ctx.fillStyle = grad;
-      ctx.beginPath();
-      ctx.moveTo(0, 0);
-      ctx.arc(0, 0, radius, angle, angle + slice);
-      ctx.fill();
+      const path = new Path2D();
+      path.moveTo(0, 0);
+      path.arc(0, 0, radius, angle, angle + slice);
+      path.closePath();
+      ctx.fill(path);
+      if (document.activeElement === label)
+        focusedPath = path;
 
       // 3. Draw the label element, and update its transform.
       const mid = angle + slice / 2;
@@ -67,6 +71,10 @@
 
       angle += slice;
     }
+
+    // 4. Draw the focus ring on top of everything else.
+    if (focusedPath)
+      ctx.drawFocusIfNeeded(focusedPath, document.activeElement);
   };
   canvas.requestPaint(); // Request an initial paint event.
 
