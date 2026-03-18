@@ -186,7 +186,7 @@ export class Slider {
   }
 
   setDragX(x: number) {
-    const minX = this.anchor[0] - this.totalLength;
+    const minX = this.anchor[0] - this.totalLength + 2.6;
     const maxX = this.anchor[0] + this.totalLength;
     this.#targetX = std.clamp(x, minX, maxX);
   }
