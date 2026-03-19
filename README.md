@@ -252,17 +252,61 @@ We are most interested in feedback on the following topics:
 
 Please file bugs or design issues [here](https://github.com/WICG/html-in-canvas/issues/new).
 
-## Alternatives considered
+## Alternatives considered: `paint` event timing
 
-* [Threaded design](https://docs.google.com/document/d/1TWe6HP7HMn6y-XnNKppIhgf9FtuXJ6LPgenJJxZDjzg/edit?tab=t.0). To support threaded effects, we explored a model where canvas children "snapshots" are sent to a worker thread. In response to threaded scrolling and animations, the worker thread could then render the most up-to-date rendering of the snapshots into OffscreenCanvas. This model requires that javascript can be synchronously called on scroll and animation updates, which is difficult for architectures that perform threaded scroll updates in a restricted process.
+A new `paint` event is needed to give developers an opportunity to update their canvas rendering in response to paint changes. This is integrated into [update the rendering](https://html.spec.whatwg.org/#update-the-rendering) so that canvas updates can occur in sync with the DOM.
 
-* [Placeholder design](https://docs.google.com/document/d/1YaHCxYqE4uQc4-UTWo4a5pHt2I2MutlwJtsnj5ljEkM/edit?usp=sharing). Some architectures cannot capture an element's rendering outside the main rendering update, so we explored a model where `drawElementImage` records a placeholder representing how an element will look on the next rendering update. When the next rendering update occurs, the placeholders would then be replaced with the actual rendering. This model can be implemented with 2D canvas by buffering the canvas commands until the [updating the rendering](https://html.spec.whatwg.org/#update-the-rendering) step. Canvas operations such as `getImageData` require synchronous flushing of the canvas command buffer and would need to show blank or stale data for the placeholders. This is problematic for WebGL because so many APIs require flushing (e.g., `getError()`).
+There are several opportunities in the [update the rendering](https://html.spec.whatwg.org/#update-the-rendering) steps where the `paint` event could fire:
 
-## Future considerations: auto-updating canvas for threaded effects
+  * 14\. Run animation frame callbacks.
+  
+  * 16.2.1\. Recalculate styles and update layout.
+      
+  * 16.2.6\. Deliver resize observers, looping back to 16.2.1 if needed.
+
+  * _Option A: Fire `paint` at resize observer timing, looping back to 16.2.1 if needed._
+  
+  * 19\. Run the update intersection observations steps.
+
+  * Paint, where the painted output of elements is calculated. This is not an explicitly named step in [update the rendering](https://html.spec.whatwg.org/#update-the-rendering).
+
+  * _Option B: Fire `paint` immediately after Paint, looping back to 16.2.1 if needed._
+
+  * _Option C: Fire `paint` immediately after Paint._
+
+  * Commit / thread handoff, where the painted output is sent to another process. This is not an explicitly named step in [update the rendering](https://html.spec.whatwg.org/#update-the-rendering).
+
+Note that the `paint` event is the new event on canvas introduced in this proposal, and the Paint step is the existing operation that browsers perform to record the painted output of the rendering tree following [paint order](https://drafts.csswg.org/css-position-4/#painting-order).
+
+#### Option A: Fire `paint` at resize observer timing, looping back to 16.2.1 if needed.
+
+Similar to resize observer, a looping approach is needed to handle cases where the paint event performs modifications (including of elements outside the canvas). There is no mechanism for preventing arbitrary javascript from modifying the DOM. Looping will be required for more conditions than those required by ResizeObserver, such as background style changes. A downside of looping is that the user's canvas code may need to run multiple times per frame.
+
+One option is to do a synchronous Paint step to snapshot the painted output of canvas children. A downside of this approach is that the Paint step may be expensive to run, and may need to be run multiple times. This approach has unique implementation challenges in Gecko, and possibly other engines, due to architectural limitations.
+
+A second option is to not run the Paint step synchronously, but instead record a placeholder representing how an element will appear on the next rendering update (see [design](https://docs.google.com/document/d/1YaHCxYqE4uQc4-UTWo4a5pHt2I2MutlwJtsnj5ljEkM/edit?usp=sharing)). This model can be implemented with 2D canvas by buffering the canvas commands until the next Paint step. When the next Paint step occurs, the placeholders would then be replaced with the actual rendering. Canvas operations such as `getImageData` require synchronous flushing of the canvas command buffer and would need to show blank or stale data for the placeholders. Unfortunately, this approach has a fundamental flaw for WebGL because many APIs require flushing (e.g., `getError()`, see callsites of [WaitForCmd](https://source.chromium.org/chromium/chromium/src/+/main:gpu/command_buffer/client/implementation_base.h;drc=b3eab4fd06ddbeee84b37224f4cc9d78094fc2f7;l=102)), and calling any of these APIs would result in a deadlock or inconsistent rendering. Therefore, we must run the `paint` event at a time where we have the complete painted display list of an element already available.
+
+#### Option B: Fire `paint` immediately after Paint, looping back to 16.2.1 if needed.
+
+See above for the reasons and downsides of looping when there are modifications made during the `paint` event.
+
+The upside of option B as compared with option A is that it does not require partial Paint of canvas children. An additional downside is that even more steps of [update the rendering](https://html.spec.whatwg.org/#update-the-rendering) need to run on each iteration of the loop.
+
+#### Option C: Fire `paint` immediately after Paint.
+
+This is the design approach taken for the API.
+
+This approach only runs `paint` once per frame, similar to the browser's own Paint step. To solve the issue of javascript being able to perform arbitrary modifications, it is important to ensure that before `paint` runs we have locked in the contents of the rendering update, except for one intentional carve-out: the drawn content of the canvas. DOM invalidations that may occur in the `paint` event apply to the subsequent frame, not the current frame.
+
+## Alternatives considered: Supporting threaded effects with worker threads
+
+To support threaded effects, we explored a [design](https://docs.google.com/document/d/1TWe6HP7HMn6y-XnNKppIhgf9FtuXJ6LPgenJJxZDjzg/edit?tab=t.0) where canvas children "snapshots" are sent to a worker thread. In response to threaded scrolling and animations, the worker thread could then render the most up-to-date rendering of the snapshots into OffscreenCanvas. This model requires that javascript can be synchronously called on scroll and animation updates, which is difficult for architectures that perform threaded scroll updates in a restricted process.
+
+## Future considerations: Supporting threaded effects with an auto-updating canvas
 
 To support threaded effects such as scrolling and animations, we are considering a future "auto-updating canvas" mode.
 
-In this model, `drawElementImage` records a placeholder representing the latest rendering. Canvas retains a command buffer which can be automatically re-played following every scroll or animation update. This allows the canvas to re-rasterize with updated placeholders that incorporate threaded scroll and animations, without needing to block on script. This would enable visual effects that stay perfectly in sync with native scrolling or animations within the canvas, independent of the main thread. This design is viable for 2D contexts, and may be viable for WebGPU with some small API additions.
+In this model, `drawElementImage` records a placeholder representing the latest rendering. Canvas retains a command buffer which can be automatically replayed following every scroll or animation update. This allows the canvas to re-rasterize with updated placeholders that incorporate threaded scrolling and animations, without needing to block on script. This would enable visual effects that stay perfectly in sync with native scrolling or animations within the canvas, independent of the main thread. This design is viable for 2D contexts, and may be viable for WebGPU with some small API additions.
 
 ## Other documents
 
