@@ -157,27 +157,32 @@ partial interface OffscreenCanvas {
   DOMMatrix getElementTransform((Element or ElementImage) element, DOMMatrix drawTransform);
 };
 
-partial interface CanvasRenderingContext2D {
+interface mixin CanvasDrawElementImage {
   DOMMatrix drawElementImage((Element or ElementImage) element,
-                             unrestricted double x, unrestricted double y);
+                             unrestricted double dx, unrestricted double dy);
 
   DOMMatrix drawElementImage((Element or ElementImage) element,
-                             unrestricted double x, unrestricted double y,
+                             unrestricted double dx, unrestricted double dy,
+                             unrestricted double dwidth, unrestricted double dheight);
+
+  DOMMatrix drawElementImage((Element or ElementImage) element,
+                             unrestricted double sx, unrestricted double sy,
+                             unrestricted double swidth, unrestricted double sheight,
+                             unrestricted double dx, unrestricted double dy);
+
+  DOMMatrix drawElementImage((Element or ElementImage) element,
+                             unrestricted double sx, unrestricted double sy,
+                             unrestricted double swidth, unrestricted double sheight,
+                             unrestricted double dx, unrestricted double dy,
                              unrestricted double dwidth, unrestricted double dheight);
 };
 
-partial interface OffscreenCanvasRenderingContext2D {
-  DOMMatrix drawElementImage((Element or ElementImage) element,
-                             unrestricted double x, unrestricted double y);
-
-  DOMMatrix drawElementImage((Element or ElementImage) element,
-                             unrestricted double x, unrestricted double y,
-                             unrestricted double dwidth, unrestricted double dheight);
-};
+CanvasRenderingContext2D includes CanvasDrawElementImage;
+OffscreenCanvasRenderingContext2D includes CanvasDrawElementImage;
 
 partial interface WebGLRenderingContext {
   void texElementImage2D(GLenum target, GLint level, GLint internalformat,
-                        GLenum format, GLenum type, (Element or ElementImage) element);
+                         GLenum format, GLenum type, (Element or ElementImage) element);
 };
 
 partial interface GPUQueue {
