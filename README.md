@@ -18,6 +18,7 @@ There is no web API to easily render complex layouts of text and other content i
 * **Accessibility Improvements.** There is currently no guarantee that the canvas fallback content used for `<canvas>` accessibility always matches the rendered content, and such fallback content can be hard to generate. With this API, elements drawn into the canvas will match their corresponding canvas fallback.
 * **Composing HTML Elements with Effects.** A limited set of CSS effects, such as filters, backdrop-filter, and mix-blend-mode are already available, but there is a desire to use general WebGL shaders with HTML.
 * **HTML Rendering in a 3D Context.** 3D aspects of sites and games need to render rich 2D content into surfaces within a 3D scene.
+* **Media Export.** There's a need to export HTML content as images or video.
 
 ## Proposed solution
 
