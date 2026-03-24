@@ -90,7 +90,7 @@ The transform used to draw the element on the worker thread needs to be synced b
     form_element.style.transform = transform.toString();
   };
 
-  // Generic code for ensuring the canvas is sized properly for high-dpi.
+  // Size the canvas grid to match the device scale factor to prevent blurriness.
   const observer = new ResizeObserver(([entry]) => {
     canvas.width = entry.devicePixelContentBoxSize[0].inlineSize;
     canvas.height = entry.devicePixelContentBoxSize[0].blockSize;
