@@ -261,6 +261,7 @@ The following new information is not considered sensitive:
 * Search text (find-in-page) and text-fragment (fragment url) markers.
 * Scrollbar and form element appearance (these are already detectable in Blink and WebKit through [foreignObject](https://jsfiddle.net/progers/qhawnyeu)).
 * Caret blink rate.
+* forced-colors (this information is already available to javascript using the `forced-colors` media query and system colors).
 
 ## Developer Trial (dev trial) Information
 The HTML-in-Canvas features may be enabled with [chrome://flags/#canvas-draw-element](chrome://flags/#canvas-draw-element) in Chrome Canary.
