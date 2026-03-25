@@ -76,9 +76,10 @@ The transform used to draw the element on the worker thread needs to be synced b
 
 ```html
 <canvas id="canvas" style="width: 200px; height: 200px;" layoutsubtree>
-  <div id="form_element">
-    name: <input>
-  </div>
+  <form id="form_element">
+    <label for="name">name:</label>
+    <input id="name">
+  </form>
 </canvas>
 
 <script>
@@ -106,7 +107,7 @@ In this example, `OffscreenCanvas` in a worker is used. The `canvas` child eleme
 ```html
 <!DOCTYPE html>
 <canvas id="canvas" style="width: 300px; height: 200px;" layoutsubtree>
-  <div id="label">enter your fullname:</div>
+  <label id="label" for="input">enter your fullname:</label>
   <input id="input">
 </canvas>
 
