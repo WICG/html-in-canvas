@@ -44,7 +44,7 @@ Similar methods are added for 3D contexts: `WebGLRenderingContext.texElementImag
 ### 3. The `paint` event
 A `paint` event is added to `canvas` elements and fires if the rendering of any canvas children has changed. This event fires just after intersection observer steps have run during [update-the-rendering](https://html.spec.whatwg.org/#update-the-rendering). The event contains a list of the canvas children which have changed. Because CSS transforms on canvas children are ignored for rendering, changing the transform does not cause the `paint` event to fire in the next frame.
 
-To support application patterns which update every frame, a new `requestPaint()` function is added which will cause the `paint` event to fire once, even if no children have changed (analagous to `requestAnimationFrame()`).
+To support application patterns which update every frame, a new `requestPaint()` function is added which will cause the `paint` event to fire once, even if no children have changed (analagous to `requestAnimationFrame()`). DOM changes made in the `paint` event, other than to the canvas, will not show up until the subsequent frame.
 
 The `paint` event also fires for `OffscreenCanvas` (main thread or worker) after the canvas element children have been prepared for rendering.
 
