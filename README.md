@@ -259,7 +259,7 @@ Sensitive information includes:
 
 The following new information is not considered sensitive:
 * Search text (find-in-page) and text-fragment (fragment url) markers.
-* Form element appearance.
+* Scrollbar and form element appearance (these are already detectable in Blink and WebKit through [foreignObject](https://jsfiddle.net/progers/qhawnyeu)).
 * Caret blink rate.
 
 ## Developer Trial (dev trial) Information
