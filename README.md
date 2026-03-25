@@ -42,7 +42,7 @@ The `drawElementImage()` method draws a child of the canvas into the canvas, and
 Similar methods are added for 3D contexts: `WebGLRenderingContext.texElementImage2D` and `copyElementImageToTexture`.
 
 ### 3. The `paint` event
-A `paint` event is added to `canvas` elements and fires if the rendering of any canvas children has changed. This event fires just after intersection observer steps have run during [update-the-rendering](https://html.spec.whatwg.org/#update-the-rendering). The event contains a list of the canvas children which have changed. Because CSS transforms on canvas children are ignored for rendering, changing the transform does not cause the `paint` event to fire in the next frame.
+A `paint` event is added to `canvas` elements and fires if the rendering of any canvas children has changed. This event fires just after intersection observer steps have run during [update-the-rendering](https://html.spec.whatwg.org/#update-the-rendering). The event contains a list of the canvas children which have changed. Because CSS transforms on canvas children are ignored for rendering, changing the transform does not cause the `paint` event to fire in the next frame. Canvas drawing commands made in the `paint` event will appear in the current frame, but DOM changes made in the `paint` event will not show up until the subsequent frame.
 
 To support application patterns which update every frame, a new `requestPaint()` function is added which will cause the `paint` event to fire once, even if no children have changed (analagous to `requestAnimationFrame()`).
 
