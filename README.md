@@ -6,7 +6,7 @@ This is a proposal for using 2D and 3D `<canvas>` to customize the rendering of 
 
 This is a living explainer which is continuously updated as we receive feedback.
 
-The APIs described here are implemented behind a flag in Chromium and can be enabled with [chrome://flags/#canvas-draw-element](chrome://flags/#canvas-draw-element).
+The APIs described here are implemented behind a flag in Chromium and can be enabled with `chrome://flags/#canvas-draw-element`.
 
 ## Motivation
 
