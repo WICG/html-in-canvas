@@ -265,7 +265,7 @@ The following new information is not considered sensitive:
 * forced-colors (this information is already available to javascript using the `forced-colors` media query and system colors).
 
 ## Developer Trial (dev trial) Information
-The HTML-in-Canvas features may be enabled with [chrome://flags/#canvas-draw-element](chrome://flags/#canvas-draw-element) in Chrome Canary.
+The HTML-in-Canvas features may be enabled with `chrome://flags/#canvas-draw-element` in Chrome Canary.
 
 We are most interested in feedback on the following topics:
 * What content works, and what fails? Which failure modes are most important to fix?
