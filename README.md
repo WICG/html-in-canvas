@@ -88,7 +88,7 @@ The transform used to draw the element on the worker thread needs to be synced b
 
   canvas.onpaint = () => {
     ctx.reset();
-    let transform = ctx.drawElementImage(form_element, 0, 0);
+    const transform = ctx.drawElementImage(form_element, 0, 0);
     form_element.style.transform = transform.toString();
   };
 
@@ -126,7 +126,7 @@ In this example, `OffscreenCanvas` in a worker is used. The `canvas` child form 
       }
       if (e.data.elementImage) {
         ctx.reset();
-        let transform = ctx.drawElementImage(e.data.elementImage, 100, 0);
+        const transform = ctx.drawElementImage(e.data.elementImage, 100, 0);
         self.postMessage({transform: transform});
       }
     };
@@ -138,7 +138,7 @@ In this example, `OffscreenCanvas` in a worker is used. The `canvas` child form 
   worker.postMessage({ canvas: offscreen }, [offscreen]);
 
   canvas.onpaint = (event) => {
-    let elementImage = canvas.captureElementImage(form_element)
+    const elementImage = canvas.captureElementImage(form_element)
     worker.postMessage({ elementImage: elementImage }, [elementImage]);
   };
 
