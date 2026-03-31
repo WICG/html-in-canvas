@@ -6,7 +6,7 @@ This is a proposal for using 2D and 3D `<canvas>` to customize the rendering of 
 
 This is a living explainer which is continuously updated as we receive feedback.
 
-The APIs described here are implemented behind a flag in Chromium and can be enabled with [chrome://flags/#canvas-draw-element](chrome://flags/#canvas-draw-element).
+The APIs described here are implemented behind a flag in Chromium and can be enabled with `chrome://flags/#canvas-draw-element`.
 
 ## Motivation
 
@@ -73,7 +73,7 @@ The transform used to draw the element on the worker thread needs to be synced b
 
 ### Basic Example
 
-<img width="205" height="36" alt="a screenshot showing a form element with a blinking cursor" src="https://github.com/user-attachments/assets/44fb3162-d179-4e0f-bc51-d1161f756513" />
+<img width="250" height="38" alt="a screenshot showing a form element with a blinking cursor" src="https://github.com/user-attachments/assets/acbdd231-3259-4819-b57e-32e29c460fc9" />
 
 ```html
 <canvas id="canvas" style="width: 200px; height: 200px;" layoutsubtree>
@@ -88,7 +88,7 @@ The transform used to draw the element on the worker thread needs to be synced b
 
   canvas.onpaint = () => {
     ctx.reset();
-    const transform = ctx.drawElementImage(form_element, 0, 0);
+    const transform = ctx.drawElementImage(form_element, 100, 0);
     form_element.style.transform = transform.toString();
   };
 
@@ -273,7 +273,7 @@ The following new information is not considered sensitive:
 * forced-colors (this information is already available to javascript using the `forced-colors` media query and system colors).
 
 ## Developer Trial (dev trial) Information
-The HTML-in-Canvas features may be enabled with [chrome://flags/#canvas-draw-element](chrome://flags/#canvas-draw-element) in Chrome Canary.
+The HTML-in-Canvas features may be enabled with `chrome://flags/#canvas-draw-element` in Chrome Canary.
 
 We are most interested in feedback on the following topics:
 * What content works, and what fails? Which failure modes are most important to fix?
