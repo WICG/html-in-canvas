@@ -212,9 +212,10 @@ dictionary PaintEventInit : EventInit {
 
 [Exposed=(Window,Worker)]
 interface ElementImage {
-  // dimensions in device pixels
-  readonly attribute unsigned long width;
-  readonly attribute unsigned long height;
+  // dimensions scaled such that when drawing to canvas, the element will appear
+  // the same size as it would outside of canvas.
+  readonly attribute double width;
+  readonly attribute double height;
 
   // value of `id` attribute on element, or the empty string
   readonly attribute DOMString id;
