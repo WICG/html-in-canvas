@@ -229,12 +229,9 @@ dictionary PaintEventInit : EventInit {
 
 [Exposed=(Window,Worker), Transferable]
 interface ElementImage {
-  // dimensions in canvas output bitmap pixels
   readonly attribute unsigned long width;
   readonly attribute unsigned long height;
-
-  // value of `id` attribute on element, or the empty string
-  readonly attribute DOMString id;
+  undefined close();
 };
 ```
 
