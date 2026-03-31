@@ -103,67 +103,60 @@ The transform used to draw the element on the worker thread needs to be synced b
 
 ### OffscreenCanvas Example
 
-In this example, `OffscreenCanvas` in a worker is used. The `canvas` child elements are captured as `ElementImage` objects in the `paint` event and are transferred to the worker for painting. Elements are distinguished by their IDs.
+In this example, `OffscreenCanvas` in a worker is used. The `canvas` child form is captured as an `ElementImage` object in the `paint` event and transferred to the worker for painting.
 
 ```html
 <!DOCTYPE html>
-<canvas id="canvas" style="width: 300px; height: 200px;" layoutsubtree>
-  <label id="label" for="input">enter your fullname:</label>
-  <input id="input">
+<canvas id="canvas" style="width: 400px; height: 200px;" layoutsubtree>
+  <form id="form_element">
+    <label for="name">name:</label>
+    <input id="name">
+  </form>
 </canvas>
-
 <script>
-  // 1. Setup worker thread.
-  const worker = new Worker("worker.js");
+  const workerCode = `
+    let ctx;
+    self.onmessage = (e) => {
+      if (e.data.canvas) {
+        ctx = e.data.canvas.getContext('2d');
+      }
+      if (e.data.width && e.data.height) {
+        ctx.canvas.width = e.data.width;
+        ctx.canvas.height = e.data.height;
+      }
+      if (e.data.elementImage) {
+        ctx.reset();
+        let transform = ctx.drawElementImage(e.data.elementImage, 100, 0);
+        self.postMessage({transform: transform});
+      }
+    };
+  `;
 
-  // 2. Transfer control to the worker.
+  const worker = new Worker(URL.createObjectURL(new Blob([workerCode])));
   const offscreen = canvas.transferControlToOffscreen();
+
   worker.postMessage({ canvas: offscreen }, [offscreen]);
 
-  // 2. Transfer control to the worker.
-  const offscreen = canvas.captureElementImage();
-  worker.postMessage({ canvas: offscreen }, [offscreen]);
-
-  // 3. Forward ElementImage snapshots to the worker.
   canvas.onpaint = (event) => {
-    const changed = [];
-    for (const child of canvas.children) {
-      changed.push(canvas.captureElementImage(child));
-    }
-    worker.postMessage({ changed }, [changed]);
+    let elementImage = canvas.captureElementImage(form_element)
+    worker.postMessage({ elementImage: elementImage }, [elementImage]);
   };
 
-  // 4. Synchronize the element's CSS transform to match its drawn location.
-  worker.onmessage = (data) => {
-    document.getElementById(data.id).style.transform = data.transform.toString();
+  // Synchronize the element's CSS transform to match its drawn location.
+  worker.onmessage = ({data}) => {
+    form_element.style.transform = data.transform.toString();
   };
+
+  // Size the canvas grid to match the device scale factor to prevent blurriness.
+  const observer = new ResizeObserver(([entry]) => {
+    worker.postMessage({
+      width: entry.devicePixelContentBoxSize[0].inlineSize,
+      height: entry.devicePixelContentBoxSize[0].blockSize
+    });
+    canvas.requestPaint();
+  });
+  observer.observe(canvas, { box: 'device-pixel-content-box' });
 </script>
-```
-
-`worker.js`:
-
-```javascript
-let ctx;
-onmessage = ({data}) => {
-  // 1. Initial setup.
-  if (data.canvas) {
-    ctx = data.canvas.getContext('2d');
-    return;
-  }
-
-  // 2. Respond to changes.
-  const changed = data.changed;
-  const changedLabel = changed.find(item => item.id === 'label');
-  if (changedLabel) {
-    let transform = ctx.drawElementImage(changedLabel, 0, 0);
-    self.postMessage({id: 'label', transform: transform});
-  }
-  const changedInput = changed.find(item => item.id === 'input');
-  if (changedInput) {
-    let transform = ctx.drawElementImage(changedInput, 0, 100);
-    self.postMessage({id: 'input', transform: transform});
-  }
-};
 ```
 
 ### IDL changes
