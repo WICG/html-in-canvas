@@ -46,7 +46,8 @@ A `paint` event is added to `canvas` elements and fires if the rendering of any 
 
 To support application patterns which update every frame, a new `requestPaint()` function is added which will cause the `paint` event to fire once, even if no children have changed (analagous to `requestAnimationFrame()`).
 
-The `paint` event also fires for `OffscreenCanvas` (main thread or worker) after the canvas element children have been prepared for rendering.
+### 4. `captureElementImage`
+To support `OffscreenCanvas` in workers, a snapshot of an element can be captured as an `ElementImage` snapshot using `canvas.captureElementImage(element)`. These objects can be transferred to a worker and drawn to an `OffscreenCanvas`.
 
 ### Synchronization
 
@@ -68,7 +69,7 @@ Where:
 
 To assist with synchronization, `drawElementImage()` returns the CSS transform which can be applied to the element to keep its location synchronized. For 3D contexts, the `getElementTransform(element, drawTransform)` helper method is provided which returns the CSS transform, provided a general transformation matrix.
 
-The transform used to draw the element on the worker thread needs to be synced back to the DOM, and can simply be `postMessage()`'d back to the main thread.
+The transform used to draw the element on the worker thread needs to be synced back to the DOM, and can simply be `postMessage()`'d back to the main thread if the position is static. If the position is dynamic, an alternative is to calculate the position on the main thread and update `element.style.transform` at the same time that the `ElementImage` objects is sent to the worker thread.
 
 ### Basic Example
 
@@ -87,7 +88,7 @@ The transform used to draw the element on the worker thread needs to be synced b
 
   canvas.onpaint = () => {
     ctx.reset();
-    let transform = ctx.drawElementImage(form_element, 100, 0);
+    const transform = ctx.drawElementImage(form_element, 100, 0);
     form_element.style.transform = transform.toString();
   };
 
@@ -102,47 +103,60 @@ The transform used to draw the element on the worker thread needs to be synced b
 
 ### OffscreenCanvas Example
 
-In this example, `OffscreenCanvas` in a worker is used. The `canvas` child elements are represented as `ElementImage` objects in the `paint` event, and are distinguished by their IDs.
+In this example, `OffscreenCanvas` in a worker is used. The `canvas` child form is captured as an `ElementImage` object in the `paint` event and transferred to the worker for painting.
 
 ```html
 <!DOCTYPE html>
-<canvas id="canvas" style="width: 300px; height: 200px;" layoutsubtree>
-  <label id="label" for="input">enter your fullname:</label>
-  <input id="input">
+<canvas id="canvas" style="width: 400px; height: 200px;" layoutsubtree>
+  <form id="form_element">
+    <label for="name">name:</label>
+    <input id="name">
+  </form>
 </canvas>
-
 <script>
-  // 1. Setup worker thread.
-  const worker = new Worker("worker.js");
+  const workerCode = `
+    let ctx;
+    self.onmessage = (e) => {
+      if (e.data.canvas) {
+        ctx = e.data.canvas.getContext('2d');
+      }
+      if (e.data.width && e.data.height) {
+        ctx.canvas.width = e.data.width;
+        ctx.canvas.height = e.data.height;
+      }
+      if (e.data.elementImage) {
+        ctx.reset();
+        const transform = ctx.drawElementImage(e.data.elementImage, 100, 0);
+        self.postMessage({transform: transform});
+      }
+    };
+  `;
 
-  // 2. Transfer control to the worker.
+  const worker = new Worker(URL.createObjectURL(new Blob([workerCode])));
   const offscreen = canvas.transferControlToOffscreen();
+
   worker.postMessage({ canvas: offscreen }, [offscreen]);
 
-  // 3. Synchronize the element's CSS transform to match its drawn location.
-  worker.onmessage = (data) => {
-    document.getElementById(data.id).style.transform = data.transform.toString();
+  canvas.onpaint = (event) => {
+    const elementImage = canvas.captureElementImage(form_element)
+    worker.postMessage({ elementImage: elementImage }, [elementImage]);
   };
+
+  // Synchronize the element's CSS transform to match its drawn location.
+  worker.onmessage = ({data}) => {
+    form_element.style.transform = data.transform.toString();
+  };
+
+  // Size the canvas grid to match the device scale factor to prevent blurriness.
+  const observer = new ResizeObserver(([entry]) => {
+    worker.postMessage({
+      width: entry.devicePixelContentBoxSize[0].inlineSize,
+      height: entry.devicePixelContentBoxSize[0].blockSize
+    });
+    canvas.requestPaint();
+  });
+  observer.observe(canvas, { box: 'device-pixel-content-box' });
 </script>
-```
-
-`worker.js`:
-
-```javascript
-onmessage = ({data}) => {
-  const ctx = data.canvas.getContext('2d');
-  data.canvas.onpaint = (event) => {
-    const changedLabel = event.changedElements.find(item => item.id === 'label');
-    if (changedLabel) {
-      let transform = ctx.drawElementImage(changedLabel, 0, 0);
-      self.postMessage({id: 'label', transform: transform});
-    }
-    const changedInput = event.changedElements.find(item => item.id === 'input');
-    if (changedInput) {
-      let transform = ctx.drawElementImage(changedInput, 0, 100);
-      self.postMessage({id: 'input', transform: transform});    }
-  };
-};
 ```
 
 ### IDL changes
@@ -155,14 +169,11 @@ partial interface HTMLCanvasElement {
 
   void requestPaint();
 
+  ElementImage captureElementImage(Element element);
   DOMMatrix getElementTransform((Element or ElementImage) element, DOMMatrix drawTransform);
 };
 
 partial interface OffscreenCanvas {
-  attribute EventHandler onpaint;
-
-  void requestPaint();
-
   DOMMatrix getElementTransform((Element or ElementImage) element, DOMMatrix drawTransform);
 };
 
@@ -199,25 +210,22 @@ partial interface GPUQueue {
                                  GPUImageCopyTextureTagged destination);
 }
 
-[Exposed=(Window,Worker)]
+[Exposed=Window]
 interface PaintEvent : Event {
   constructor(DOMString type, optional PaintEventInit eventInitDict);
 
-  readonly attribute FrozenArray<Element or ElementImage> changedElements;
+  readonly attribute FrozenArray<Element> changedElements;
 };
 
 dictionary PaintEventInit : EventInit {
-  sequence<Element or ElementImage> changedElements = [];
+  sequence<Element> changedElements = [];
 };
 
-[Exposed=(Window,Worker)]
+[Exposed=(Window,Worker), Transferable]
 interface ElementImage {
-  // dimensions in device pixels
   readonly attribute unsigned long width;
   readonly attribute unsigned long height;
-
-  // value of `id` attribute on element, or the empty string
-  readonly attribute DOMString id;
+  undefined close();
 };
 ```
 
