@@ -176,6 +176,7 @@ partial interface HTMLCanvasElement {
 
   void requestPaint();
 
+  ElementImage captureElementImage(Element element);
   DOMMatrix getElementTransform((Element or ElementImage) element, DOMMatrix drawTransform);
 };
 
@@ -216,7 +217,7 @@ partial interface GPUQueue {
                                  GPUImageCopyTextureTagged destination);
 }
 
-[Exposed=(Window,Worker)]
+[Exposed=Window]
 interface PaintEvent : Event {
   constructor(DOMString type, optional PaintEventInit eventInitDict);
 
