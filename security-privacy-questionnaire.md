@@ -1,7 +1,7 @@
 01.  What information might this feature expose to Web sites or other parties,
      and for what purposes is that exposure necessary?
      
-     A design requirement is to not expose any new security information, and to limit the amount of new privacy information (see: [Privacy-preserving painting](https://github.com/WICG/html-in-canvas?tab=readme-ov-file#privacy-preserving-painting)). For the purpose of enabling interactivity, this API will reveal form control / scrollbar rendering (but not OS theme preferences), find-in-page highlights, and the caret blink rate.
+     A design requirement is to not expose any new security information, and to limit the amount of new privacy information (see: [Privacy-preserving painting](https://github.com/WICG/html-in-canvas?tab=readme-ov-file#privacy-preserving-painting)). For the purpose of enabling interactivity, this API will reveal form control rendering, scrollbar rendering, text selection, find-in-page selection, and the caret blink rate (all without revealing OS theme colors).
      
 02.  Do features in your specification expose the minimum amount of information
      necessary to enable their intended uses?
