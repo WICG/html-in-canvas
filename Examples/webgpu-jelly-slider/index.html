@@ -7,11 +7,55 @@
 </head>
 <body>
 <style>
+  :root {
+    color-scheme: light dark;
+  }
   #slider {
     cursor: grab;
     width: 75%;
     height: 12.5%;
     opacity: 0;
+
+    --jelly-color: rgb(255, 115, 19);
+    --ground-color: rgb(255, 255, 255);
+    --text-color: rgb(40, 40, 40);
+
+    color: var(--jelly-color);
+    background-color: var(--ground-color);
+    caret-color: var(--text-color);
+  }
+  #slider:focus {
+    --jelly-color: rgb(51, 153, 255);
+  }
+  @media (prefers-color-scheme: dark) {
+    #slider {
+      --ground-color: rgb(26, 26, 26);
+      --text-color: rgb(204, 204, 204);
+    }
+  }
+  @media (prefers-contrast: more) {
+    #slider {
+      --jelly-color: rgb(255, 51, 0);
+      --text-color: rgb(0, 0, 0);
+    }
+    #slider:focus {
+      --jelly-color: rgb(0, 0, 255);
+    }
+    @media (prefers-color-scheme: dark) {
+      #slider {
+        --text-color: rgb(255, 255, 255);
+      }
+    }
+  }
+  @media (forced-colors: active) {
+    #slider {
+      --jelly-color: transparent;
+      --ground-color: Canvas;
+      --text-color: CanvasText;
+    }
+    #slider:focus {
+      --jelly-color: Highlight;
+    }
   }
   #value {
     text-align: right;

@@ -29,7 +29,6 @@ import {
   AO_INTENSITY,
   AO_RADIUS,
   AO_STEPS,
-  GROUND_ALBEDO,
   JELLY_IOR,
   JELLY_SCATTER_STRENGTH,
   LINE_HALF_THICK,
@@ -131,6 +130,8 @@ const lightUniform = root.createUniform(DirectionalLight, {
 });
 
 const jellyColorUniform = root.createUniform(d.vec4f, d.vec4f(1.0, 0.45, 0.075, 1.0));
+const groundColorUniform = root.createUniform(d.vec3f, d.vec3f(1.0));
+const groundTextColorUniform = root.createUniform(d.vec3f, d.vec3f(0.5));
 
 const randomUniform = root.createUniform(d.vec2f);
 const blurEnabledUniform = root.createUniform(d.u32);
@@ -612,11 +613,11 @@ const renderBackground = (
     .mul(std.abs(newNormal.z));
 
   const litColor = calculateLighting(posOffset, newNormal, rayOrigin);
-  const backgroundColor = applyAO(GROUND_ALBEDO.mul(litColor), posOffset, newNormal)
+  const backgroundColor = applyAO(groundColorUniform.$.mul(litColor), posOffset, newNormal)
     .add(d.vec4f(bounceLight, 0))
     .add(d.vec4f(sideBounceLight, 0));
 
-  const textColor = std.saturate(backgroundColor.rgb.mul(d.vec3f(0.5)));
+  const textColor = groundTextColorUniform.$;
 
   return d.vec4f(
     std.mix(backgroundColor.rgb, textColor, percentageSample.x).mul(1.0 + highlights),
@@ -705,7 +706,9 @@ const rayMarch = (rayOrigin: d.v3f, rayDirection: d.v3f, _uv: d.v2f) => {
 
       const jelly = std.add(reflection.mul(F), refractedColor.mul(1 - F));
 
-      return d.vec4f(jelly, 1.0);
+      const finalJelly = std.mix(background.rgb, jelly, jellyColorUniform.$.w);
+
+      return d.vec4f(finalJelly, 1.0);
     }
 
     if (distanceFromOrigin > backgroundDist) {
@@ -838,7 +841,50 @@ resizeObserver.observe(canvas);
 animationFrameHandle = requestAnimationFrame(render);
 
 
+const hcMedia = window.matchMedia('(forced-colors: active)');
+const darkMedia = window.matchMedia('(prefers-color-scheme: dark)');
+const contrastMedia = window.matchMedia('(prefers-contrast: more)');
+
+const parseColor3 = (colorStr: string): d.Infer<typeof d.vec3f> => {
+  const match = colorStr.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)/);
+  if (match) {
+    return d.vec3f(parseInt(match[1]) / 255, parseInt(match[2]) / 255, parseInt(match[3]) / 255);
+  }
+  return d.vec3f(1.0);
+};
+
+const parseColor4 = (colorStr: string): d.Infer<typeof d.vec4f> => {
+  const match = colorStr.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)(?:,\s*([0-9.]+))?\)/);
+  if (match) {
+    const a = match[4] !== undefined ? parseFloat(match[4]) : 1.0;
+    return d.vec4f(parseInt(match[1]) / 255, parseInt(match[2]) / 255, parseInt(match[3]) / 255, a);
+  }
+  return d.vec4f(1.0, 1.0, 1.0, 1.0);
+};
+
+const updateColors = () => {
+  const style = getComputedStyle(sliderElement);
+
+  jellyColorUniform.write(parseColor4(style.color));
+  groundColorUniform.write(parseColor3(style.backgroundColor));
+  groundTextColorUniform.write(parseColor3(style.caretColor));
+  (canvas as any).requestPaint?.();
+};
+
+sliderElement.addEventListener('focus', updateColors);
+sliderElement.addEventListener('blur', updateColors);
+hcMedia.addEventListener('change', updateColors);
+darkMedia.addEventListener('change', updateColors);
+contrastMedia.addEventListener('change', updateColors);
+updateColors();
+
+
 export function onCleanup() {
+  sliderElement.removeEventListener('focus', updateColors);
+  sliderElement.removeEventListener('blur', updateColors);
+  hcMedia.removeEventListener('change', updateColors);
+  darkMedia.removeEventListener('change', updateColors);
+  contrastMedia.removeEventListener('change', updateColors);
   cancelAnimationFrame(animationFrameHandle);
   resizeObserver.disconnect();
   root.destroy();
