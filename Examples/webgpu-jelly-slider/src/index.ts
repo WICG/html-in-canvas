@@ -130,6 +130,7 @@ const lightUniform = root.createUniform(DirectionalLight, {
 });
 
 const jellyColorUniform = root.createUniform(d.vec4f, d.vec4f(1.0, 0.45, 0.075, 1.0));
+const jellyScatterUniform = root.createUniform(d.f32, JELLY_SCATTER_STRENGTH);
 const groundColorUniform = root.createUniform(d.vec3f, d.vec3f(1.0));
 const groundTextColorUniform = root.createUniform(d.vec3f, d.vec3f(0.5));
 
@@ -700,7 +701,7 @@ const rayMarch = (rayOrigin: d.v3f, rayDirection: d.v3f, _uv: d.v2f) => {
         const lightDir = std.neg(lightUniform.$.direction);
 
         const forward = std.max(0.0, std.dot(lightDir, refrDir));
-        const scatter = scatterTint.mul(JELLY_SCATTER_STRENGTH * forward * progress ** 3);
+        const scatter = scatterTint.mul(jellyScatterUniform.$ * forward * progress ** 3);
         refractedColor = env.mul(T).add(scatter);
       }
 
@@ -797,7 +798,15 @@ function render(timestamp: number) {
 
   randomUniform.write(d.vec2f((Math.random() - 0.5) * 2, (Math.random() - 0.5) * 2));
 
-  currentMouseX += (targetMouseX - currentMouseX) * 0.08;
+  const reduce = motionMedia.matches || transparencyMedia.matches;
+  if (reduce) {
+    currentMouseX = targetMouseX;
+    slider.restLen = Math.max(0.001, Math.abs(currentMouseX - slider.anchor[0])) / (slider.n - 1);
+  } else {
+    currentMouseX += (targetMouseX - currentMouseX) * 0.08;
+    slider.restLen = 1.9 / (slider.n - 1);
+  }
+
   slider.setDragX(currentMouseX);
   slider.update(deltaTime);
 
@@ -845,6 +854,27 @@ const hcMedia = window.matchMedia('(forced-colors: active)');
 const darkMedia = window.matchMedia('(prefers-color-scheme: dark)');
 const contrastMedia = window.matchMedia('(prefers-contrast: more)');
 
+const motionMedia = window.matchMedia('(prefers-reduced-motion: reduce)');
+const transparencyMedia = window.matchMedia('(prefers-reduced-transparency: reduce)');
+
+const updateReducedFeatures = () => {
+  const reduce = motionMedia.matches || transparencyMedia.matches;
+  
+  if (reduce) {
+    slider.damping = 1.0;
+    slider.archStrength = 0.0;
+    jellyScatterUniform.write(0.0);
+  } else {
+    slider.damping = 0.01;
+    slider.archStrength = 2.0;
+    jellyScatterUniform.write(JELLY_SCATTER_STRENGTH);
+  }
+};
+
+motionMedia.addEventListener('change', updateReducedFeatures);
+transparencyMedia.addEventListener('change', updateReducedFeatures);
+updateReducedFeatures();
+
 const parseColor3 = (colorStr: string): d.Infer<typeof d.vec3f> => {
   const match = colorStr.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)/);
   if (match) {
@@ -885,6 +915,8 @@ export function onCleanup() {
   hcMedia.removeEventListener('change', updateColors);
   darkMedia.removeEventListener('change', updateColors);
   contrastMedia.removeEventListener('change', updateColors);
+  motionMedia.removeEventListener('change', updateReducedFeatures);
+  transparencyMedia.removeEventListener('change', updateReducedFeatures);
   cancelAnimationFrame(animationFrameHandle);
   resizeObserver.disconnect();
   root.destroy();

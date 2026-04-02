@@ -34,11 +34,11 @@ export class Slider {
     StorageFlag;
   endCapUniform: TgpuUniform<d.Vec4f>;
 
-  readonly n: number;
-  readonly totalLength: number;
-  readonly restLen: number;
-  readonly baseY: number;
-  readonly anchor: d.v2f;
+  n: number;
+  totalLength: number;
+  restLen: number;
+  baseY: number;
+  anchor: d.v2f;
   readonly bbox: [top: number, right: number, bottom: number, left: number];
 
   // Physics parameters
