@@ -76,7 +76,7 @@ The transform used to draw the element on the worker thread needs to be synced b
 <img width="250" height="38" alt="a screenshot showing a form element with a blinking cursor" src="https://github.com/user-attachments/assets/acbdd231-3259-4819-b57e-32e29c460fc9" />
 
 ```html
-<canvas id="canvas" style="width: 200px; height: 200px;" layoutsubtree>
+<canvas id="canvas" style="width: 400px; height: 200px;" layoutsubtree>
   <form id="form_element">
     <label for="name">name:</label>
     <input id="name">
