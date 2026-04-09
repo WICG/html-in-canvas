@@ -265,6 +265,7 @@ Sensitive information includes:
 * Spelling and grammar markers.
 * Visited link information.
 * Pending form autofill information not otherwise available to JavaScript.
+* Subpixel text anti-aliasing.
 
 The following new information is not considered sensitive:
 * Search text (find-in-page) and text-fragment (fragment url) markers.
