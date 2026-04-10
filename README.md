@@ -223,8 +223,8 @@ dictionary PaintEventInit : EventInit {
 
 [Exposed=(Window,Worker), Transferable]
 interface ElementImage {
-  readonly attribute unsigned long width;
-  readonly attribute unsigned long height;
+  readonly attribute double width;
+  readonly attribute double height;
   undefined close();
 };
 ```
