@@ -203,10 +203,26 @@ OffscreenCanvasRenderingContext2D includes CanvasDrawElementImage;
 partial interface WebGLRenderingContext {
   void texElementImage2D(GLenum target, GLint level, GLint internalformat,
                          GLenum format, GLenum type, (Element or ElementImage) element);
+  void texElementImage2D(GLenum target, GLint level, GLint internalformat,
+                         GLsizei width, GLsizei height, GLenum format,
+                         GLenum type, (Element or ElementImage) element);
+  void texElementImage2D(GLenum target, GLint level, GLint internalformat,
+                         GLfloat sx, GLfloat sy, GLfloat swidth, GLfloat sheight,
+                         GLenum format, GLenum type, (Element or ElementImage) element);
+  void texElementImage2D(GLenum target, GLint level, GLint internalformat,
+                         GLfloat sx, GLfloat sy, GLfloat swidth, GLfloat sheight,
+                         GLsizei width, GLsizei height, GLenum format,
+                         GLenum type, (Element or ElementImage) element);
 };
 
 partial interface GPUQueue {
   void copyElementImageToTexture((Element or ElementImage) source,
+                                 GPUImageCopyTextureTagged destination);
+  void copyElementImageToTexture((Element or ElementImage) source,
+                                 GPUIntegerCoordinate width, GPUIntegerCoordinate height,
+                                 GPUImageCopyTextureTagged destination);
+  void copyElementImageToTexture((Element or ElementImage) source,
+                                 float sx, float sy, float swidth, float sheight,
                                  GPUImageCopyTextureTagged destination);
 }
 
