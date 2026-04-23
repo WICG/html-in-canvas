@@ -224,6 +224,10 @@ partial interface GPUQueue {
   void copyElementImageToTexture((Element or ElementImage) source,
                                  float sx, float sy, float swidth, float sheight,
                                  GPUImageCopyTextureTagged destination);
+  void copyElementImageToTexture((Element or ElementImage) source,
+                                 float sx, float sy, float swidth, float sheight,
+                                 GPUIntegerCoordinate width, GPUIntegerCoordinate height,
+                                 GPUImageCopyTextureTagged destination);
 }
 
 [Exposed=Window]
