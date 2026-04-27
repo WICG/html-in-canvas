@@ -280,7 +280,7 @@ The `drawElementImage()` method and any other methods that draw element image sn
 Both painting (via canvas pixel readbacks or timing attacks) and invalidation (via `onpaint`) have the potential to leak sensitive information, and this is prevented by excluding sensitive information when painting and invalidating.
 
 Sensitive information includes:
-* Cross-origin data in [embedded content](https://html.spec.whatwg.org/#embedded-content-category) (e.g., `<iframe>`, `<img>`), [`<url>`](https://drafts.csswg.org/css-values-4/#url-value) references (e.g., `background-image`, `clip-path`), and [SVG](https://svgwg.org/svg2-draft/single-page.html#types-InterfaceSVGURIReference) (e.g., `<use>`). Note that same-origin iframes would still paint, but cross-origin content in them would not.
+* Cross-origin data in [embedded content](https://html.spec.whatwg.org/#embedded-content-category) (e.g., `<iframe>`, `<img>`), [`<url>`](https://drafts.csswg.org/css-values-4/#url-value) references (e.g., `background-image`, `clip-path`), `<canvas>` elements tained with cross-origin data, and [SVG](https://svgwg.org/svg2-draft/single-page.html#types-InterfaceSVGURIReference) (e.g., `<use>`, `<pattern>`, `<feImage>`). Note that same-origin iframes would still paint, but cross-origin content in them would not.
 * System colors, themes, or preferences.
 * Spelling and grammar markers.
 * Visited link information.
