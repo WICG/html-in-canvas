@@ -259,7 +259,7 @@ interface ElementImage {
 
 <img width="640" height="320" alt="screenshot showing a pie chart" src="https://github.com/user-attachments/assets/887eefa2-ffc0-49d6-914b-987b05ccb45d" />
 
-#### [Live demo](https://wicg.github.io/html-in-canvas/Examples/webgpu-jelly-slider/) ([source](Examples/webgpu-jelly-slider)) using the WebGPU `copyElementImage` API to draw a div under a jelly slider.
+#### [Live demo](https://wicg.github.io/html-in-canvas/Examples/webgpu-jelly-slider/) ([source](Examples/webgpu-jelly-slider)) using the WebGPU `copyElementImageToTexture` API to draw a div under a jelly slider.
 
 <img width="640" height="320" alt="screenshot showing a range slider with a jelly effect" src="https://github.com/user-attachments/assets/86ecb8b8-4d3b-49b0-8aa0-5f2df5674045" />
 
