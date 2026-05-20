@@ -10,7 +10,7 @@ The APIs described here are implemented behind a flag in Chromium and can be ena
 
 ## Motivation
 
-There is no web API to easily render complex layouts of text and other content into a `<canvas>`. As a result, `<canvas>`-based content suffers in accessibility, internationalization, performance, and quality.
+There is no web API to easily render complex layouts of text and other content in a `<canvas>`. As a result, `<canvas>`-based content suffers in accessibility, internationalization, performance, and quality.
 
 ### Use cases
 
