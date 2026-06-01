@@ -771,7 +771,22 @@ function createBindGroups() {
 }
 
 (canvas as any).onpaint = () => {
-  (root.device.queue as any).copyElementImageToTexture(valueElement, width, height, { texture: valueRawTexture });
+  const sourceDict = { source: valueElement };
+  const destDict = {
+    destination: { texture: valueRawTexture },
+    width: width,
+    height: height
+  };
+  try {
+    (root.device.queue as any).copyElementImageToTexture(sourceDict, destDict);
+  } catch (e) {
+    // The copyElementImageToTexture API was recently changed to take two maps
+    // (see: https://github.com/WICG/html-in-canvas#idl-changes). This snippet
+    // supports the old syntax temporarily so that the demos do not break.
+    (root.device.queue as any).copyElementImageToTexture(
+      valueElement, width, height, { texture: valueRawTexture });
+    console.log('Note: using old copyElementImageToTexture API');
+  }
 
   // TODO(pdr): Calculate this correctly using `getElementTransform`. For now,
   // the transform is just hard-coded.
@@ -859,7 +874,7 @@ const transparencyMedia = window.matchMedia('(prefers-reduced-transparency: redu
 
 const updateReducedFeatures = () => {
   const reduce = motionMedia.matches || transparencyMedia.matches;
-  
+
   if (reduce) {
     slider.damping = 1.0;
     slider.archStrength = 0.0;
