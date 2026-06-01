@@ -310,13 +310,13 @@ A new `paint` event is needed to give developers an opportunity to update their 
 There are several opportunities in the [update the rendering](https://html.spec.whatwg.org/#update-the-rendering) steps where the `paint` event could fire:
 
   * 14\. Run animation frame callbacks.
-  
+
   * 16.2.1\. Recalculate styles and update layout.
-      
+
   * 16.2.6\. Deliver resize observers, looping back to 16.2.1 if needed.
 
   * _Option A: Fire `paint` at resize observer timing, looping back to 16.2.1 if needed._
-  
+
   * 19\. Run the update intersection observations steps.
 
   * Paint, where the painted output of elements is calculated. This is not an explicitly named step in [update the rendering](https://html.spec.whatwg.org/#update-the-rendering).
