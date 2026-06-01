@@ -65,9 +65,9 @@
       // supports the old syntax temporarily so that the demos do not break.
       const level = 0;
       const srcFormat = gl.RGBA;
-      const srcType = gl.UNSIGNED_BYTE;
+      const destType = gl.UNSIGNED_BYTE;
       gl.texElementImage2D(gl.TEXTURE_2D, level, internalFormat,
-                              srcFormat, srcType, draw_element);
+                              srcFormat, destType, draw_element);
       console.log('Note: using old texElementImage2D API');
     }
 
