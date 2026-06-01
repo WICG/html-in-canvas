@@ -56,13 +56,21 @@
     const texture = gl.createTexture();
     gl.bindTexture(gl.TEXTURE_2D, texture);
 
-    const level = 0;
-    const internalFormat = gl.RGBA;
-    const srcFormat = gl.RGBA;
-    const srcType = gl.UNSIGNED_BYTE;
+    const internalFormat = gl.RGBA8;
+    try {
+      gl.texElementImage2D(gl.TEXTURE_2D, internalFormat, draw_element);
+    } catch (e) {
+      // The texElementImage2D API was recently changed (see:
+      // https://github.com/WICG/html-in-canvas#idl-changes). This snippet
+      // supports the old syntax temporarily so that the demos do not break.
+      const level = 0;
+      const srcFormat = gl.RGBA;
+      const destType = gl.UNSIGNED_BYTE;
+      gl.texElementImage2D(gl.TEXTURE_2D, level, internalFormat,
+                              srcFormat, destType, draw_element);
+      console.log('Note: using old texElementImage2D API');
+    }
 
-    gl.texElementImage2D(gl.TEXTURE_2D, level, internalFormat,
-                            srcFormat, srcType, draw_element);
 
     // Linear texture filtering produces better results than mipmap with text.
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
