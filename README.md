@@ -200,34 +200,38 @@ interface mixin CanvasDrawElementImage {
 CanvasRenderingContext2D includes CanvasDrawElementImage;
 OffscreenCanvasRenderingContext2D includes CanvasDrawElementImage;
 
+dictionary WebGLCopyElementImageConfig {
+  GLfloat sx;
+  GLfloat sy;
+  GLfloat swidth;
+  GLfloat sheight;
+  GLsizei width;
+  GLsizei height;
+};
+
 partial interface WebGLRenderingContext {
-  void texElementImage2D(GLenum target, GLint level, GLint internalformat,
-                         GLenum format, GLenum type, (Element or ElementImage) element);
-  void texElementImage2D(GLenum target, GLint level, GLint internalformat,
-                         GLsizei width, GLsizei height, GLenum format,
-                         GLenum type, (Element or ElementImage) element);
-  void texElementImage2D(GLenum target, GLint level, GLint internalformat,
-                         GLfloat sx, GLfloat sy, GLfloat swidth, GLfloat sheight,
-                         GLenum format, GLenum type, (Element or ElementImage) element);
-  void texElementImage2D(GLenum target, GLint level, GLint internalformat,
-                         GLfloat sx, GLfloat sy, GLfloat swidth, GLfloat sheight,
-                         GLsizei width, GLsizei height, GLenum format,
-                         GLenum type, (Element or ElementImage) element);
+  void texElementImage2D(GLenum target, GLenum internalformat,
+                         (Element or ElementImage) element,
+                         optional WebGLCopyElementImageConfig config = {});
+};
+
+dictionary GPUCopyElementImageDestination {
+  required GPUImageCopyTextureTagged destination;
+  GPUIntegerCoordinate width;
+  GPUIntegerCoordinate height;
+};
+
+dictionary GPUCopyElementImageSource {
+  required (Element or ElementImage) source;
+  float sx;
+  float sy;
+  float swidth;
+  float sheight;
 };
 
 partial interface GPUQueue {
-  void copyElementImageToTexture((Element or ElementImage) source,
-                                 GPUImageCopyTextureTagged destination);
-  void copyElementImageToTexture((Element or ElementImage) source,
-                                 GPUIntegerCoordinate width, GPUIntegerCoordinate height,
-                                 GPUImageCopyTextureTagged destination);
-  void copyElementImageToTexture((Element or ElementImage) source,
-                                 float sx, float sy, float swidth, float sheight,
-                                 GPUImageCopyTextureTagged destination);
-  void copyElementImageToTexture((Element or ElementImage) source,
-                                 float sx, float sy, float swidth, float sheight,
-                                 GPUIntegerCoordinate width, GPUIntegerCoordinate height,
-                                 GPUImageCopyTextureTagged destination);
+  void copyElementImageToTexture(GPUCopyElementImageSource source,
+                                 GPUCopyElementImageDestination destination);
 }
 
 [Exposed=Window]
