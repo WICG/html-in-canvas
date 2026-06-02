@@ -54,9 +54,10 @@ const rawContentTexture = root.unwrap(contentTexture);
 
 const contentElement = document.getElementById("content")!;
 canvas.onpaint = () => {
-  root.device.queue.copyElementImageToTexture(contentElement, width, height, {
-    texture: rawContentTexture,
-  });
+  root.device.queue.copyElementImageToTexture(
+    { source: contentElement },
+    { destination: { texture: rawContentTexture }, width, height },
+  );
 
   const drawTransform = new DOMMatrix().scale(
     width / contentElement.clientWidth,
