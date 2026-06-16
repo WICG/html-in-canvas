@@ -277,9 +277,9 @@ A demo of the same thing using an experimental extension of [three.js](https://t
 
 <img width="640" height="320" alt="screenshot showing a form drawn into canvas" src="https://github.com/user-attachments/assets/be2d098f-17ae-4982-a0f9-a069e3c2d1d5" />
 
-## Privacy-preserving painting
+## Read-back-allowed rendering
 
-The `drawElementImage()` method and any other methods that draw element image snapshots, as well as the paint event, must not reveal any security- or privacy-sensitive information that isn't otherwise observable to author code.
+The `drawElementImage()` method and any other methods that draw element image snapshots, as well as the paint event, must not reveal any security- or privacy-sensitive information that isn't otherwise observable to author code. This concept is called read-back-allowed rendering because it makes it possible to allow pixel read-back, which is always possible with WebGL and WebGPU.
 
 Both painting (via canvas pixel readbacks or timing attacks) and invalidation (via `onpaint`) have the potential to leak sensitive information, and this is prevented by excluding sensitive information when painting and invalidating.
 
