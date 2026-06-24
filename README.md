@@ -291,6 +291,7 @@ Sensitive information includes:
 * Pending form autofill information not otherwise available to JavaScript.
 * Subpixel text anti-aliasing.
 * User preferences for caption and subtitle selection and appearance.
+* IME pop-ups and distinctive IME text formatting.
 
 The following new information is not considered sensitive:
 * Search text (find-in-page) and text-fragment (fragment url) markers.
