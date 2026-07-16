@@ -1,0 +1,485 @@
+<!doctype html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <title>WebGL 3D Book Experience</title>
+    <style>
+        body { margin: 0; overflow: hidden; background: #111; color: white; font-family: sans-serif; touch-action: none; }
+        canvas { display: block; width: 100vw; height: 100vh; }
+        #ui { position: absolute; top: 10px; left: 10px; background: rgba(0,0,0,0.7); padding: 15px; border-radius: 8px; pointer-events: none; border: 1px solid #555; z-index: 1000; }
+        h1 { margin: 0 0 5px 0; font-size: 18px; color: #aaa; }
+        
+        /* Book Page DOM Styles */
+        .book-page {
+            position: absolute;
+            width: 800px;
+            height: 1200px; /* 1:1.5 Aspect Ratio to match WebGL 2.0x3.0 plane */
+            background-color: #fdf6e3;
+            color: #333;
+            box-sizing: border-box;
+            padding: 80px;
+            font-family: 'Georgia', serif;
+            box-shadow: inset 0 0 50px rgba(0,0,0,0.1);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .book-page.cover {
+            background-color: #2c3e50;
+            color: #ecf0f1;
+            align-items: center;
+            border: 20px solid #ecf0f1;
+            padding: 40px;
+        }
+
+        .book-page h2 {
+            font-size: 60px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .book-page p {
+            font-size: 32px;
+            line-height: 1.6;
+            margin-bottom: 30px;
+            text-align: justify;
+        }
+
+        .page-number {
+            position: absolute;
+            bottom: 40px;
+            width: 100%;
+            text-align: center;
+            font-size: 24px;
+            left: 0;
+            color: #777;
+        }
+    </style>
+</head>
+<body>
+    <div id="ui">
+        <h1>WebGL Book</h1>
+        Use Left/Right Arrow keys to turn pages. Try selecting the text!
+    </div>
+    <canvas id="gl-canvas" layoutsubtree>
+        <!-- Page 0 (Front Cover) -->
+        <div id="page-0" class="book-page cover">
+            <h2>The Adventures of<br>Sherlock Holmes</h2>
+            <p style="text-align:center;">By Arthur Conan Doyle</p>
+        </div>
+    
+        <!-- Page 1 (Inside Front Cover / Blank) -->
+        <div id="page-1" class="book-page"></div>
+    
+        <!-- Page 2 -->
+        <div id="page-2" class="book-page">
+            <h2>A Scandal in Bohemia</h2>
+            <p>To Sherlock Holmes she is always the woman. I have seldom heard him mention her under any other name. In his
+                eyes she eclipses and predominates the whole of her sex. It was not that he felt any emotion akin to love
+                for Irene Adler. All emotions, and that one particularly, were abhorrent to his cold, precise but admirably
+                balanced mind.</p>
+            <p>He was, I take it, the most perfect reasoning and observing machine that the world has seen, but as a lover
+                he would have placed himself in a false position.</p>
+            <div class="page-number">2</div>
+        </div>
+    
+        <!-- Page 3 -->
+        <div id="page-3" class="book-page">
+            <p>He never spoke of the softer passions, save with a gibe and a sneer. They were admirable things for the
+                observer—excellent for drawing the veil from men’s motives and actions. But for the trained reasoner to
+                admit such intrusions into his own delicate and finely adjusted temperament was to introduce a distracting
+                factor which might throw a doubt upon all his mental results.</p>
+            <p>Grit in a sensitive instrument, or a crack in one of his own high-power lenses, would not be more disturbing
+                than a strong emotion in a nature such as his.</p>
+            <div class="page-number">3</div>
+        </div>
+    
+        <!-- Page 4 -->
+        <div id="page-4" class="book-page">
+            <p>And yet there was but one woman to him, and that woman was the late Irene Adler, of dubious and questionable
+                memory.</p>
+            <p>I had seen little of Holmes lately. My marriage had drifted us away from each other. My own complete
+                happiness, and the home-centred interests which rise up around the man who first finds himself master of his
+                own establishment, were sufficient to absorb all my attention, while Holmes, who loathed every form of
+                society with his whole Bohemian soul, remained in our lodgings in Baker Street, buried among his old books,
+                and alternating from week to week between cocaine and ambition.</p>
+            <div class="page-number">4</div>
+        </div>
+    
+        <!-- Page 5 (Back Cover) -->
+        <div id="page-5" class="book-page cover" style="background-color:#1a252f;">
+            <h2>The End</h2>
+        </div>
+    </canvas>
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gl-matrix/2.8.1/gl-matrix-min.js"></script>
+    <script>
+      const PAGE_WIDTH = 2.0;
+      const PAGE_HEIGHT = 3.0;
+      
+      const canvas = document.getElementById('gl-canvas');
+      const gl = canvas.getContext('webgl2', { antialias: true });
+      if (!gl) { alert('WebGL2 not supported'); throw new Error('WebGL2 not supported'); }
+
+      window.addEventListener('resize', () => {
+          canvas.width = window.innerWidth;
+          canvas.height = window.innerHeight;
+          gl.viewport(0, 0, canvas.width, canvas.height);
+      });
+      window.dispatchEvent(new Event('resize')); 
+
+      function createPlane(width, height, segX, segY) {
+          const positions = [], normals = [], uvs = [], indices = [];
+          for (let y = 0; y <= segY; y++) {
+              for (let x = 0; x <= segX; x++) {
+                  const u = x / segX;
+                  const v = y / segY;
+                  positions.push(u * width, (v - 0.5) * height, 0);
+                  normals.push(0, 0, 1);
+                  uvs.push(u, 1.0 - v);
+              }
+          }
+          for (let y = 0; y < segY; y++) {
+              for (let x = 0; x < segX; x++) {
+                  const p1 = y * (segX + 1) + x;
+                  const p2 = p1 + 1;
+                  const p3 = (y + 1) * (segX + 1) + x;
+                  const p4 = p3 + 1;
+                  indices.push(p1, p2, p3);
+                  indices.push(p2, p4, p3);
+              }
+          }
+          return {
+              positions: new Float32Array(positions),
+              normals: new Float32Array(normals),
+              uvs: new Float32Array(uvs),
+              indices: new Uint16Array(indices)
+          };
+      }
+
+                function createPageTexture(gl) {
+                    const tex = gl.createTexture();
+                    gl.bindTexture(gl.TEXTURE_2D, tex);
+                    // Pre-allocate a 1x1 pixel while we wait for DOM paint
+                    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 1, 1, 0, gl.RGBA, gl.UNSIGNED_BYTE, new Uint8Array([255, 255, 255, 255]));
+                    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+                    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+                    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+                    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+                    return tex;
+                }
+
+                function updatePageTextureFromDOM(gl, tex, domId) {
+                    if (!gl.texElementImage2D) return;
+                    const element = document.getElementById(domId);
+                    if (!element) return;
+            
+          gl.bindTexture(gl.TEXTURE_2D, tex);
+                // html-in-canvas API call to paint DOM into texture
+                gl.texElementImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, element);
+      }
+
+      const vsSource = `#version 300 es
+      layout(location=0) in vec3 aPosition;
+      layout(location=1) in vec3 aNormal;
+      layout(location=2) in vec2 aTexCoord;
+
+      uniform mat4 uProjection;
+      uniform mat4 uView;
+      uniform mat4 uModel;
+
+      uniform float uTurnProgress;
+      uniform float uPageWidth;
+
+      out vec2 vTexCoord;
+      out vec3 vNormal;
+      out vec3 vWorldPos;
+
+      void main() {
+          float t = uTurnProgress;
+          float theta = t * 3.14159265;
+          vec3 pos = aPosition;
+
+          float normalizedDist = pos.x / uPageWidth;
+          
+          // Pages bow backwards when peeled (air resistance/tension)
+          float sagAmount = -sin(theta) * uPageWidth * 0.15;
+          float sagProfile = pow(normalizedDist, 1.5); 
+          pos.z += sagAmount * sagProfile;
+
+          // Rotate around spine
+          float xRot = pos.x * cos(theta) - pos.z * sin(theta);
+          float zRot = pos.x * sin(theta) + pos.z * cos(theta);
+          pos.x = xRot;
+          pos.z = zRot;
+
+          vec4 worldPos = uModel * vec4(pos, 1.0);
+          gl_Position = uProjection * uView * worldPos;
+
+          // Approximate normals for lighting
+          vec3 n = aNormal;
+          float nx = n.x * cos(theta) - n.z * sin(theta);
+          float nz = n.x * sin(theta) + n.z * cos(theta);
+          vNormal = mat3(uModel) * vec3(nx, n.y, nz);
+          
+          vWorldPos = worldPos.xyz;
+          vTexCoord = aTexCoord;
+      }`;
+
+      const fsSource = `#version 300 es
+      precision highp float;
+
+      in vec2 vTexCoord;
+      in vec3 vNormal;
+      in vec3 vWorldPos;
+
+      uniform sampler2D uFrontTex;
+      uniform sampler2D uBackTex;
+      
+      out vec4 fragColor;
+
+      void main() {
+          vec2 texCoord = vTexCoord;
+          vec4 texColor;
+          vec3 n = normalize(vNormal);
+
+          if (gl_FrontFacing) {
+              texColor = texture(uFrontTex, texCoord);
+          } else {
+              texCoord.x = 1.0 - texCoord.x;
+              texColor = texture(uBackTex, texCoord);
+              n = -n;
+          }
+
+          vec3 lightDir = normalize(vec3(0.4, 0.8, 0.8)); // angled lit
+          float diff = max(dot(n, lightDir), 0.3); 
+          vec3 color = texColor.rgb * diff;
+          
+          // Spine shadow gradient
+          float distToSpine = gl_FrontFacing ? vTexCoord.x : (1.0 - vTexCoord.x);
+          float shadow = mix(0.4, 1.0, smoothstep(0.0, 0.2, distToSpine));
+          color *= shadow;
+
+          fragColor = vec4(color, texColor.a);
+      }`;
+
+      function createShader(gl, type, source) {
+          const shader = gl.createShader(type);
+          gl.shaderSource(shader, source);
+          gl.compileShader(shader);
+          if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
+              console.error(gl.getShaderInfoLog(shader));
+              gl.deleteShader(shader);
+              return null;
+          }
+          return shader;
+      }
+
+      const program = gl.createProgram();
+      gl.attachShader(program, createShader(gl, gl.VERTEX_SHADER, vsSource));
+      gl.attachShader(program, createShader(gl, gl.FRAGMENT_SHADER, fsSource));
+      gl.linkProgram(program);
+
+      const uniforms = {
+          uProjection: gl.getUniformLocation(program, 'uProjection'),
+          uView: gl.getUniformLocation(program, 'uView'),
+          uModel: gl.getUniformLocation(program, 'uModel'),
+          uTurnProgress: gl.getUniformLocation(program, 'uTurnProgress'),
+          uPageWidth: gl.getUniformLocation(program, 'uPageWidth'),
+          uFrontTex: gl.getUniformLocation(program, 'uFrontTex'),
+          uBackTex: gl.getUniformLocation(program, 'uBackTex')
+      };
+
+      const plane = createPlane(PAGE_WIDTH, PAGE_HEIGHT, 50, 50);
+      const vao = gl.createVertexArray();
+      gl.bindVertexArray(vao);
+
+      const posBuffer = gl.createBuffer();
+      gl.bindBuffer(gl.ARRAY_BUFFER, posBuffer);
+      gl.bufferData(gl.ARRAY_BUFFER, plane.positions, gl.STATIC_DRAW);
+      gl.enableVertexAttribArray(0); gl.vertexAttribPointer(0, 3, gl.FLOAT, false, 0, 0);
+
+      const normBuffer = gl.createBuffer();
+      gl.bindBuffer(gl.ARRAY_BUFFER, normBuffer);
+      gl.bufferData(gl.ARRAY_BUFFER, plane.normals, gl.STATIC_DRAW);
+      gl.enableVertexAttribArray(1); gl.vertexAttribPointer(1, 3, gl.FLOAT, false, 0, 0);
+
+      const uvBuffer = gl.createBuffer();
+      gl.bindBuffer(gl.ARRAY_BUFFER, uvBuffer);
+      gl.bufferData(gl.ARRAY_BUFFER, plane.uvs, gl.STATIC_DRAW);
+      gl.enableVertexAttribArray(2); gl.vertexAttribPointer(2, 2, gl.FLOAT, false, 0, 0);
+
+      const idxBuffer = gl.createBuffer();
+      gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, idxBuffer);
+      gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, plane.indices, gl.STATIC_DRAW);
+
+      const numTotalPages = 6;
+                const pages = [];
+      for (let i = 0; i < numTotalPages/2; i++) {
+          const frontId = `page-${i * 2}`;
+          const backId = `page-${i * 2 + 1}`;
+          const frontTex = createPageTexture(gl);
+          const backTex = createPageTexture(gl);
+
+          pages.push({
+              frontId,
+              backId,
+              frontTex,
+              backTex,
+              progress: 0,
+              targetProgress: 0
+          });
+      }
+
+      function getTurnablePage(direction) {
+          if (direction > 0) {
+              return pages.find(p => p.targetProgress === 0.0) || null;
+          } else {
+              const reversed = [...pages].reverse();
+              return reversed.find(p => p.targetProgress === 1.0) || null;
+          }
+      }
+
+      window.addEventListener('keydown', e => {
+          if (e.key === 'ArrowRight') {
+              let p = getTurnablePage(1);
+              if (p) { p.targetProgress = 1.0; p.progress = Math.max(0.01, p.progress); }
+          }
+          if (e.key === 'ArrowLeft') {
+              let p = getTurnablePage(-1);
+              if (p) { p.targetProgress = 0.0; p.progress = Math.min(0.99, p.progress); }
+          }
+      });
+
+      let lastTime = 0;
+
+      function render(time) {
+          const dt = (time - lastTime) / 1000;
+          lastTime = time;
+
+          for (let p of pages) {
+              if (p.targetProgress !== -1 && p.progress !== p.targetProgress) {
+                  const speed = 1.0; 
+                  if (p.progress < p.targetProgress) {
+                      p.progress = Math.min(p.targetProgress, p.progress + speed * dt);
+                  } else {
+                      p.progress = Math.max(p.targetProgress, p.progress - speed * dt);
+                  }
+              }
+
+              // Update Texture from DOM every frame so interactions/animations are captured
+              updatePageTextureFromDOM(gl, p.frontTex, p.frontId);
+              updatePageTextureFromDOM(gl, p.backTex, p.backId);
+          }
+
+          gl.clearColor(0.1, 0.1, 0.1, 1.0);
+          gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+          gl.enable(gl.DEPTH_TEST);
+          gl.disable(gl.CULL_FACE);
+
+          gl.useProgram(program);
+
+          const projection = mat4.create();
+          mat4.perspective(projection, 45 * Math.PI / 180, canvas.width / canvas.height, 0.1, 100.0);
+          
+          const view = mat4.create();
+          mat4.lookAt(view, [0, 0, 7], [0, 0, 0], [0, 1, 0]);
+
+          gl.uniformMatrix4fv(uniforms.uProjection, false, projection);
+          gl.uniformMatrix4fv(uniforms.uView, false, view);
+          gl.uniform1f(uniforms.uPageWidth, PAGE_WIDTH);
+
+          gl.bindVertexArray(vao);
+          gl.activeTexture(gl.TEXTURE0);
+          gl.uniform1i(uniforms.uSampler, 0);
+
+          for (let i = 0; i < pages.length; i++) {
+              const p = pages[i];
+              const t = p.progress;
+              const zRight = -i * 0.01;
+              const zLeft = -(pages.length - 1 - i) * 0.01;
+              const zOffset = (1.0 - t) * zRight + t * zLeft;
+              
+              const model = mat4.create();
+              mat4.translate(model, model, [0, 0, zOffset]);
+              mat4.rotateX(model, model, -0.15); 
+
+              gl.uniformMatrix4fv(uniforms.uModel, false, model);
+              gl.uniform1f(uniforms.uTurnProgress, t);
+
+              gl.activeTexture(gl.TEXTURE0);
+              gl.bindTexture(gl.TEXTURE_2D, p.frontTex);
+              gl.uniform1i(uniforms.uFrontTex, 0);
+
+              gl.activeTexture(gl.TEXTURE1);
+              gl.bindTexture(gl.TEXTURE_2D, p.backTex);
+              gl.uniform1i(uniforms.uBackTex, 1);
+
+              gl.drawElements(gl.TRIANGLES, plane.indices.length, gl.UNSIGNED_SHORT, 0);
+
+              // Update DOM Transforms using html-in-canvas getElementTransform
+              if (canvas.getElementTransform) {
+                  // The HTML element is 800x1200 pixels CSS.
+                  // The Quad is 0 to 2 in X, and -1.5 to 1.5 in Y.
+                  // Center of quad is X=1, Y=0.
+                  const toGLModel = new DOMMatrix()
+                      // Scale CSS to WebGL space units
+                      .scale(PAGE_WIDTH / 800, -PAGE_HEIGHT / 1200, 1)
+                      // Origin in CSS is top-left, we want (0,0) in top left to map to WebGL (0, 1.5)
+                      // so we shift.
+                      .translate(0, -1200 / 2); // Shift Y to put origin at center of the CSS div's Y axis
+
+                  // Wait, actually CSS Y goes down, Quad goes up.
+                  // toGLModel maps [0..800, 0..1200] -> [0..2, 1.5..-1.5]
+
+                  // For the uncurled flat model matrix for Front
+                  const flatModelFront = mat4.create();
+                  mat4.translate(flatModelFront, flatModelFront, [0, 0, zOffset]);
+                  mat4.rotateX(flatModelFront, flatModelFront, -0.15);
+
+                  // The back side has X flipped, which technically happens in the shader, but for interaction we must flip it:
+                  const flatModelBack = mat4.create();
+                  mat4.translate(flatModelBack, flatModelBack, [0, 0, zOffset]);
+                  mat4.rotateX(flatModelBack, flatModelBack, -0.15);
+                  mat4.translate(flatModelBack, flatModelBack, [2.0, 0, 0]); // Move to right edge
+                  mat4.scale(flatModelBack, flatModelBack, [-1, 1, 1]); // Flip X
+
+                  // To CSS Viewport matrix
+                  const toCSSViewport = new DOMMatrix()
+                      .translate(canvas.width / 2, canvas.height / 2)
+                      .scale(canvas.width / 2, -canvas.height / 2, 1);
+
+                  // Process Front DOM Element
+                  const mvpFront = mat4.create();
+                  mat4.multiply(mvpFront, projection, view);
+                  mat4.multiply(mvpFront, mvpFront, flatModelFront);
+
+                  const frontEl = document.getElementById(p.frontId);
+                  if (frontEl) {
+                      const finalTransformFront = toCSSViewport.multiply(new DOMMatrix(Array.from(mvpFront))).multiply(toGLModel);
+                      const tFront = canvas.getElementTransform(frontEl, finalTransformFront);
+                      if (tFront) frontEl.style.transform = tFront.toString();
+                  }
+
+                  // Process Back DOM Element
+                  const mvpBack = mat4.create();
+                  mat4.multiply(mvpBack, projection, view);
+                  mat4.multiply(mvpBack, mvpBack, flatModelBack);
+
+                  const backEl = document.getElementById(p.backId);
+                  if (backEl) {
+                      const finalTransformBack = toCSSViewport.multiply(new DOMMatrix(Array.from(mvpBack))).multiply(toGLModel);
+                      const tBack = canvas.getElementTransform(backEl, finalTransformBack);
+                      if (tBack) backEl.style.transform = tBack.toString();
+                  }
+              }
+          }
+
+          requestAnimationFrame(render);
+      }
+      requestAnimationFrame(render);
+    </script>
+</body>
+</html>
