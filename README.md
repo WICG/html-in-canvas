@@ -205,6 +205,8 @@ dictionary WebGLCopyElementImageConfig {
   GLfloat sy;
   GLfloat swidth;
   GLfloat sheight;
+  GLint xoffset;
+  GLint yoffset;
   GLsizei width;
   GLsizei height;
 };
