@@ -11,54 +11,121 @@
 <style>
   canvas {
     border: 1px solid blue;
-    width: 638px;
-    height: 318px;
+    width: 400px;
+    height: 600px;
   }
-  #draw_element {
+  #choice {
     border: 1px solid blue;
     width: 400px;
     height: 400px;
     padding: 10px;
+    font-size: 3em;
+    display: flex;
+    flex-direction: column;
+  }
+  #choice label {
+    display: flex;
+    align-items: center;
+    gap: 0.3em;
+  }
+  #choice input[type="radio"] {
+    width: 0.8em;
+    height: 0.8em;
+  }
+  #choice button {
+    font-size: 0.5em;
+    margin-top: 0.4em;
+    padding: 0.2em 0.6em;
+    cursor: pointer;
+  }
+  .message {
+    width: 300px;
+    height: 300px;
+    padding: 10px;
+    font-size: 2em;
   }
 </style>
 
-<canvas id="gl-canvas" width="638" height="318" layoutsubtree="true">
-  <!-- inert to prevent hit testing in this example. -->
-  <div id="draw_element" inert>
-    Hello world!<br>I'm multi-line, <b>formatted</b>,
-    rotated text with emoji (&#128512;), RTL text
-    <span dir=rtl>من فارسی صحبت میکنم</span>,
-    vertical text,
-    <p style="writing-mode: vertical-rl;">
-      这是垂直文本
-    </p>
-    an inline image (<img width="150" src="wolf.jpg">), and
-    <svg width="50" height="50">
-      <circle cx="25" cy="25" r="20" fill="green" />
-      <text x="25" y="30" font-size="15" text-anchor="middle" fill="#fff">
-        SVG
-      </text>
-    </svg>!
+<canvas id="gl-canvas" width="400" height="600" layoutsubtree>
+  <div drawable id="choice">
+    <label><input type="radio" id="chk-english" name="language" value="english" checked> English</label>
+    <label><input type="radio" id="chk-spanish" name="language" value="spanish"> Español</label>
+    <label><input type="radio" id="chk-hindi" name="language" value="hindi"> हिंदी</label>
+    <label><input type="radio" id="chk-korean" name="language" value="korean"> 한국어</label>
+    <button id="flip-btn" onclick="flip()">Flip</button>
+  </div>
+  <div drawable id="english" class="message" inert>
+    <p lang="en">Internationalized text made easy with HTML-in-Canvas</p>
+    <button onclick="flip()">Flip</button>
+  </div>
+  <div drawable id="spanish" class="message" inert>
+    <p lang="es">Texto internacionalizado hecho fácil con HTML-in-Canvas</p>
+    <button onclick="flip()">Flip</button>
+  </div>
+  <div drawable id="hindi" class="message" inert>
+    <p lang="hi">HTML-in-Canvas के साथ अंतर्राष्ट्रीयकृत पाठ आसान बना</p>
+    <button onclick="flip()">Flip</button>
+  </div>
+  <div drawable id="korean" class="message" inert>
+    <p lang="ko">HTML-in-Canvas로 쉬워진 국제화 텍스트</p>
+    <button onclick="flip()">Flip</button>
   </div>
 </canvas>
 
 <script>
-  let cubeRotation = 0.0;
+  let cardRotation = 0.0;
+  let cardTargetRotation = 0.0;
   let currentTime = 0;
   let deltaTime = 0;
   let render_context = null;
 
-  //
-  // Initialize a texture and load an image.
-  // When the image finished loading copy it into the texture.
-  //
-  function loadTexture(gl) {
+  // Update the inert status when the card is flipped. This keeps the
+  // accessibility information up to date and determines which elements are
+  // hit tested.
+  function setInert(checked_elmt) {
+    const messages = ["english", "spanish", "hindi", "korean"];
+    var choice_elmt = document.getElementById("choice");
+    var checked_lang = "";
+    if (checked_elmt) {
+      checked_lang = checked_elmt.value;
+      choice_elmt.setAttribute("inert", true);
+    } else {
+      choice_elmt.removeAttribute("inert");
+    }
+    for (id in messages) {
+      var elmt = document.getElementById(messages[id]);
+      if (messages[id] == checked_lang) {
+        elmt.removeAttribute("inert");
+      } else {
+        elmt.setAttribute("inert", true);
+      }
+    }
+  }
+
+  // Flip the card, which involves triggering the animation and resetting the
+  // inert status of elements.
+  function flip() {
+    if (cardTargetRotation > 0.0) {
+      cardTargetRotation = 0.0;
+      setInert(null);
+    } else {
+      cardTargetRotation = Math.PI;
+      checked_elmt = document.querySelector('input[name="language"]:checked');
+      setInert(checked_elmt);
+    }
+    if (render_context) {
+      render();
+    }
+  }
+
+  // Initialize a textures with the element image.
+  function loadTexture(gl, element = choice) {
     const texture = gl.createTexture();
     gl.bindTexture(gl.TEXTURE_2D, texture);
 
     const internalFormat = gl.RGBA8;
     try {
-      gl.texElementImage2D(gl.TEXTURE_2D, internalFormat, draw_element);
+      gl.texElementImage2D(gl.TEXTURE_2D, internalFormat, element);
     } catch (e) {
       // The texElementImage2D API was recently changed (see:
       // https://github.com/WICG/html-in-canvas#idl-changes). This snippet
@@ -67,10 +134,9 @@
       const srcFormat = gl.RGBA;
       const destType = gl.UNSIGNED_BYTE;
       gl.texElementImage2D(gl.TEXTURE_2D, level, internalFormat,
-                              srcFormat, destType, draw_element);
+                              srcFormat, destType, element);
       console.log('Note: using old texElementImage2D API');
     }
-
 
     // Linear texture filtering produces better results than mipmap with text.
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
@@ -80,7 +146,7 @@
     return texture;
   }
 
-  // Draw the scene repeatedly
+  // Draw the scene
   function render() {
     let new_time = performance.now() * 0.001; // convert to seconds
     deltaTime = new_time - currentTime;
@@ -93,10 +159,21 @@
     drawScene(render_context.gl,
               render_context.program,
               render_context.buffers,
-              render_context.texture,
-              cubeRotation);
+              render_context.texture_checkboxes,
+              render_context.texture_choice,
+              cardRotation);
 
-    cubeRotation += deltaTime;
+    if (cardRotation < cardTargetRotation) {
+      cardRotation += deltaTime;
+      if (cardRotation > cardTargetRotation) {
+        cardRotation = cardTargetRotation;
+      }
+    } else if (cardRotation > cardTargetRotation) {
+      cardRotation -= deltaTime;
+      if (cardRotation < cardTargetRotation) {
+        cardRotation = cardTargetRotation;
+      }
+    }
     requestAnimationFrame(render);
   }
 
@@ -140,13 +217,8 @@
       }
     `;
 
-    // Initialize a shader program; this is where all the lighting
-    // for the vertices and so forth is established.
     const shaderProgram = initShaderProgram(gl, vsSource, fsSource);
 
-    // Collect all the info needed to use the shader program.
-    // Look up which attribute our shader program is using
-    // for aVertexPosition and look up uniform locations.
     const programInfo = {
       program: shaderProgram,
       attribLocations: {
@@ -162,8 +234,13 @@
 
     const buffers = initBuffers(gl);
 
-    // Load texture
-    const texture = loadTexture(gl);
+    // Load textures
+    const texture_checkboxes = loadTexture(gl, choice);
+    const checkedLang = document.querySelector('input[name="language"]:checked');
+    if (!checkedLang) {
+      checkedLang = document.getElementById("chk-english");
+    }
+    const texture_choice = loadTexture(gl, document.getElementById(checkedLang.value));
     // Flip image pixels into the bottom-to-top order that WebGL expects.
     gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
 
@@ -171,7 +248,8 @@
       gl: gl,
       program: programInfo,
       buffers: buffers,
-      texture:texture,
+      texture_checkboxes: texture_checkboxes,
+      texture_choice: texture_choice,
     };
 
     requestAnimationFrame(render);
