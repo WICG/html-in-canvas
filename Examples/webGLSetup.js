@@ -154,7 +154,7 @@ function initTextureBuffer(gl) {
   return textureCoordBuffer;
 }
 
-function drawScene(gl, programInfo, buffers, texture_checkboxes, texture_choice, cardRotation) {
+function drawScene(gl, programInfo, buffers, texture_checkboxes, texture_choice, cardRotation, model_to_scree) {
   if (typeof texture_choice === 'number' || texture_choice === undefined) {
     cardRotation = texture_choice;
     texture_choice = texture_checkboxes;
@@ -186,6 +186,11 @@ function drawScene(gl, programInfo, buffers, texture_checkboxes, texture_choice,
   // as the destination to receive the result.
   mat4.perspective(projectionMatrix, fieldOfView, aspect, zNear, zFar);
 
+  // A matrix to map a point to the screen coords. Note this include the
+  // model translation but not the rotation, because for the purposes of
+  // calculating the CanvasTransform for DOM content we do not want it.
+  const pointToScreenMatrix = mat4.create();
+
   // Set the drawing position to the "identity" point, which is
   // the center of the scene.
   const modelViewMatrix = mat4.create();
@@ -197,6 +202,7 @@ function drawScene(gl, programInfo, buffers, texture_checkboxes, texture_choice,
     modelViewMatrix, // matrix to translate
     [-0.0, 0.0, -6.0],
   ); // amount to translate
+  mat4.multiply(pointToScreenMatrix, projectionMatrix, modelViewMatrix);
   mat4.rotate(
     modelViewMatrix, // destination matrix
     modelViewMatrix, // matrix to rotate
@@ -260,6 +266,8 @@ function drawScene(gl, programInfo, buffers, texture_checkboxes, texture_choice,
   // Side faces (top, bottom, right, left: indices 12..35, offset 12 * 2 = 24 bytes)
   gl.bindTexture(gl.TEXTURE_2D, gl._whiteTexture);
   gl.drawElements(gl.TRIANGLES, 24, type, 24);
+
+  return pointToScreenMatrix;
 }
 
 // Tell WebGL how to pull out the positions from the position

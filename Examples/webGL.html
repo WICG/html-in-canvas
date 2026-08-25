@@ -16,6 +16,7 @@
   }
   #choice {
     border: 1px solid blue;
+    box-sizing: border-box;
     width: 400px;
     height: 400px;
     padding: 10px;
@@ -39,8 +40,10 @@
     cursor: pointer;
   }
   .message {
-    width: 300px;
-    height: 300px;
+    border: 1px solid blue;
+    box-sizing: border-box;
+    width: 400px;
+    height: 400px;
     padding: 10px;
     font-size: 2em;
   }
@@ -73,28 +76,42 @@
 </canvas>
 
 <script>
-  let cardRotation = 0.0;
+  let canvas_css_width = 400;
+  let canvas_css_height = 600;
+  let choice_in_front = true;
+  let card_rotation = 0.0;
   let cardTargetRotation = 0.0;
   let currentTime = 0;
   let deltaTime = 0;
   let render_context = null;
 
+  // Determine which element texture is visible
+  function getVisibleElement() {
+    if (cardTargetRotation > 0.0) {
+      choice_in_front = false;
+      var checked_elmt = document.querySelector('input[name="language"]:checked');
+      return document.getElementById(checked_elmt.value);
+    } else {
+      choice_in_front = true;
+      return document.getElementById("choice");
+    }
+  }
+
   // Update the inert status when the card is flipped. This keeps the
   // accessibility information up to date and determines which elements are
   // hit tested.
-  function setInert(checked_elmt) {
+  function setInert() {
     const messages = ["english", "spanish", "hindi", "korean"];
+    var visible_element = getVisibleElement();
     var choice_elmt = document.getElementById("choice");
-    var checked_lang = "";
-    if (checked_elmt) {
-      checked_lang = checked_elmt.value;
-      choice_elmt.setAttribute("inert", true);
-    } else {
+    if (choice_elmt == visible_element) {
       choice_elmt.removeAttribute("inert");
+    } else {
+      choice_elmt.setAttribute("inert", true);
     }
     for (id in messages) {
       var elmt = document.getElementById(messages[id]);
-      if (messages[id] == checked_lang) {
+      if (elmt == visible_element) {
         elmt.removeAttribute("inert");
       } else {
         elmt.setAttribute("inert", true);
@@ -107,15 +124,46 @@
   function flip() {
     if (cardTargetRotation > 0.0) {
       cardTargetRotation = 0.0;
-      setInert(null);
     } else {
       cardTargetRotation = Math.PI;
-      checked_elmt = document.querySelector('input[name="language"]:checked');
-      setInert(checked_elmt);
     }
+    setInert();
     if (render_context) {
       render();
     }
+  }
+
+  function setElementTransform(model_to_screen_matrix) {
+    var top_left = vec4.fromValues(-1, -1, 0.1, 1);
+    var bottom_right = vec4.fromValues(1, 1, 0.1, 1);
+    vec4.transformMat4(top_left, top_left, model_to_screen_matrix);
+    vec4.transformMat4(bottom_right, bottom_right, model_to_screen_matrix);
+    var gl_screen_rect = new DOMRect();
+    gl_screen_rect.x = top_left[0] / top_left[3];
+    gl_screen_rect.y = top_left[1] / top_left[3];
+    gl_screen_rect.width = bottom_right[0] / bottom_right[3] - gl_screen_rect.x;
+    gl_screen_rect.height = bottom_right[1] / bottom_right[3] - gl_screen_rect.y;
+
+    // The GL rectangle origin (-1,-1) size (2,2) covers the canvas area. Map
+    // GL coordinates into canvas CSS coordinates.
+    const canvas = document.querySelector('#gl-canvas');
+    var canvas_rect = new DOMRect();
+    canvas_rect.x = (gl_screen_rect.x + 1) * canvas_css_width;
+    canvas_rect.y = (gl_screen_rect.y + 1) * canvas_css_height;
+    canvas_rect.width = gl_screen_rect.width * canvas_css_width / 2;
+    canvas_rect.height = gl_screen_rect.height * canvas_css_height / 2;
+
+    // Determine the DOMMatrix transform that maps the element bounding box
+    // onto the GL rect for the texture area. The element bounding box is
+    // 400x400.
+    var visible_elmt = getVisibleElement();
+    var canvas_transform = new DOMMatrix();
+    canvas_transform.a = canvas_rect.width / 400;
+    canvas_transform.d = canvas_rect.height / 400;
+    canvas_transform.e = canvas_rect.x;
+    canvas_transform.f = canvas_rect.y;
+
+    visible_elmt.setCanvasTransform(canvas_transform);
   }
 
   // Initialize a textures with the element image.
@@ -156,22 +204,24 @@
       return;
     }
 
-    drawScene(render_context.gl,
-              render_context.program,
-              render_context.buffers,
-              render_context.texture_checkboxes,
-              render_context.texture_choice,
-              cardRotation);
+    var model_to_screen_matrix = drawScene(render_context.gl,
+                                           render_context.program,
+                                           render_context.buffers,
+                                           render_context.texture_checkboxes,
+                                           render_context.texture_choice,
+                                           card_rotation);
 
-    if (cardRotation < cardTargetRotation) {
-      cardRotation += deltaTime;
-      if (cardRotation > cardTargetRotation) {
-        cardRotation = cardTargetRotation;
+    setElementTransform(model_to_screen_matrix);
+
+    if (card_rotation < cardTargetRotation) {
+      card_rotation += deltaTime;
+      if (card_rotation > cardTargetRotation) {
+        card_rotation = cardTargetRotation;
       }
-    } else if (cardRotation > cardTargetRotation) {
-      cardRotation -= deltaTime;
-      if (cardRotation < cardTargetRotation) {
-        cardRotation = cardTargetRotation;
+    } else if (card_rotation > cardTargetRotation) {
+      card_rotation -= deltaTime;
+      if (card_rotation < cardTargetRotation) {
+        card_rotation = cardTargetRotation;
       }
     }
     requestAnimationFrame(render);
@@ -265,6 +315,8 @@
     const observer = new ResizeObserver(([entry]) => {
       canvas.width = entry.devicePixelContentBoxSize[0].inlineSize;
       canvas.height = entry.devicePixelContentBoxSize[0].blockSize;
+      canvas_css_width = entry.contentBoxSize[0].inlineSize;
+      canvas_css_height = entry.contentBoxSize[0].blockSize;
     });
     observer.observe(canvas, {box: 'device-pixel-content-box'});
   }
