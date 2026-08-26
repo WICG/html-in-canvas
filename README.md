@@ -42,7 +42,7 @@ A reference to the most recent snapshot of a `drawable` element can be acquired 
 
 ### 5. Synchronizing the DOM and drawing
 The `updateElementGeometry` method enables synchronizing the element's canvas drawing with the DOM:
-* Hit test order can be set or updated with `updateHitTestOrder`. The canvas maintains a list of drawable descendants to hit test, and hit testing proceeds straight from the canvas element to each descendant, skipping intervening clips and transforms.
+* Hit test order can be set to the top, cleared, or left unmodified with `preserveHitTestOrder`. The canvas maintains an ordered list of drawable descendants to hit test, and hit testing proceeds straight from the canvas element to each descendant, skipping intervening clips and transforms.
 * The DOM position of a `drawable` element can be modified with a canvas element transform, which is a DOMMatrix that transforms the element's border-box, before CSS transformations, to the drawn location in the canvas. The canvas element transform is not used for rendering, so changes to it do not cause the `paint` event to fire in the next frame. Once the canvas element transform has been set, the element's accessibility information is updated to include geometry information.
 
 `updateElementGeometry` is automatically run when drawing an element into a 2D context using `drawElementImage`. This behavior can be customized with `DrawElementImageOptions` by passing `{ preserveElementGeometry: true }` to `drawElementImage` to disable automatic geometry updates. 3D contexts must call `updateElementGeometry` because, unlike 2D contexts, the transform from the element's drawn location in a texture to the canvas's CSS coordinates is not available in the canvas API.
@@ -142,12 +142,22 @@ In this example, `OffscreenCanvas` in a worker is used. The `canvas` child form 
 
 // Manual Geometry Updates (primarily for 3D).
 dictionary UpdateElementGeometryOptions {
-  // If true, pushes the element to the top of the canvas hit testing stack.
-  boolean updateHitTestOrder = true;
+  enum CanvasHitTestUpdate {
+    "preserve",
+    "top",
+    "clear"
+  };
 
-  // The transform used to set the Element's canvas transform.
-  // If null, the existing transform is left unchanged.
-  DOMMatrix? canvasTransform = null;
+  // Defaults to "top", pushing the element to the top of the stack.
+  // Use "preserve" to leave the state unchanged, or "clear" to remove it.
+  CanvasHitTestUpdate hitTestOrder = "top";
+
+  // The transform used to set the Element's canvas transform which maps the
+  // element's border box, before CSS transforms, to the canvas.
+  // If a matrix is provided, updates the transform.
+  // If explicit `null` is provided, unsets/clears the transform.
+  // If omitted, the existing transform is left unchanged.
+  DOMMatrix? canvasTransform;
 };
 
 partial interface HTMLCanvasElement {
