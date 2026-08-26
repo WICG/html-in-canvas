@@ -140,17 +140,6 @@ In this example, `OffscreenCanvas` in a worker is used. The `canvas` child form 
 
 ```idl
 
-partial interface Element {
-  // Returns the current transform applied to the Element mapping its border box
-  // to the canvas coordinate space. Applies before standard CSS transforms.
-  // The initial value is the identity matrix.
-  [NewObject] DOMMatrix getCanvasTransform();
-
-  // Manually sets the canvas transform.
-  // Note: Updating this does not trigger the canvas `paint` event.
-  void setCanvasTransform(optional DOMMatrixInit matrix = {});
-};
-
 // Manual Geometry Updates (primarily for 3D).
 dictionary UpdateElementGeometryOptions {
   // If true, pushes the element to the top of the canvas hit testing stack.
@@ -158,7 +147,7 @@ dictionary UpdateElementGeometryOptions {
 
   // The transform used to set the Element's canvas transform.
   // If null, the existing transform is left unchanged.
-  DOMMatrixInit? canvasTransform = null;
+  DOMMatrix? canvasTransform = null;
 };
 
 partial interface HTMLCanvasElement {
@@ -172,6 +161,11 @@ partial interface HTMLCanvasElement {
 
   // Allows manual geometry updates (primarily for WebGL/WebGPU)
   void updateElementGeometry((Element or ElementImage) element, optional UpdateElementGeometryOptions options = {});
+
+  // Returns the current transform applied to the Element mapping its
+  // border box to the canvas coordinate space. Applies before standard
+  // CSS transforms.
+  [NewObject] DOMMatrix? getCanvasTransform(Element element);
 
   // Fired when the browser completes applying geometry updates originating
   // from an OffscreenCanvas.
