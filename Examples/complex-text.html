@@ -11,7 +11,7 @@
 </style>
 
 <canvas id="canvas" width="638" height="318" layoutsubtree="true">
-  <div id="draw_element" style="width: 550px;">
+  <div id="draw_element" drawable style="width: 550px;">
     Hello from <a href="https://github.com/WICG/html-in-canvas">html-in-canvas</a>!
     <br>I'm multi-line, <b>formatted</b>,
     rotated text with emoji (&#128512;), RTL text
@@ -37,8 +37,7 @@
     ctx.reset();
     ctx.rotate((15 * Math.PI) / 180);
     ctx.translate(80 * devicePixelRatio, -20 * devicePixelRatio);
-    let transform = ctx.drawElementImage(draw_element, 0, 0);
-    draw_element.style.transform = transform.toString();
+    ctx.drawElementImage(draw_element, 0, 0);
   };
   canvas.requestPaint(); // Request an initial paint event.
 

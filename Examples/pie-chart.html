@@ -20,13 +20,13 @@
 </style>
 
 <canvas layoutsubtree class="pie" role="list" aria-label="Pie Chart">
-  <div class="label" role="listitem" tabindex="0" data-val="0.45" data-color="tomato">
+  <div drawable class="label" role="listitem" tabindex="0" data-val="0.45" data-color="tomato">
     <span class="val">45%</span>Apple
   </div>
-  <div class="label" role="listitem" tabindex="0" data-val="0.35" data-color="cornflowerblue">
+  <div drawable class="label" role="listitem" tabindex="0" data-val="0.35" data-color="cornflowerblue">
     <span class="val">35%</span>Blackberry / Bramble
   </div>
-  <div class="label" role="listitem" tabindex="0" data-val="0.20" data-color="gold">
+  <div drawable class="label" role="listitem" tabindex="0" data-val="0.20" data-color="gold">
     <span class="val">20%</span>Durian
   </div>
 </canvas>
@@ -66,8 +66,7 @@
       const label_height = label.offsetHeight * devicePixelRatio;
       const x = Math.cos(mid) * radius * 0.60 - label_width / 2;
       const y = Math.sin(mid) * radius * 0.60 - label_height / 2;
-      const transform = ctx.drawElementImage(label, x, y);
-      label.style.transform = transform;
+      ctx.drawElementImage(label, x, y);
 
       angle += slice;
     }

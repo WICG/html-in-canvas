@@ -42,8 +42,10 @@ A reference to the most recent snapshot of a `drawable` element can be acquired 
 
 ### 5. Synchronizing the DOM and drawing
 The `updateElementGeometry` method enables synchronizing the element's canvas drawing with the DOM:
-* Hit test order can be set to the top, cleared, or left unmodified with `preserveHitTestOrder`. The canvas maintains an ordered list of drawable descendants to hit test, and hit testing proceeds straight from the canvas element to each descendant, skipping intervening clips and transforms.
-* The DOM position of a `drawable` element can be modified with a canvas element transform, which is a DOMMatrix that transforms the element's border-box, before CSS transformations, to the drawn location in the canvas. The canvas element transform is not used for rendering, so changes to it do not cause the `paint` event to fire in the next frame. Once the canvas element transform has been set, the element's accessibility information is updated to include geometry information.
+* Hit test order can be set to the top or left unmodified with `preserveHitTestOrder`. The canvas maintains an ordered list of drawable descendants to hit test, and hit testing proceeds straight from the canvas element to each descendant, skipping intervening clips and transforms.
+* The DOM position of a `drawable` element can be set with a canvas element transform, which is a DOMMatrix that transforms the element's border-box, before CSS transformations, to the drawn location in the canvas. The canvas element transform is not used for rendering, so changes to it do not cause the `paint` event to fire in the next frame. When the canvas element transform is set, the element's accessibility information is updated to include geometry information.
+
+The `clearElementGeometry` method clears the above state.
 
 `updateElementGeometry` is automatically run when drawing an element into a 2D context using `drawElementImage`. This behavior can be customized with `DrawElementImageOptions` by passing `{ preserveElementGeometry: true }` to `drawElementImage` to disable automatic geometry updates. 3D contexts must call `updateElementGeometry` because, unlike 2D contexts, the transform from the element's drawn location in a texture to the canvas's CSS coordinates is not available in the canvas API.
 
@@ -142,22 +144,15 @@ In this example, `OffscreenCanvas` in a worker is used. The `canvas` child form 
 
 // Manual Geometry Updates (primarily for 3D).
 dictionary UpdateElementGeometryOptions {
-  enum CanvasHitTestUpdate {
-    "preserve",
-    "top",
-    "clear"
-  };
-
-  // Defaults to "top", pushing the element to the top of the stack.
-  // Use "preserve" to leave the state unchanged, or "clear" to remove it.
-  CanvasHitTestUpdate hitTestOrder = "top";
+  // If false, the element is moved to the top of the canvas's hit test order.
+  // If true, the existing hit test order is preserved.
+  boolean preserveHitTestOrder = false;
 
   // The transform used to set the Element's canvas transform which maps the
   // element's border box, before CSS transforms, to the canvas.
-  // If a matrix is provided, updates the transform.
-  // If explicit `null` is provided, unsets/clears the transform.
-  // If omitted, the existing transform is left unchanged.
-  DOMMatrix? canvasTransform;
+  // If present, updates the transform.
+  // If omitted, the existing transform is preserved.
+  DOMMatrixInit canvasTransform;
 };
 
 partial interface HTMLCanvasElement {
@@ -171,6 +166,7 @@ partial interface HTMLCanvasElement {
 
   // Allows manual geometry updates (primarily for WebGL/WebGPU)
   void updateElementGeometry((Element or ElementImage) element, optional UpdateElementGeometryOptions options = {});
+  void clearElementGeometry((Element or ElementImage) element);
 
   // Returns the current transform applied to the Element mapping its
   // border box to the canvas coordinate space. Applies before standard
@@ -191,10 +187,16 @@ partial interface OffscreenCanvas {
   // `elementgeometryupdate` event is fired on the associated
   // HTMLCanvasElement.
   void updateElementGeometry((Element or ElementImage) element, optional UpdateElementGeometryOptions options = {});
+  // Clears the element's geometry and fires `elementgeometryupdate`
+  // like `updateElementGeometry`.
+  void clearElementGeometry((Element or ElementImage) element);
 };
 
 dictionary DrawElementImageOptions {
   // If true, prevents the automatic update of the Element's geometry.
+  // If false, automatically updates the Element's geometry by calling
+  // `updateElementGeometry` with a `canvasTransform` that maps the element's
+  // border-box to the drawn position in the canvas.
   boolean preserveElementGeometry = false;
 };
 
@@ -409,6 +411,7 @@ In this model, `drawElementImage` records a placeholder representing the latest 
 * [Stephen Chenney](mailto:schenney@igalia.com)
 * [Chris Harrelson](mailto:chrishtr@chromium.org)
 * [Philip Jägenstedt](mailto:foolip@chromium.org)
+* [Stefan Zager](mailto:szager@chromium.org)
 * [Khushal Sagar](mailto:khushalsagar@chromium.org)
 * [Vladimir Levin](mailto:vmpstr@chromium.org)
 * [Fernando Serboncini](mailto:fserb@chromium.org)

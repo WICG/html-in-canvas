@@ -14,7 +14,7 @@
 </style>
 
 <canvas id="canvas" width="638" height="318" layoutsubtree="true">
-  <div id=draw_element style="width: 578px" >
+  <div id=draw_element drawable style="width: 578px" >
     <form id="demo-form" action="#" method="get">
       <fieldset>
         <legend>🚀 Spaceship Control Panel</legend>
@@ -55,8 +55,7 @@
     ctx.reset();
     let x = canvas.width / 25;
     let y = canvas.height / 25;
-    let transform = ctx.drawElementImage(draw_element, x, y);
-    draw_element.style.transform = transform.toString();
+    ctx.drawElementImage(draw_element, x, y);
   };
   canvas.requestPaint(); // Request an initial paint event.
 
