@@ -31,23 +31,23 @@ The `layoutsubtree` attribute on a `<canvas>` element opts in canvas descendants
 The `drawable` attribute on `<canvas>` descendant elements is required for drawing, and implies `isolation: isolate` as well as being a containing block for all descendants. `drawable` elements can be nested, and a _drawable subtree_ includes a drawable element and its descendants, excluding descendants that are marked as drawable.
 
 ### 3. The `paint` event
-The `paint` event enables synchronizing the DOM with canvas. A snapshot of the rendering of all `drawable` elements (this includes their drawable subtrees) of the canvas is recorded on every rendering update. The canvas `paint` event fires if a `drawable` element would be drawn differently. This event fires just after intersection observer steps have run during [update-the-rendering](https://html.spec.whatwg.org/#update-the-rendering). The event contains a list of the canvas `drawable` descendants which have changed. Canvas drawing commands made in the `paint` event will appear in the current frame, but DOM changes made in the `paint` event will not show up until the subsequent frame. If there are multiple `<canvas>` elements, the `paint` event fires in _reverse_ tree order which ensures that descendants fire `paint` before ancestors.
+The `paint` event enables synchronizing the DOM with canvas. A snapshot of the rendering commands of all `drawable` elements, including their drawable subtrees, of the canvas is recorded on every rendering update. The canvas `paint` event fires if an element's snapshot would be drawn differently. This event fires just after intersection observer steps have run during [update-the-rendering](https://html.spec.whatwg.org/#update-the-rendering). The event contains a list of the canvas `drawable` descendants which have changed. Canvas drawing commands made in the `paint` event will appear in the current frame, but DOM changes made in the `paint` event will not show up until the subsequent frame. If there are multiple `<canvas>` elements, the `paint` event fires in _reverse_ tree order which ensures that descendants fire `paint` before ancestors.
 
-To support application patterns which update every frame, a new `requestPaint()` function is added which will cause the `paint` event to fire once, even if no canvas descendants have changed (analogous to `requestAnimationFrame()`).
+To support application patterns which update every frame, a new `requestPaint()` function is added which will cause the `paint` event to fire once during the next rendering opportunity, even if no canvas descendants have changed (analogous to `requestAnimationFrame()`).
 
 ### 4. `drawElementImage` (and WebGL: `texElementSubImage2D`, WebGPU: `drawElementImageToTexture`)
-The `drawElementImage()` method draws the last snapshot of a `drawable` element, and its drawable subtree, into the 2D canvas, and similar APIs are provided for WebGL and WebGPU to draw into a texture. The rendering starts at the element's border box, before CSS transformations. Optional parameters can be used to adjust the src and destination rects. An exception is thrown if `drawElementImage()` is called with an element without the `drawable` attribute, before an initial snapshot has been recorded, or for elements with other canvas ancestors.
+The `drawElementImage()` method draws the last snapshot of a `drawable` element, and its drawable subtree, into the 2D canvas, and similar APIs are provided for WebGL and WebGPU to draw into a texture. The rendering starts at the element's border box, before CSS transformations. Similar to the 2D [drawImage](https://html.spec.whatwg.org/multipage/canvas.html#dom-context-2d-drawimage-dev), and similar WebGL/WebGPU APIs, optional source and destination rect parameters can be provided. The source rect parameters can be used to apply outsets to the drawn element, either for clipping or to include ink overflow extending beyond the element's border box. The destination rect parameters can be used to position and scale the drawn element. An exception is thrown if `drawElementImage()` is called with an element without the `drawable` attribute, before an initial snapshot has been recorded, or for elements with other canvas ancestors.
 
-The snapshot of a `drawable` element can be captured as an `ElementImage` using `captureElementImage`. These objects can be transferred to a worker and drawn to an `OffscreenCanvas`.
+A reference to the most recent snapshot of a `drawable` element can be acquired as an `ElementImage` using `captureElementImage`. These objects can be transferred to a worker and drawn to an `OffscreenCanvas`.
 
 ### 5. Synchronizing the DOM and drawing
 The `updateElementGeometry` method enables synchronizing the element's canvas drawing with the DOM:
 * Hit test order can be set or updated with `updateHitTestOrder`. The canvas maintains a list of drawable descendants to hit test, and hit testing proceeds straight from the canvas element to each descendant, skipping intervening clips and transforms.
-* DOM position can be set or updated with `canvasElementTransform`. Each drawable element maintains a DOMMatrix which transforms its border-box, before CSS transformations, to the drawn location in the canvas. The canvas element transform is not used for rendering, so changes to it do not cause the `paint` event to fire in the next frame. Once the canvas element transform has been set, the element's accessibility information is updated to include geometry information.
+* The DOM position of a `drawable` element can be modified with a canvas element transform, which is a DOMMatrix that transforms the element's border-box, before CSS transformations, to the drawn location in the canvas. The canvas element transform is not used for rendering, so changes to it do not cause the `paint` event to fire in the next frame. Once the canvas element transform has been set, the element's accessibility information is updated to include geometry information.
 
-`updateElementGeometry` is automatically run when drawing an element into a 2D context using `drawElementImage`. This behavior can be customized using `DrawElementOptions` by passing `updateElementGeometry = false` to `drawElementImage`. 3D contexts must call `updateElementGeometry` because, unlike 2D contexts, the transform from the element's drawn location in a texture to the canvas's CSS coordinates is not available in the canvas API.
+`updateElementGeometry` is automatically run when drawing an element into a 2D context using `drawElementImage`. This behavior can be customized with `DrawElementImageOptions` by passing `{ preserveElementGeometry: true }` to `drawElementImage` to disable automatic geometry updates. 3D contexts must call `updateElementGeometry` because, unlike 2D contexts, the transform from the element's drawn location in a texture to the canvas's CSS coordinates is not available in the canvas API.
 
-On a worker thread, after each drawing API call (`drawElementImage`, etc), the drawn ElementImage is added to an internal pending notification queue and a microtask is queued to notify the main thread. When the microtask runs, if the pending notification queue is not empty, a task is posted to the main thread with all of the drawn ElementImages. When this task runs on the main thread, the associated elements synchronously perform their geometry updates, and a `workergeometryupdate` event is fired synchronously with a list of Elements that were updated (if an updated Element no longer exists when the event fires, it is omitted from the list). This batching approach, as opposed to issuing a stand-alone update for each drawing API call, is similar to existing "observer" APIs, and ensures that updates are applied atomically, so no tasks can run between updates.
+On worker threads there is no synchronous access to DOM APIs. When updating element geometry for an `OffscreenCanvas` (note that only `ElementImage` references may be passed from a worker), the updates are added to an internal pending notification queue, and a microtask is queued to batch them. On a worker thread, this microtask asynchronously posts a task to the main thread. Main-thread `OffscreenCanvas` geometry updates are similarly batched via a microtask. When the main-thread updates complete, the elements synchronously apply their geometry changes, and an `elementgeometryupdate` event is fired on the associated `HTMLCanvasElement` with a list of the elements that were updated. If an element no longer exists when the event fires, it is omitted from the list. This batching approach, as opposed to issuing a stand-alone update for each drawing API call, is similar to existing "observer" APIs and ensures that updates are applied atomically without other tasks interleaving.
 
 ### Basic Example
 
@@ -119,6 +119,12 @@ In this example, `OffscreenCanvas` in a worker is used. The `canvas` child form 
     worker.postMessage({ form: formImg }, [ formImg ]);
   };
 
+  // OffscreenCanvas notification of element geometry updates.
+  canvas.onelementgeometryupdate = () => {
+    // #form's canvas element transform would now be updated. For example,
+    // form.getBoundingClientRect() would include an x translation of 100.
+  };
+
   // Size the canvas grid to match the device scale factor.
   new ResizeObserver(([entry]) => {
     worker.postMessage({
@@ -146,7 +152,7 @@ partial interface Element {
 };
 
 // Manual Geometry Updates (primarily for 3D).
-dictionary ElementGeometryUpdate {
+dictionary UpdateElementGeometryOptions {
   // If true, pushes the element to the top of the canvas hit testing stack.
   boolean updateHitTestOrder = true;
 
@@ -165,46 +171,51 @@ partial interface HTMLCanvasElement {
   ElementImage captureElementImage(Element element);
 
   // Allows manual geometry updates (primarily for WebGL/WebGPU)
-  void updateElementGeometry(Element element, ElementGeometryUpdate options = {});
+  void updateElementGeometry((Element or ElementImage) element, optional UpdateElementGeometryOptions options = {});
 
-  // Fired when the browser completes applying asynchronous geometry updates
-  // originating from an OffscreenCanvas on a worker.
-  attribute EventHandler onworkergeometryupdate;
+  // Fired when the browser completes applying geometry updates originating
+  // from an OffscreenCanvas.
+  attribute EventHandler onelementgeometryupdate;
 };
 
 partial interface OffscreenCanvas {
-  // Worker equivalent using ElementImage, since DOM Elements are not exposed here.
-  void updateElementGeometry(ElementImage element, ElementGeometryUpdate options = {});
+  // Updates the element's geometry. When called from a worker thread,
+  // only `ElementImage` may be passed. Worker-thread updates are
+  // batched via a microtask and asynchronously posted to the main
+  // thread. Main-thread updates are also batched via a microtask. When
+  // the main-thread updates of element geometry complete, an
+  // `elementgeometryupdate` event is fired on the associated
+  // HTMLCanvasElement.
+  void updateElementGeometry((Element or ElementImage) element, optional UpdateElementGeometryOptions options = {});
 };
 
-dictionary DrawElementOptions {
-  // If true, automatically updates the Element's `canvasTransform`, and pushes
-  // it to the top of the canvas hit-test stack.
-  boolean updateGeometry = true;
+dictionary DrawElementImageOptions {
+  // If true, prevents the automatic update of the Element's geometry.
+  boolean preserveElementGeometry = false;
 };
 
 interface mixin CanvasDrawElementImage {
   DOMMatrix drawElementImage((Element or ElementImage) element,
                              unrestricted double dx, unrestricted double dy,
-                             optional DrawElementOptions options = {});
+                             optional DrawElementImageOptions options = {});
 
   DOMMatrix drawElementImage((Element or ElementImage) element,
                              unrestricted double dx, unrestricted double dy,
                              unrestricted double dwidth, unrestricted double dheight,
-                             optional DrawElementOptions options = {});
+                             optional DrawElementImageOptions options = {});
 
   DOMMatrix drawElementImage((Element or ElementImage) element,
                              unrestricted double sx, unrestricted double sy,
                              unrestricted double swidth, unrestricted double sheight,
                              unrestricted double dx, unrestricted double dy,
-                             optional DrawElementOptions options = {});
+                             optional DrawElementImageOptions options = {});
 
   DOMMatrix drawElementImage((Element or ElementImage) element,
                              unrestricted double sx, unrestricted double sy,
                              unrestricted double swidth, unrestricted double sheight,
                              unrestricted double dx, unrestricted double dy,
                              unrestricted double dwidth, unrestricted double dheight,
-                             optional DrawElementOptions options = {});
+                             optional DrawElementImageOptions options = {});
 };
 
 CanvasRenderingContext2D includes CanvasDrawElementImage;
@@ -262,13 +273,13 @@ interface ElementImage {
   undefined close();
 };
 
-// Worker thread geometry update notifications.
+// OffscreenCanvas element geometry update notifications.
 [Exposed=Window]
-interface WorkerGeometryUpdateEvent : Event {
-  constructor(DOMString type, optional WorkerGeometryUpdateEventInit eventInitDict = {});
+interface ElementGeometryUpdateEvent : Event {
+  constructor(DOMString type, optional ElementGeometryUpdateEventInit eventInitDict = {});
   readonly attribute FrozenArray<Element> elements;
 };
-dictionary WorkerGeometryUpdateEventInit : EventInit {
+dictionary ElementGeometryUpdateEventInit : EventInit {
   sequence<Element> elements = [];
 };
 ```
