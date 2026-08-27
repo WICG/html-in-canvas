@@ -15,7 +15,7 @@ There is no web API to easily render complex layouts of text and other content i
 ### Use cases
 
 * **Styled, Laid Out Content in Canvas.** There’s a strong need for better styled text support in Canvas. Examples include chart components (legend, axes, etc.), rich content boxes in creative tools, and in-game menus.
-* **Accessibility Improvements.** There is currently no guarantee that the canvas fallback content used for `<canvas>` accessibility always matches the rendered content, and such fallback content can be hard to generate. With this API, elements drawn into the canvas will match their corresponding canvas fallback.
+* **Accessibility Improvements.** Maintaining accessible `<canvas>` experiences requires manually synchronizing auxiliary DOM subtrees with canvas draw calls.
 * **Composing HTML Elements with Effects.** A limited set of CSS effects, such as filters, backdrop-filter, and mix-blend-mode are already available, but there is a desire to use general WebGL shaders with HTML.
 * **HTML Rendering in a 3D Context.** 3D aspects of sites and games need to render rich 2D content into surfaces within a 3D scene.
 * **Media Export.** There's a need to export HTML content as images or video.
@@ -25,7 +25,7 @@ There is no web API to easily render complex layouts of text and other content i
 The solution introduces five primitives to manage canvas layout, drawing capabilities, rendering events for DOM-to-canvas synchronization, and geometry update capabilities for canvas-to-DOM synchronization.
 
 ### 1. The `layoutsubtree` attribute
-The `layoutsubtree` attribute on a `<canvas>` element opts in canvas descendants to layout. The canvas element blockifies immediate descendants and they are laid out with static positioning. In terms of accessibility, canvas descendants work like regular DOM content and respect CSS/HTML primitives like `inert`, but are initially marked as offscreen (i.e., only semantic information is exposed to accessibility, without geometry). In terms of hit testing, canvas descendants are initially not hit testable.
+The `layoutsubtree` attribute on a `<canvas>` element opts in canvas descendants to layout. The canvas element blockifies immediate descendants and they are laid out with static positioning. In terms of accessibility, canvas descendants work like regular DOM content and respect CSS/HTML primitives like `aria-hidden="true"`, but initially do not have geometry information (for more information, see [Accessibility](#accessibility)). In terms of hit testing, canvas descendants are initially not hit testable.
 
 ### 2. The `drawable` attribute
 The `drawable` attribute on `<canvas>` descendant elements is required for drawing, and implies `isolation: isolate` as well as being a containing block for all descendants. `drawable` elements can be nested, and a _drawable subtree_ includes a drawable element and its descendants, excluding descendants that are marked as drawable.
@@ -43,7 +43,7 @@ A reference to the most recent snapshot of a `drawable` element can be acquired 
 ### 5. Synchronizing the DOM and drawing
 The `updateElementGeometry` method enables synchronizing the element's canvas drawing with the DOM:
 * Hit test order can be set to the top or left unmodified with `preserveHitTestOrder`. The canvas maintains an ordered list of drawable descendants to hit test, and hit testing proceeds straight from the canvas element to each descendant, skipping intervening clips and transforms.
-* The DOM position of a `drawable` element can be set with a canvas element transform, which is a DOMMatrix that transforms the element's border-box, before CSS transformations, to the drawn location in the canvas. The canvas element transform is not used for rendering, so changes to it do not cause the `paint` event to fire in the next frame. When the canvas element transform is set, the element's accessibility information is updated to include geometry information.
+* The DOM position of a `drawable` element can be set with a canvas element transform, which is a DOMMatrix that transforms the element's border-box, before CSS transformations, to the drawn location in the canvas. The canvas element transform is not used for rendering, so changes to it do not cause the `paint` event to fire in the next frame. When the canvas element transform is set, the element's accessibility information is updated to include geometry information (for more information, see [Accessibility](#accessibility)).
 
 The `clearElementGeometry` method clears the above state.
 
@@ -171,7 +171,7 @@ partial interface HTMLCanvasElement {
   // Returns the current transform applied to the Element mapping its
   // border box to the canvas coordinate space. Applies before standard
   // CSS transforms.
-  [NewObject] DOMMatrix? getCanvasTransform(Element element);
+  [NewObject] DOMMatrix getCanvasTransform(Element element);
 
   // Fired when the browser completes applying geometry updates originating
   // from an OffscreenCanvas.
@@ -340,7 +340,35 @@ The following new information is not considered sensitive:
 * Caret blink rate.
 * forced-colors (this information is already available to javascript using the `forced-colors` media query and system colors).
 
+## Accessibility
+
+Content under a `<canvas>` with `layoutsubtree` is exposed to accessibility in the same way as regular DOM (i.e., present in the accessibility tree unless this is modified with accessibility primitives like `aria-hidden="true"`, `inert`, etc.) with one special case: if a `drawable` element's geometry is not updated (either automatically via `drawElementImage` or explicitly with `updateElementGeometry`), the `drawable` element and its drawable subtree are reported to the accessibility tree without geometry information. This approach ensures that accessibility does not lose the semantic information of content outside a `drawable` subtree, or in a `drawable` subtree but without updated geometry. This allows for assistive technologies to filter out content without geometry information. It is important that the accessibility aspects of unused canvas descendants, such as hidden views or no-longer-drawn content, are considered, and in many cases these should be removed from the DOM or hidden using accessibility primitives like `aria-hidden="true"`.
+
+Note that accessibility indicators such as focus or carets will be rendered with `drawElementImage` (and similar WebGL/WebGPU APIs).
+
+Below is an example where the semantics of a figure, image, and caption are preserved while drawing the image and figure separately:
+```html
+<canvas id="canvas" layoutsubtree>
+  <figure id="figure">
+    <img drawable id="image" src="..." alt="image alt text" />
+    <figcaption drawable id="caption">A caption</figcaption>
+  </figure>
+</canvas>
+<script>
+  canvas.onpaint = () => {
+    const ctx = canvas.getContext('2d');
+    ctx.reset();
+    // Note: Because `preserveElementGeometry` defaults to false, the
+    // `drawElementImage` call automatically updates geometry, ensuring
+    // the image and caption have geometry information for accessibility.
+    ctx.drawElementImage(image, 0, 0);
+    ctx.drawElementImage(caption, 0, 200);
+  };
+</script>
+```
+
 ## Developer Trial (dev trial) Information
+
 The HTML-in-Canvas features may be enabled with `chrome://flags/#canvas-draw-element` in Chrome Canary.
 
 We are most interested in feedback on the following topics:
