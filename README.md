@@ -201,27 +201,27 @@ dictionary DrawElementImageOptions {
 };
 
 interface mixin CanvasDrawElementImage {
-  DOMMatrix drawElementImage((Element or ElementImage) element,
-                             unrestricted double dx, unrestricted double dy,
-                             optional DrawElementImageOptions options = {});
+  void drawElementImage((Element or ElementImage) element,
+                         unrestricted double dx, unrestricted double dy,
+                         optional DrawElementImageOptions options = {});
 
-  DOMMatrix drawElementImage((Element or ElementImage) element,
-                             unrestricted double dx, unrestricted double dy,
-                             unrestricted double dwidth, unrestricted double dheight,
-                             optional DrawElementImageOptions options = {});
+  void drawElementImage((Element or ElementImage) element,
+                         unrestricted double dx, unrestricted double dy,
+                         unrestricted double dwidth, unrestricted double dheight,
+                         optional DrawElementImageOptions options = {});
 
-  DOMMatrix drawElementImage((Element or ElementImage) element,
-                             unrestricted double sx, unrestricted double sy,
-                             unrestricted double swidth, unrestricted double sheight,
-                             unrestricted double dx, unrestricted double dy,
-                             optional DrawElementImageOptions options = {});
+  void drawElementImage((Element or ElementImage) element,
+                         unrestricted double sx, unrestricted double sy,
+                         unrestricted double swidth, unrestricted double sheight,
+                         unrestricted double dx, unrestricted double dy,
+                         optional DrawElementImageOptions options = {});
 
-  DOMMatrix drawElementImage((Element or ElementImage) element,
-                             unrestricted double sx, unrestricted double sy,
-                             unrestricted double swidth, unrestricted double sheight,
-                             unrestricted double dx, unrestricted double dy,
-                             unrestricted double dwidth, unrestricted double dheight,
-                             optional DrawElementImageOptions options = {});
+  void drawElementImage((Element or ElementImage) element,
+                         unrestricted double sx, unrestricted double sy,
+                         unrestricted double swidth, unrestricted double sheight,
+                         unrestricted double dx, unrestricted double dy,
+                         unrestricted double dwidth, unrestricted double dheight,
+                         optional DrawElementImageOptions options = {});
 };
 
 CanvasRenderingContext2D includes CanvasDrawElementImage;
