@@ -265,7 +265,7 @@ partial interface GPUQueue {
 interface PaintEvent : Event {
   constructor(DOMString type, optional PaintEventInit eventInitDict);
 
-  readonly attribute FrozenArray<Element> changedElements;
+  [SameObject] readonly attribute FrozenArray<Element> changedElements;
 };
 
 dictionary PaintEventInit : EventInit {
@@ -283,7 +283,7 @@ interface ElementImage {
 [Exposed=Window]
 interface ElementGeometryUpdateEvent : Event {
   constructor(DOMString type, optional ElementGeometryUpdateEventInit eventInitDict = {});
-  readonly attribute FrozenArray<Element> elements;
+  [SameObject] readonly attribute FrozenArray<Element> elements;
 };
 dictionary ElementGeometryUpdateEventInit : EventInit {
   sequence<Element> elements = [];
@@ -302,9 +302,13 @@ dictionary ElementGeometryUpdateEventInit : EventInit {
 
 #### [Live demo](https://wicg.github.io/html-in-canvas/Examples/webgpu-jelly-slider/) ([source](Examples/webgpu-jelly-slider)) using the WebGPU `copyElementImageToTexture` API to draw a div under a jelly slider.
 
+Note: This demo needs to be updated to work with the recent API changes.
+
 <img width="640" height="320" alt="screenshot showing a range slider with a jelly effect" src="https://github.com/user-attachments/assets/86ecb8b8-4d3b-49b0-8aa0-5f2df5674045" />
 
 #### [Live demo](https://wicg.github.io/html-in-canvas/Examples/webGL.html) ([source](Examples/webGL.html)) using the WebGL `texElementImage2D` API to draw HTML onto a 3D cube.
+
+Note: This demo needs to be updated to work with the recent API changes.
 
 <img width="640" height="320" alt="screenshot showing html content on a 3D cube" src="https://github.com/user-attachments/assets/689fefe3-56d9-4ae9-b386-32a01ebb0117" />
 
