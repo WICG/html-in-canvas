@@ -141,17 +141,16 @@ In this example, `OffscreenCanvas` in a worker is used. The `canvas` child form 
 ### IDL changes
 
 ```idl
-
-// Manual Geometry Updates (primarily for 3D).
 dictionary UpdateElementGeometryOptions {
-  // If false, the element is moved to the top of the canvas's hit test order.
-  // If true, the existing hit test order is preserved.
+  // Controls how the canvas's hit testing order stack should be modified. If
+  // this is true and the element is already in the canvas's hit testing stack,
+  // do nothing. In all other cases, place the element at the top of the
+  // canvas's hit testing stack.
   boolean preserveHitTestOrder = false;
 
-  // The transform used to set the Element's canvas transform which maps the
-  // element's border box, before CSS transforms, to the canvas.
-  // If present, updates the transform.
-  // If omitted, the existing transform is preserved.
+  // Sets the element's canvas transform which maps the element's border box,
+  // before CSS transforms, to the canvas. If omitted, the pre-existing value
+  // of the element's canvas transform is preserved.
   DOMMatrixInit canvasTransform;
 };
 
@@ -164,7 +163,7 @@ partial interface HTMLCanvasElement {
 
   ElementImage captureElementImage(Element element);
 
-  // Allows manual geometry updates (primarily for WebGL/WebGPU)
+  // Allows manual geometry updates (primarily for WebGL/WebGPU).
   void updateElementGeometry((Element or ElementImage) element, optional UpdateElementGeometryOptions options = {});
   void clearElementGeometry((Element or ElementImage) element);
 
