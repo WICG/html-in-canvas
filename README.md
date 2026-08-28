@@ -236,7 +236,8 @@ dictionary WebGLCopyElementImageConfig {
 };
 
 partial interface WebGLRenderingContext {
-  void texElementSubImage2D(GLenum target, GLenum internalformat,
+  void texElementSubImage2D(GLenum target, GLint level,
+                            GLint xoffset, GLint yoffset,
                             (Element or ElementImage) element,
                             optional WebGLCopyElementImageConfig config = {});
 };
