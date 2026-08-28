@@ -1,0 +1,133 @@
+{
+  "accessors": [
+    {
+      "bufferView": 0,
+      "componentType": 5126,
+      "count": 73588,
+      "max": [
+        0.960716784000397,
+        1.72198891639709,
+        2.54086112976074
+      ],
+      "min": [
+        -0.9601930975914,
+        -1.72225701808929,
+        -2.54067301750183
+      ],
+      "type": "VEC3"
+    },
+    {
+      "bufferView": 1,
+      "componentType": 5126,
+      "count": 73588,
+      "type": "VEC3"
+    },
+    {
+      "bufferView": 2,
+      "componentType": 5126,
+      "count": 73588,
+      "type": "VEC2"
+    },
+    {
+      "bufferView": 3,
+      "componentType": 5125,
+      "count": 300000,
+      "type": "SCALAR"
+    }
+  ],
+  "asset": {
+    "generator": "MeshSmith mesh conversion tool",
+    "version": "2.0"
+  },
+  "bufferViews": [
+    {
+      "buffer": 0,
+      "byteLength": 883056,
+      "target": 34962
+    },
+    {
+      "buffer": 0,
+      "byteLength": 883056,
+      "byteOffset": 883056,
+      "target": 34962
+    },
+    {
+      "buffer": 0,
+      "byteLength": 588704,
+      "byteOffset": 1766112,
+      "target": 34962
+    },
+    {
+      "buffer": 0,
+      "byteLength": 1200000,
+      "byteOffset": 2354816,
+      "target": 34963
+    }
+  ],
+  "buffers": [
+    {
+      "byteLength": 3554816,
+      "uri": "woolly-mammoth-100k-4096.bin"
+    }
+  ],
+  "images": [
+    {
+      "uri": "woolly-mammoth-100k-4096-occlusion.jpg"
+    },
+    {
+      "uri": "woolly-mammoth-100k-4096-normals.jpg"
+    }
+  ],
+  "materials": [
+    {
+      "name": "default",
+      "normalTexture": {
+        "index": 1
+      },
+      "occlusionTexture": {
+        "index": 0
+      },
+      "pbrMetallicRoughness": {
+        "metallicFactor": 0.100000001490116,
+        "roughnessFactor": 0.800000011920929
+      }
+    }
+  ],
+  "meshes": [
+    {
+      "primitives": [
+        {
+          "attributes": {
+            "NORMAL": 1,
+            "POSITION": 0,
+            "TEXCOORD_0": 2
+          },
+          "indices": 3,
+          "material": 0,
+          "mode": 4
+        }
+      ]
+    }
+  ],
+  "nodes": [
+    {
+      "mesh": 0
+    }
+  ],
+  "scene": 0,
+  "scenes": [
+    {
+      "nodes": [
+        0
+      ]
+    }
+  ],
+  "textures": [
+    {
+      "source": 0
+    },
+    {
+      "source": 1
+    }
+  ]
+}
