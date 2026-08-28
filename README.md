@@ -139,7 +139,6 @@ In this example, `OffscreenCanvas` in a worker is used. The `canvas` child form 
 ```
 
 ### IDL changes
-
 ```idl
 dictionary UpdateElementGeometryOptions {
   // Controls how the canvas's hit testing order stack should be modified. If
@@ -164,13 +163,16 @@ partial interface HTMLCanvasElement {
   ElementImage captureElementImage(Element element);
 
   // Allows manual geometry updates (primarily for WebGL/WebGPU).
-  void updateElementGeometry((Element or ElementImage) element, optional UpdateElementGeometryOptions options = {});
+  void updateElementGeometry(
+      (Element or ElementImage) element,
+      optional UpdateElementGeometryOptions options = {});
   void clearElementGeometry((Element or ElementImage) element);
 
-  // Returns the current transform applied to the Element mapping its
-  // border box to the canvas coordinate space. Applies before standard
-  // CSS transforms.
-  [NewObject] DOMMatrix getCanvasTransform(Element element);
+  // Returns the current transform applied to the Element to map its
+  // border box, before CSS transforms, to the canvas coordinate space, or
+  // an identity DOMMatrix if no transform has been set. Updated
+  // with `updateElementGeometry` and cleared with `clearElementGeometry`.
+  [NewObject] DOMMatrix getElementTransform(Element element);
 
   // Fired when the browser completes applying geometry updates originating
   // from an OffscreenCanvas.
@@ -185,7 +187,10 @@ partial interface OffscreenCanvas {
   // the main-thread updates of element geometry complete, an
   // `elementgeometryupdate` event is fired on the associated
   // HTMLCanvasElement.
-  void updateElementGeometry((Element or ElementImage) element, optional UpdateElementGeometryOptions options = {});
+  void updateElementGeometry(
+      (Element or ElementImage) element,
+      optional UpdateElementGeometryOptions options = {});
+  
   // Clears the element's geometry and fires `elementgeometryupdate`
   // like `updateElementGeometry`.
   void clearElementGeometry((Element or ElementImage) element);
@@ -200,27 +205,31 @@ dictionary DrawElementImageOptions {
 };
 
 interface mixin CanvasDrawElementImage {
-  void drawElementImage((Element or ElementImage) element,
-                         unrestricted double dx, unrestricted double dy,
-                         optional DrawElementImageOptions options = {});
+  void drawElementImage(
+      (Element or ElementImage) element,
+      unrestricted double dx, unrestricted double dy,
+      optional DrawElementImageOptions options = {});
 
-  void drawElementImage((Element or ElementImage) element,
-                         unrestricted double dx, unrestricted double dy,
-                         unrestricted double dwidth, unrestricted double dheight,
-                         optional DrawElementImageOptions options = {});
+  void drawElementImage(
+      (Element or ElementImage) element,
+      unrestricted double dx, unrestricted double dy,
+      unrestricted double dwidth, unrestricted double dheight,
+      optional DrawElementImageOptions options = {});
 
-  void drawElementImage((Element or ElementImage) element,
-                         unrestricted double sx, unrestricted double sy,
-                         unrestricted double swidth, unrestricted double sheight,
-                         unrestricted double dx, unrestricted double dy,
-                         optional DrawElementImageOptions options = {});
+  void drawElementImage(
+      (Element or ElementImage) element,
+      unrestricted double sx, unrestricted double sy,
+      unrestricted double swidth, unrestricted double sheight,
+      unrestricted double dx, unrestricted double dy,
+      optional DrawElementImageOptions options = {});
 
-  void drawElementImage((Element or ElementImage) element,
-                         unrestricted double sx, unrestricted double sy,
-                         unrestricted double swidth, unrestricted double sheight,
-                         unrestricted double dx, unrestricted double dy,
-                         unrestricted double dwidth, unrestricted double dheight,
-                         optional DrawElementImageOptions options = {});
+  void drawElementImage(
+      (Element or ElementImage) element,
+      unrestricted double sx, unrestricted double sy,
+      unrestricted double swidth, unrestricted double sheight,
+      unrestricted double dx, unrestricted double dy,
+      unrestricted double dwidth, unrestricted double dheight,
+      optional DrawElementImageOptions options = {});
 };
 
 CanvasRenderingContext2D includes CanvasDrawElementImage;
@@ -236,10 +245,11 @@ dictionary WebGLCopyElementImageConfig {
 };
 
 partial interface WebGLRenderingContext {
-  void texElementSubImage2D(GLenum target, GLint level,
-                            GLint xoffset, GLint yoffset,
-                            (Element or ElementImage) element,
-                            optional WebGLCopyElementImageConfig config = {});
+  void texElementSubImage2D(
+      GLenum target, GLint level,
+      GLint xoffset, GLint yoffset,
+      (Element or ElementImage) element,
+      optional WebGLCopyElementImageConfig config = {});
 };
 
 dictionary GPUDrawElementImageDestination {
@@ -257,8 +267,9 @@ dictionary GPUDrawElementImageSource {
 };
 
 partial interface GPUQueue {
-  void drawElementImageToTexture(GPUDrawElementImageSource source,
-                                 GPUDrawElementImageDestination destination);
+  void drawElementImageToTexture(
+      GPUDrawElementImageSource source,
+      GPUDrawElementImageDestination destination);
 }
 
 [Exposed=Window]
@@ -282,9 +293,13 @@ interface ElementImage {
 // OffscreenCanvas element geometry update notifications.
 [Exposed=Window]
 interface ElementGeometryUpdateEvent : Event {
-  constructor(DOMString type, optional ElementGeometryUpdateEventInit eventInitDict = {});
+  constructor(
+      DOMString type, 
+      optional ElementGeometryUpdateEventInit eventInitDict = {});
+  
   [SameObject] readonly attribute FrozenArray<Element> elements;
 };
+
 dictionary ElementGeometryUpdateEventInit : EventInit {
   sequence<Element> elements = [];
 };
