@@ -190,7 +190,7 @@ partial interface OffscreenCanvas {
   void updateElementGeometry(
       (Element or ElementImage) element,
       optional UpdateElementGeometryOptions options = {});
-  
+
   // Clears the element's geometry and fires `elementgeometryupdate`
   // like `updateElementGeometry`.
   void clearElementGeometry((Element or ElementImage) element);
@@ -294,9 +294,9 @@ interface ElementImage {
 [Exposed=Window]
 interface ElementGeometryUpdateEvent : Event {
   constructor(
-      DOMString type, 
+      DOMString type,
       optional ElementGeometryUpdateEventInit eventInitDict = {});
-  
+
   [SameObject] readonly attribute FrozenArray<Element> elements;
 };
 
@@ -329,9 +329,9 @@ Note: This demo needs to be updated to work with the recent API changes.
 
 A demo of the same thing using an experimental extension of [three.js](https://threejs.org/) is [here](https://raw.githack.com/mrdoob/three.js/htmltexture/examples/webgl_materials_texture_html.html). Further instructions and context are [here](https://github.com/mrdoob/three.js/pull/31233).
 
-#### [Live demo](https://wicg.github.io/html-in-canvas/Examples/text-input.html) ([source](Examples/text-input.html)) of interactive content in canvas.
+#### [Live demo](https://wicg.github.io/html-in-canvas/Examples/nested-sparkles.html) ([source](Examples/nested-sparkles.html)) of nested drawable elements.
 
-<img width="640" height="320" alt="screenshot showing a form drawn into canvas" src="https://github.com/user-attachments/assets/be2d098f-17ae-4982-a0f9-a069e3c2d1d5" />
+<img width="640" height="320" alt="screenshot showing the roses are red poem" src="https://github.com/user-attachments/assets/8a04126d-fc03-4de4-a6b8-965285773aed" />
 
 ## Read-back-allowed rendering
 

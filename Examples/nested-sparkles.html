@@ -1,0 +1,97 @@
+<!doctype html>
+<meta charset="utf-8" />
+<title>Demo of nested drawables in canvas</title>
+
+<style>
+  canvas {
+    border: 1px solid blue;
+    width: 638px;
+    height: 318px;
+  }
+  .line {
+    padding: 0.7em;
+    border-radius: 1em;
+    font-family: sans-serif;
+  }
+  .line:nth-child(odd) {
+    background: #b3e5fc;
+    margin-right: 1em;
+  }
+  .line:nth-child(even) {
+    text-align: right;
+    background: #f8bbd0;
+    margin-left: 1em;
+  }
+  #sparkle {
+    font-weight: bold;
+  }
+</style>
+
+<canvas id="canvas" layoutsubtree>
+  <div drawable id="poem">
+    <div class="line">Roses are red</div>
+    <div class="line">Violets are blue,</div>
+    <div class="line">Sugar is sweet</div>
+    <div class="line">And so are <span id="sparkle" drawable>you</span>.</div>
+  </div>
+</canvas>
+
+<script>
+  const canvas = document.getElementById('canvas');
+  const ctx = canvas.getContext('2d');
+  canvas.onpaint = (event) => {
+    ctx.reset();
+    ctx.translate(canvas.width / 3, canvas.height / 5);
+    ctx.drawElementImage(poem, 0, 0);
+
+    // Draw a sparkle effect of random white dots.
+    let rect = getInFlowRect(sparkle);
+    ctx.fillStyle = 'white';
+    const numberOfSparkles = 15;
+    for (let i = 0; i < numberOfSparkles; i++) {
+      const sparkleSize = (Math.random() + 1) * devicePixelRatio;
+      const sparkleX = rect.x + Math.random() * rect.width;
+      const sparkleY = rect.y + Math.random() * rect.height;
+      ctx.beginPath();
+      ctx.arc(sparkleX, sparkleY, sparkleSize, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    ctx.drawElementImage(sparkle, rect.x, rect.y, rect.width, rect.height);
+
+    // Setup a loop to paint continuously.
+    canvas.requestPaint();
+  };
+
+  // Return the rect of `element`, relative to the nearest `canvas` or
+  // `drawable`. The returned rect is in canvas grid coordinates.
+  function getInFlowRect(element) {
+    // Calculate the rect relative to offsetParent.
+    let rect = new DOMRect(element.offsetLeft, element.offsetTop,
+                           element.offsetWidth, element.offsetHeight);
+    const ancestor = element.parentElement.closest('[drawable], canvas');
+    // Use GeometryUtils to convert the rect from offsetParent to ancestor.
+    if (ancestor.convertRectFromNode !== undefined) {
+      rect = ancestor.convertRectFromNode(rect, element.offsetParent).getBounds();
+    } else {
+      // Fallback to using getBoundingClientRect if GeometryUtils is not available.
+      let current = element.offsetParent;
+      while (current !== ancestor) {
+        rect.x += current.offsetLeft;
+        rect.y += current.offsetTop;
+        current = current.offsetParent;
+      }
+    }
+    return new DOMRect(
+      rect.x * devicePixelRatio,
+      rect.y * devicePixelRatio,
+      rect.width * devicePixelRatio,
+      rect.height * devicePixelRatio);
+  }
+
+  // Size the canvas grid to match the device scale factor.
+  const observer = new ResizeObserver(([entry]) => {
+    canvas.width = entry.devicePixelContentBoxSize[0].inlineSize;
+    canvas.height = entry.devicePixelContentBoxSize[0].blockSize;
+  });
+  observer.observe(canvas, {box: 'device-pixel-content-box'});
+</script>
