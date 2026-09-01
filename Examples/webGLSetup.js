@@ -71,22 +71,22 @@ function initPositionBuffer(gl) {
 
   const positions = [
     // Front face
-    -1.0, -1.0, 1.0, 1.0, -1.0, 1.0, 1.0, 1.0, 1.0, -1.0, 1.0, 1.0,
+    -1.0, -1.0, 0.1, 1.0, -1.0, 0.1, 1.0, 1.0, 0.1, -1.0, 1.0, 0.1,
 
     // Back face
-    -1.0, -1.0, -1.0, -1.0, 1.0, -1.0, 1.0, 1.0, -1.0, 1.0, -1.0, -1.0,
+    -1.0, -1.0, -0.1, -1.0, 1.0, -0.1, 1.0, 1.0, -0.1, 1.0, -1.0, -0.1,
 
     // Top face
-    -1.0, 1.0, -1.0, -1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, -1.0,
+    -1.0, 1.0, -0.1, -1.0, 1.0, 0.1, 1.0, 1.0, 0.1, 1.0, 1.0, -0.1,
 
     // Bottom face
-    -1.0, -1.0, -1.0, 1.0, -1.0, -1.0, 1.0, -1.0, 1.0, -1.0, -1.0, 1.0,
+    -1.0, -1.0, -0.1, 1.0, -1.0, -0.1, 1.0, -1.0, 0.1, -1.0, -1.0, 0.1,
 
     // Right face
-    1.0, -1.0, -1.0, 1.0, 1.0, -1.0, 1.0, 1.0, 1.0, 1.0, -1.0, 1.0,
+    1.0, -1.0, -0.1, 1.0, 1.0, -0.1, 1.0, 1.0, 0.1, 1.0, -1.0, 0.1,
 
     // Left face
-    -1.0, -1.0, -1.0, -1.0, -1.0, 1.0, -1.0, 1.0, 1.0, -1.0, 1.0, -1.0,
+    -1.0, -1.0, -0.1, -1.0, -1.0, 0.1, -1.0, 1.0, 0.1, -1.0, 1.0, -0.1,
   ];
 
   // Now pass the list of positions into WebGL to build the
@@ -132,9 +132,9 @@ function initTextureBuffer(gl) {
 
   const textureCoordinates = [
     // Front
-    1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 1.0, 1.0,
+    0.0, 0.0, 1.0, 0.0, 1.0, 1.0, 0.0, 1.0,
     // Back
-    1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 1.0, 1.0,
+    1.0, 0.0, 1.0, 1.0, 0.0, 1.0, 0.0, 0.0,
     // Top
     1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 1.0, 1.0,
     // Bottom
@@ -154,7 +154,12 @@ function initTextureBuffer(gl) {
   return textureCoordBuffer;
 }
 
-function drawScene(gl, programInfo, buffers, texture, cubeRotation) {
+function drawScene(gl, programInfo, buffers, texture_checkboxes, texture_choice, cardRotation, model_to_scree) {
+  if (typeof texture_choice === 'number' || texture_choice === undefined) {
+    cardRotation = texture_choice;
+    texture_choice = texture_checkboxes;
+  }
+
   gl.clearColor(0.0, 0.0, 0.0, 1.0); // Clear to black, fully opaque
   gl.clearDepth(1.0); // Clear everything
   gl.enable(gl.DEPTH_TEST); // Enable depth testing
@@ -181,35 +186,29 @@ function drawScene(gl, programInfo, buffers, texture, cubeRotation) {
   // as the destination to receive the result.
   mat4.perspective(projectionMatrix, fieldOfView, aspect, zNear, zFar);
 
+  // A matrix to map a point to the screen coords. Note this include the
+  // model translation but not the rotation, because for the purposes of
+  // calculating the CanvasTransform for DOM content we do not want it.
+  const pointToScreenMatrix = mat4.create();
+
   // Set the drawing position to the "identity" point, which is
   // the center of the scene.
   const modelViewMatrix = mat4.create();
 
   // Now move the drawing position a bit to where we want to
-  // start drawing the square.
+  // start drawing the card.
   mat4.translate(
     modelViewMatrix, // destination matrix
     modelViewMatrix, // matrix to translate
     [-0.0, 0.0, -6.0],
   ); // amount to translate
+  mat4.multiply(pointToScreenMatrix, projectionMatrix, modelViewMatrix);
   mat4.rotate(
     modelViewMatrix, // destination matrix
     modelViewMatrix, // matrix to rotate
-    cubeRotation, // amount to rotate in radians
-    [0, 0, 1],
-  ); // axis to rotate around (Z)
-  mat4.rotate(
-    modelViewMatrix, // destination matrix
-    modelViewMatrix, // matrix to rotate
-    cubeRotation * 0.7, // amount to rotate in radians
+    cardRotation, // amount to rotate in radians
     [0, 1, 0],
   ); // axis to rotate around (Y)
-  mat4.rotate(
-    modelViewMatrix, // destination matrix
-    modelViewMatrix, // matrix to rotate
-    cubeRotation * 0.3, // amount to rotate in radians
-    [1, 0, 0],
-  ); // axis to rotate around (X)
 
   setPositionAttribute(gl, buffers, programInfo);
   setTextureAttribute(gl, buffers, programInfo);
@@ -233,18 +232,42 @@ function drawScene(gl, programInfo, buffers, texture, cubeRotation) {
   // Tell WebGL we want to affect texture unit 0
   gl.activeTexture(gl.TEXTURE0);
 
-  // Bind the texture to texture unit 0
-  gl.bindTexture(gl.TEXTURE_2D, texture);
-
   // Tell the shader we bound the texture to texture unit 0
   gl.uniform1i(programInfo.uniformLocations.uSampler, 0);
 
-  {
-    const vertexCount = 36;
-    const type = gl.UNSIGNED_SHORT;
-    const offset = 0;
-    gl.drawElements(gl.TRIANGLES, vertexCount, type, offset);
+  // Ensure a 1x1 solid white texture exists for side faces
+  if (!gl._whiteTexture) {
+    const whiteTex = gl.createTexture();
+    gl.bindTexture(gl.TEXTURE_2D, whiteTex);
+    gl.texImage2D(
+      gl.TEXTURE_2D,
+      0,
+      gl.RGBA,
+      1,
+      1,
+      0,
+      gl.RGBA,
+      gl.UNSIGNED_BYTE,
+      new Uint8Array([255, 255, 255, 255]),
+    );
+    gl._whiteTexture = whiteTex;
   }
+
+  const type = gl.UNSIGNED_SHORT;
+
+  // Front face (indices 0..5, offset 0 bytes)
+  gl.bindTexture(gl.TEXTURE_2D, texture_checkboxes);
+  gl.drawElements(gl.TRIANGLES, 6, type, 0);
+
+  // Back face (indices 6..11, offset 6 * 2 = 12 bytes)
+  gl.bindTexture(gl.TEXTURE_2D, texture_choice);
+  gl.drawElements(gl.TRIANGLES, 6, type, 12);
+
+  // Side faces (top, bottom, right, left: indices 12..35, offset 12 * 2 = 24 bytes)
+  gl.bindTexture(gl.TEXTURE_2D, gl._whiteTexture);
+  gl.drawElements(gl.TRIANGLES, 24, type, 24);
+
+  return pointToScreenMatrix;
 }
 
 // Tell WebGL how to pull out the positions from the position

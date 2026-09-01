@@ -11,66 +11,175 @@
 <style>
   canvas {
     border: 1px solid blue;
-    width: 638px;
-    height: 318px;
+    width: 400px;
+    height: 600px;
   }
-  #draw_element {
+  #choice {
     border: 1px solid blue;
+    box-sizing: border-box;
     width: 400px;
     height: 400px;
     padding: 10px;
+    font-size: 3em;
+    display: flex;
+    flex-direction: column;
+  }
+  #choice label {
+    display: flex;
+    align-items: center;
+    gap: 0.3em;
+  }
+  #choice input[type="radio"] {
+    width: 0.8em;
+    height: 0.8em;
+  }
+  #choice button {
+    font-size: 0.5em;
+    margin-top: 0.4em;
+    padding: 0.2em 0.6em;
+  }
+  .message {
+    border: 1px solid blue;
+    box-sizing: border-box;
+    width: 400px;
+    height: 400px;
+    padding: 10px;
+    font-size: 2em;
+    display: flex;
+    flex-direction: column;
+  }
+  .message button {
+    font-size: 0.5em;
+    margin-top: 0.4em;
+    padding: 0.2em 0.6em;
   }
 </style>
 
-<canvas id="gl-canvas" width="638" height="318" layoutsubtree="true">
-  <!-- inert to prevent hit testing in this example. -->
-  <div id="draw_element" inert>
-    Hello world!<br>I'm multi-line, <b>formatted</b>,
-    rotated text with emoji (&#128512;), RTL text
-    <span dir=rtl>من فارسی صحبت میکنم</span>,
-    vertical text,
-    <p style="writing-mode: vertical-rl;">
-      这是垂直文本
-    </p>
-    an inline image (<img width="150" src="wolf.jpg">), and
-    <svg width="50" height="50">
-      <circle cx="25" cy="25" r="20" fill="green" />
-      <text x="25" y="30" font-size="15" text-anchor="middle" fill="#fff">
-        SVG
-      </text>
-    </svg>!
+<canvas id="gl-canvas" width="400" height="600" layoutsubtree>
+  <div drawable id="choice">
+    <label><input type="radio" id="chk-english" name="language" value="english" checked> English</label>
+    <label><input type="radio" id="chk-spanish" name="language" value="spanish"> Español</label>
+    <label><input type="radio" id="chk-hindi" name="language" value="hindi"> हिंदी</label>
+    <label><input type="radio" id="chk-korean" name="language" value="korean"> 한국어</label>
+    <button id="flip-btn" onclick="flip()">Flip</button>
+  </div>
+  <div drawable id="english" class="message" inert>
+    <p lang="en">Internationalized text made easy with HTML-in-Canvas</p>
+    <button onclick="flip()">Flip</button>
+  </div>
+  <div drawable id="spanish" class="message" inert>
+    <p lang="es">Texto internacionalizado hecho fácil con HTML-in-Canvas</p>
+    <button onclick="flip()">Flip</button>
+  </div>
+  <div drawable id="hindi" class="message" inert>
+    <p lang="hi">HTML-in-Canvas के साथ अंतर्राष्ट्रीयकृत पाठ आसान बना</p>
+    <button onclick="flip()">Flip</button>
+  </div>
+  <div drawable id="korean" class="message" inert>
+    <p lang="ko">HTML-in-Canvas로 쉬워진 국제화 텍스트</p>
+    <button onclick="flip()">Flip</button>
   </div>
 </canvas>
 
 <script>
-  let cubeRotation = 0.0;
+  let canvas_css_width = 400;
+  let canvas_css_height = 600;
+  let choice_in_front = true;
+  let card_rotation = 0.0;
+  let cardTargetRotation = 0.0;
   let currentTime = 0;
   let deltaTime = 0;
   let render_context = null;
 
-  //
-  // Initialize a texture and load an image.
-  // When the image finished loading copy it into the texture.
-  //
-  function loadTexture(gl) {
+  // Determine which element texture is visible
+  function getVisibleElement() {
+    if (cardTargetRotation > 0.0) {
+      choice_in_front = false;
+      var checked_elmt = document.querySelector('input[name="language"]:checked');
+      return document.getElementById(checked_elmt.value);
+    } else {
+      choice_in_front = true;
+      return document.getElementById("choice");
+    }
+  }
+
+  // Update the inert status when the card is flipped. This keeps the
+  // accessibility information up to date and determines which elements are
+  // hit tested.
+  function setInert() {
+    const messages = ["english", "spanish", "hindi", "korean"];
+    var visible_element = getVisibleElement();
+    var choice_elmt = document.getElementById("choice");
+    if (choice_elmt == visible_element) {
+      choice_elmt.removeAttribute("inert");
+    } else {
+      choice_elmt.setAttribute("inert", true);
+    }
+    for (id in messages) {
+      var elmt = document.getElementById(messages[id]);
+      if (elmt == visible_element) {
+        elmt.removeAttribute("inert");
+      } else {
+        elmt.setAttribute("inert", true);
+      }
+    }
+  }
+
+  // Flip the card, which involves triggering the animation and resetting the
+  // inert status of elements.
+  function flip() {
+    if (cardTargetRotation > 0.0) {
+      cardTargetRotation = 0.0;
+    } else {
+      cardTargetRotation = Math.PI;
+    }
+    setInert();
+  }
+
+  function updateElementGeometry(model_to_screen_matrix) {
+    var top_left = vec4.fromValues(-1, -1, 0.1, 1);
+    var bottom_right = vec4.fromValues(1, 1, 0.1, 1);
+    vec4.transformMat4(top_left, top_left, model_to_screen_matrix);
+    vec4.transformMat4(bottom_right, bottom_right, model_to_screen_matrix);
+    var gl_screen_rect = new DOMRect();
+    gl_screen_rect.x = top_left[0] / top_left[3];
+    gl_screen_rect.y = top_left[1] / top_left[3];
+    gl_screen_rect.width = bottom_right[0] / bottom_right[3] - gl_screen_rect.x;
+    gl_screen_rect.height = bottom_right[1] / bottom_right[3] - gl_screen_rect.y;
+
+    // The GL rectangle origin (-1,-1) size (2,2) covers the canvas area. Map
+    // GL coordinates into canvas CSS coordinates.
+    const canvas = document.querySelector('#gl-canvas');
+    var canvas_rect = new DOMRect();
+    canvas_rect.x = (gl_screen_rect.x + 1) * canvas_css_width / 2;
+    canvas_rect.y = (gl_screen_rect.y + 1) * canvas_css_height / 2;
+    canvas_rect.width = gl_screen_rect.width * canvas_css_width / 2;
+    canvas_rect.height = gl_screen_rect.height * canvas_css_height / 2;
+
+    // Determine the DOMMatrix transform that maps the element bounding box
+    // onto the GL rect for the texture area. The element bounding box is
+    // 400x400.
+    var visible_elmt = getVisibleElement();
+    var canvas_transform = new DOMMatrix();
+    canvas_transform.a = canvas_rect.width / 400;
+    canvas_transform.d = canvas_rect.height / 400;
+    canvas_transform.e = canvas_rect.x;
+    canvas_transform.f = canvas_rect.y;
+
+    if (canvas.updateElementGeometry !== undefined) {
+      // New html-in-canvas approach for updating the element's geometry from
+      // the canvas transform.
+      canvas.updateElementGeometry(visible_elmt, {canvasTransform: canvas_transform});
+    } else {
+      // Older approach (do not use).
+      visible_elmt.style.transform = canvas_transform.toString();
+    }
+  }
+
+  // Create an initial empty texture for binding.
+  function createEmptyTexture(gl) {
     const texture = gl.createTexture();
     gl.bindTexture(gl.TEXTURE_2D, texture);
-
-    const internalFormat = gl.RGBA8;
-    try {
-      gl.texElementImage2D(gl.TEXTURE_2D, internalFormat, draw_element);
-    } catch (e) {
-      // The texElementImage2D API was recently changed (see:
-      // https://github.com/WICG/html-in-canvas#idl-changes). This snippet
-      // supports the old syntax temporarily so that the demos do not break.
-      const level = 0;
-      const srcFormat = gl.RGBA;
-      const destType = gl.UNSIGNED_BYTE;
-      gl.texElementImage2D(gl.TEXTURE_2D, level, internalFormat,
-                              srcFormat, destType, draw_element);
-      console.log('Note: using old texElementImage2D API');
-    }
-
 
     // Linear texture filtering produces better results than mipmap with text.
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
@@ -80,7 +189,27 @@
     return texture;
   }
 
-  // Draw the scene repeatedly
+  // Draw/update the element's visual onto the specified texture
+  function updateTexture(gl, texture, element) {
+    gl.bindTexture(gl.TEXTURE_2D, texture);
+    const internalFormat = gl.RGBA8;
+
+    try {
+      gl.texElementImage2D(gl.TEXTURE_2D, internalFormat, element);
+    } catch (e) {
+      // The texElementImage2D API was recently changed (see:
+      // https://github.com/WICG/html-in-canvas#idl-changes). This snippet
+      // supports the old syntax temporarily so that the demos do not break.
+      const level = 0;
+      const srcFormat = gl.RGBA;
+      const destType = gl.UNSIGNED_BYTE;
+      gl.texElementImage2D(gl.TEXTURE_2D, level, internalFormat,
+                              srcFormat, destType, element);
+      console.log('Note: using old texElementImage2D API');
+    }
+  }
+
+  // Draw the scene
   function render() {
     let new_time = performance.now() * 0.001; // convert to seconds
     deltaTime = new_time - currentTime;
@@ -90,17 +219,29 @@
       return;
     }
 
-    drawScene(render_context.gl,
-              render_context.program,
-              render_context.buffers,
-              render_context.texture,
-              cubeRotation);
+    var model_to_screen_matrix = drawScene(render_context.gl,
+                                           render_context.program,
+                                           render_context.buffers,
+                                           render_context.texture_checkboxes,
+                                           render_context.texture_choice,
+                                           card_rotation);
 
-    cubeRotation += deltaTime;
-    requestAnimationFrame(render);
+    updateElementGeometry(model_to_screen_matrix);
+
+    if (card_rotation < cardTargetRotation) {
+      card_rotation += deltaTime;
+      if (card_rotation > cardTargetRotation) {
+        card_rotation = cardTargetRotation;
+      }
+    } else if (card_rotation > cardTargetRotation) {
+      card_rotation -= deltaTime;
+      if (card_rotation < cardTargetRotation) {
+        card_rotation = cardTargetRotation;
+      }
+    }
   }
 
-  function main() {
+  function setupGL() {
     const canvas = document.querySelector('#gl-canvas');
     // Initialize the GL context
     const gl = canvas.getContext('webgl2');
@@ -140,13 +281,8 @@
       }
     `;
 
-    // Initialize a shader program; this is where all the lighting
-    // for the vertices and so forth is established.
     const shaderProgram = initShaderProgram(gl, vsSource, fsSource);
 
-    // Collect all the info needed to use the shader program.
-    // Look up which attribute our shader program is using
-    // for aVertexPosition and look up uniform locations.
     const programInfo = {
       program: shaderProgram,
       attribLocations: {
@@ -162,8 +298,10 @@
 
     const buffers = initBuffers(gl);
 
-    // Load texture
-    const texture = loadTexture(gl);
+    // Initialize textures without drawing immediately, waiting for onpaint to fill them
+    const texture_checkboxes = createEmptyTexture(gl);
+    const texture_choice = createEmptyTexture(gl);
+
     // Flip image pixels into the bottom-to-top order that WebGL expects.
     gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
 
@@ -171,22 +309,55 @@
       gl: gl,
       program: programInfo,
       buffers: buffers,
-      texture:texture,
+      texture_checkboxes: texture_checkboxes,
+      texture_choice: texture_choice,
     };
-
-    requestAnimationFrame(render);
   }
 
   onload = () => {
     const canvas = document.querySelector('#gl-canvas');
-    canvas.onpaint = () => {
-      main();
+    let initialized_gl = false;
+    let lastLangId = null;
+
+    // The main paint event loop.
+    canvas.onpaint = (event) => {
+      if (!initialized_gl) {
+        setupGL();
+        initialized_gl = true;
+      }
+
+      if (event.changedElements && event.changedElements.length) {
+        // Convert elements into an array if they are not already to safely use array methods
+        const changedArray = Array.from(event.changedElements);
+        const choiceEl = document.getElementById("choice");
+        const checkedLang = document.querySelector('input[name="language"]:checked');
+        const langId = checkedLang ? checkedLang.value : "english";
+        const langEl = document.getElementById(langId);
+
+        // Update the checkboxes texture if the choice element changed
+        if (changedArray.includes(choiceEl)) {
+          updateTexture(render_context.gl, render_context.texture_checkboxes, choiceEl);
+        }
+
+        // Update the choice texture if its content changed, or if the user selected a new language
+        if (changedArray.includes(langEl) || langId !== lastLangId) {
+          updateTexture(render_context.gl, render_context.texture_choice, langEl);
+          lastLangId = langId;
+        }
+      }
+
+      render();
+
+      // Loop to continuously fire canvas paint events.
+      canvas.requestPaint();
     }
     canvas.requestPaint();
 
     const observer = new ResizeObserver(([entry]) => {
       canvas.width = entry.devicePixelContentBoxSize[0].inlineSize;
       canvas.height = entry.devicePixelContentBoxSize[0].blockSize;
+      canvas_css_width = entry.contentBoxSize[0].inlineSize;
+      canvas_css_height = entry.contentBoxSize[0].blockSize;
     });
     observer.observe(canvas, {box: 'device-pixel-content-box'});
   }
