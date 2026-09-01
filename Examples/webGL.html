@@ -195,17 +195,37 @@
     const internalFormat = gl.RGBA8;
 
     try {
-      gl.texElementImage2D(gl.TEXTURE_2D, internalFormat, element);
+      // Pre-allocate texture backing with pre-determined size.
+      let elementImage = gl.canvas.captureElementImage(element);
+      gl.texImage2D(
+          /* target */ gl.TEXTURE_2D,
+          /* level */ 0,
+          /* internalformat */ gl.RGBA8,
+          /* width */ elementImage.width,
+          /* height */ elementImage.height,
+          /* border */ 0,
+          /* format */ gl.RGBA,
+          /* type */ gl.UNSIGNED_BYTE,
+          /* srcData */ null);
+      gl.texElementSubImage2D(gl.TEXTURE_2D, /*level*/0, /*xoffset*/0, /*yoffset*/0, element);
     } catch (e) {
-      // The texElementImage2D API was recently changed (see:
-      // https://github.com/WICG/html-in-canvas#idl-changes). This snippet
-      // supports the old syntax temporarily so that the demos do not break.
-      const level = 0;
-      const srcFormat = gl.RGBA;
-      const destType = gl.UNSIGNED_BYTE;
-      gl.texElementImage2D(gl.TEXTURE_2D, level, internalFormat,
-                              srcFormat, destType, element);
-      console.log('Note: using old texElementImage2D API');
+      try {
+        // The texElementImage2D API was recently changed (see:
+        // https://github.com/WICG/html-in-canvas#idl-changes). This snippet
+        // supports the old syntax temporarily so that the demos do not break.
+        const level = 0;
+        const srcFormat = gl.RGBA;
+        const destType = gl.UNSIGNED_BYTE;
+        gl.texElementImage2D(gl.TEXTURE_2D, level, internalFormat,
+                                srcFormat, destType, element);
+        console.log('Note: using old texElementImage2D API');
+      } catch (e) {
+        // The texElementImage2D API was recently changed (see:
+        // https://github.com/WICG/html-in-canvas#idl-changes). This snippet
+        // supports the old syntax temporarily so that the demos do not break.
+        gl.texElementImage2D(gl.TEXTURE_2D, internalFormat, element);
+        console.log('Note: using old texElementImage2D API');
+      }
     }
   }
 
