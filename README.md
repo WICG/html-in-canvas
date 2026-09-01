@@ -273,13 +273,13 @@ partial interface GPUQueue {
 }
 
 [Exposed=Window]
-interface PaintEvent : Event {
-  constructor(DOMString type, optional PaintEventInit eventInitDict);
+interface CanvasPaintEvent : Event {
+  constructor(DOMString type, optional CanvasPaintEventInit eventInitDict);
 
   [SameObject] readonly attribute FrozenArray<Element> changedElements;
 };
 
-dictionary PaintEventInit : EventInit {
+dictionary CanvasPaintEventInit : EventInit {
   sequence<Element> changedElements = [];
 };
 
