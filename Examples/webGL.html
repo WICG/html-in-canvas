@@ -57,15 +57,38 @@
     gl.bindTexture(gl.TEXTURE_2D, texture);
 
     const internalFormat = gl.RGBA8;
+    const level = 0;
+    const srcFormat = gl.RGBA;
+    const destType = gl.UNSIGNED_BYTE;
+
+    // Pre-allocate texture storage big enough for draw_element.
+    const canvas = document.querySelector('#gl-canvas');
+    const canvasCSSWidth =
+      Number.parseFloat(getComputedStyle(canvas).width);
+    const canvasCSSHeight =
+      Number.parseFloat(getComputedStyle(canvas).height);
+    // Scaling factor from CSS pixels to canvas grid.
+    const canvasScaleX = canvas.width / canvasCSSWidth;
+    const canvasScaleY = canvas.height / canvasCSSHeight;
+    const elementCSSWidth =
+      Number.parseFloat(getComputedStyle(draw_element).width);
+    const elementCSSHeight =
+      Number.parseFloat(getComputedStyle(draw_element).height);
+    // Allocate buffer to accomodate draw_element in canvas grid units. Include
+    // one-pixel fudge factor to allow for differences between single-precision
+    // floating-point arithmetic used by GL implementation and double-precision
+    // arithmetic used by JavaScript.
+    const texWidth = Math.ceil(elementCSSWidth * canvasScaleX + 1);
+    const texHeight = Math.ceil(elementCSSHeight * canvasScaleY + 1);
+    gl.texImage2D(gl.TEXTURE_2D, 0, internalFormat, texWidth, texHeight, 0,
+                  srcFormat, destType, null);
+
     try {
       gl.texElementImage2D(gl.TEXTURE_2D, internalFormat, draw_element);
     } catch (e) {
       // The texElementImage2D API was recently changed (see:
       // https://github.com/WICG/html-in-canvas#idl-changes). This snippet
       // supports the old syntax temporarily so that the demos do not break.
-      const level = 0;
-      const srcFormat = gl.RGBA;
-      const destType = gl.UNSIGNED_BYTE;
       gl.texElementImage2D(gl.TEXTURE_2D, level, internalFormat,
                               srcFormat, destType, draw_element);
       console.log('Note: using old texElementImage2D API');
