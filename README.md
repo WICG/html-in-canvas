@@ -321,11 +321,9 @@ Note: This demo needs to be updated to work with the recent API changes.
 
 <img width="640" height="320" alt="screenshot showing a range slider with a jelly effect" src="https://github.com/user-attachments/assets/86ecb8b8-4d3b-49b0-8aa0-5f2df5674045" />
 
-#### [Live demo](https://wicg.github.io/html-in-canvas/Examples/webGL.html) ([source](Examples/webGL.html)) using the WebGL `texElementImage2D` API to draw HTML onto a 3D cube.
+#### [Live demo](https://wicg.github.io/html-in-canvas/Examples/webGL.html) ([source](Examples/webGL.html)) using the WebGL `texElementSubImage2D` API to draw HTML onto a 3D card.
 
-Note: This demo needs to be updated to work with the recent API changes.
-
-<img width="640" height="320" alt="screenshot showing html content on a 3D cube" src="https://github.com/user-attachments/assets/689fefe3-56d9-4ae9-b386-32a01ebb0117" />
+<img width="640" height="320" alt="screenshot showing html content on a 3D card" src="https://github.com/user-attachments/assets/f4f0e2d0-5dd2-4295-98ee-3862c0caea8d" />
 
 A demo of the same thing using an experimental extension of [three.js](https://threejs.org/) is [here](https://raw.githack.com/mrdoob/three.js/htmltexture/examples/webgl_materials_texture_html.html). Further instructions and context are [here](https://github.com/mrdoob/three.js/pull/31233).
 
