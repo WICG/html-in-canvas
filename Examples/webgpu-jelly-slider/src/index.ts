@@ -808,10 +808,10 @@ function createBindGroups() {
   const sliderHeight = sliderElement.clientHeight || (canvas.clientHeight * 0.125);
   let x = (canvas.width / devicePixelRatio) / 8;
   let y = (canvas.height / devicePixelRatio) / 2 - (sliderHeight / 2);
-  if (canvas.updateElementGeometry !== undefined) {
+  if ((canvas as any).updateElementGeometry !== undefined) {
     let transform = new DOMMatrix().translate(x, y);
-    canvas.updateElementGeometry(valueElement, {canvasTransform: transform});
-    canvas.updateElementGeometry(sliderElement, {canvasTransform: transform});
+    (canvas as any).updateElementGeometry(valueElement, {canvasTransform: transform});
+    (canvas as any).updateElementGeometry(sliderElement, {canvasTransform: transform});
   } else {
     sliderElement.style.transform = `translate(${x}px, ${y}px)`;
     valueElement.style.transform = `translate(${x}px, ${y}px)`;
