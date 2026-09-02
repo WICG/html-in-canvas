@@ -771,34 +771,51 @@ function createBindGroups() {
 }
 
 (canvas as any).onpaint = () => {
-  const sourceDict = { source: valueElement };
+  const sourceDict = {
+    source: valueElement,
+  };
   const destDict = {
-    destination: { texture: valueRawTexture },
-    width: width,
-    height: height
+    texture: valueRawTexture,
+    size: { width: width, height: height }
   };
   try {
-    (root.device.queue as any).copyElementImageToTexture(sourceDict, destDict);
+    (root.device.queue as any).drawElementImageToTexture(sourceDict, destDict);
   } catch (e) {
-    // The copyElementImageToTexture API was recently changed to take two maps
-    // (see: https://github.com/WICG/html-in-canvas#idl-changes). This snippet
-    // supports the old syntax temporarily so that the demos do not break.
-    (root.device.queue as any).copyElementImageToTexture(
-      valueElement, width, height, { texture: valueRawTexture });
-    console.log('Note: using old copyElementImageToTexture API');
+    try {
+      const legacyDestDict = {
+        destination: { texture: valueRawTexture },
+        width: width,
+        height: height
+      };
+      (root.device.queue as any).copyElementImageToTexture(sourceDict, legacyDestDict);
+      console.log('Note: using old copyElementImageToTexture API');
+    } catch (e) {
+      // The copyElementImageToTexture API was recently changed to take two maps
+      // (see: https://github.com/WICG/html-in-canvas#idl-changes). This snippet
+      // supports the old syntax temporarily so that the demos do not break.
+      (root.device.queue as any).copyElementImageToTexture(
+        valueElement, width, height, { texture: valueRawTexture });
+      console.log('Note: using old copyElementImageToTexture API');
+    }
   }
 
-  // TODO(pdr): Calculate this correctly using `getElementTransform`. For now,
-  // the transform is just hard-coded.
-  //const view = camera.view;
-  //const proj = camera.proj;
-  //const mvp = m.mat4.mul(proj, view, d.mat4x4f());
-  //const sliderWidth = sliderElement.clientWidth || (canvas.clientWidth * 0.75);
+  // TODO(pdr): Calculate this correctly from the webgpu matrices. For now, the
+  // values are just hard-coded.
+  //   const view = camera.view;
+  //   const proj = camera.proj;
+  //   const mvp = m.mat4.mul(proj, view, d.mat4x4f());
+  //   const sliderWidth = sliderElement.clientWidth || (canvas.clientWidth * 0.75);
   const sliderHeight = sliderElement.clientHeight || (canvas.clientHeight * 0.125);
   let x = (canvas.width / devicePixelRatio) / 8;
   let y = (canvas.height / devicePixelRatio) / 2 - (sliderHeight / 2);
-  sliderElement.style.transform = `translate(${x}px, ${y}px)`;
-  valueElement.style.transform = `translate(${x}px, ${y}px)`;
+  if (canvas.updateElementGeometry !== undefined) {
+    let transform = new DOMMatrix().translate(x, y);
+    canvas.updateElementGeometry(valueElement, {canvasTransform: transform});
+    canvas.updateElementGeometry(sliderElement, {canvasTransform: transform});
+  } else {
+    sliderElement.style.transform = `translate(${x}px, ${y}px)`;
+    valueElement.style.transform = `translate(${x}px, ${y}px)`;
+  }
 };
 (canvas as any).requestPaint();
 
