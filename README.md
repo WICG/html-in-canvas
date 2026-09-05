@@ -342,7 +342,7 @@ Sensitive information includes:
 * Visited link information.
 * Pending form autofill information not otherwise available to JavaScript.
 * Subpixel text anti-aliasing.
-* User preferences for caption and subtitle selection and appearance.
+* Captions and video controls.
 * IME pop-ups and distinctive IME text formatting.
 
 The following new information is not considered sensitive:
