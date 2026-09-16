@@ -285,8 +285,8 @@ dictionary CanvasPaintEventInit : EventInit {
 
 [Exposed=(Window,Worker), Transferable]
 interface ElementImage {
-  // The default size of the element in canvas grid coordinates. If the width
-  // and height parameters to drawElementImage() are omitted, these are the
+  // The default size of the element in canvas grid coordinates. If the dwidth
+  // and dheight parameters to drawElementImage() are omitted, these are the
   // values that will be used.
   readonly attribute double width;
   readonly attribute double height;
