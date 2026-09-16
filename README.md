@@ -44,6 +44,7 @@ A reference to the most recent snapshot of a `drawable` element can be acquired 
 The `updateElementGeometry` method enables synchronizing the element's canvas drawing with the DOM:
 * Hit test order can be set to the top or left unmodified with `preserveHitTestOrder`. The canvas maintains an ordered list of drawable descendants to hit test, and hit testing proceeds straight from the canvas element to each descendant, skipping intervening clips and transforms.
 * The DOM position of a `drawable` element can be set with a canvas element transform, which is a DOMMatrix that transforms the element's border-box, before CSS transformations, to the drawn location in the canvas. The canvas element transform is not used for rendering, so changes to it do not cause the `paint` event to fire in the next rendering update. When the canvas element transform is set, the element's accessibility information is updated to include geometry information (for more information, see [Accessibility](#accessibility)).
+* The hit test clipping of a `drawable` element can be set with a canvas element clip, which is a DOMRect in the coordinate space of the canvas element transform. This is useful for cases where only a portion of an element is drawn. The canvas element clip is not used for rendering, so changes to it do not cause the `paint` event to fire in the next rendering update.
 
 The `clearElementGeometry` method clears the above state.
 
@@ -146,6 +147,12 @@ dictionary UpdateElementGeometryOptions {
   // do nothing. In all other cases, place the element at the top of the
   // canvas's hit testing stack.
   boolean preserveHitTestOrder = false;
+
+  // Sets the element's canvas clip used for hit testing, evaluated in the
+  // coordinate space of `canvasTransform`.
+  // If omitted, the pre-existing value of the element's canvas clip is
+  // preserved.
+  DOMRectInit clip;
 
   // Sets the element's canvas transform which maps the element's border box,
   // before CSS transforms, to the canvas. If omitted, the pre-existing value
