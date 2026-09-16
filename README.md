@@ -24,8 +24,8 @@ There is no web API to easily render complex layouts of text and other content i
 
 The solution introduces five primitives to manage canvas layout, drawing capabilities, rendering events for DOM-to-canvas synchronization, and geometry update capabilities for canvas-to-DOM synchronization.
 
-### 1. The `layoutsubtree` attribute
-The `layoutsubtree` attribute on a `<canvas>` element opts in canvas descendants to layout. The canvas element blockifies immediate descendants and they are laid out with static positioning. In terms of accessibility, canvas descendants work like regular DOM content and respect CSS/HTML primitives like `aria-hidden="true"`, but initially do not have geometry information (for more information, see [Accessibility](#accessibility)). In terms of hit testing, canvas descendants are initially not hit testable.
+### 1. The canvas `content` attribute
+The `content` attribute on a `<canvas>` element takes two values: `fallback` (default) for treating canvas descendants as fallback content, and `drawable` for opting in canvas descendants to layout. The canvas element blockifies immediate descendants and they are laid out with static positioning. In terms of accessibility, `content=drawable` canvas descendants work like regular DOM content and respect CSS/HTML primitives like `aria-hidden="true"`, but initially do not have geometry information (for more information, see [Accessibility](#accessibility)). In terms of hit testing, `content=drawable` canvas descendants are initially not hit testable.
 
 ### 2. The `drawable` attribute
 The `drawable` attribute on `<canvas>` descendant elements is required for drawing, and implies `isolation: isolate` as well as being a containing block for all descendants. `drawable` elements can be nested, and a _drawable subtree_ includes a drawable element and its descendants, excluding `drawable` descendants and their subtrees.
@@ -56,7 +56,7 @@ On worker threads there is no synchronous access to DOM APIs. When updating elem
 <img width="250" height="38" alt="a screenshot showing a form element with a blinking cursor" src="https://github.com/user-attachments/assets/acbdd231-3259-4819-b57e-32e29c460fc9" />
 
 ```html
-<canvas id="canvas" style="width: 400px; height: 200px;" layoutsubtree>
+<canvas id="canvas" style="width: 400px; height: 200px;" content="drawable">
   <form drawable id="form_element">
     <label for="name">name:</label>
     <input id="name">
@@ -85,7 +85,7 @@ In this example, `OffscreenCanvas` in a worker is used. The `canvas` child form 
 
 ```html
 <!DOCTYPE html>
-<canvas id="canvas" style="width: 400px; height: 400px;" layoutsubtree>
+<canvas id="canvas" style="width: 400px; height: 400px;" content="drawable">
   <form drawable id="form">
     <label for="name">name:</label>
     <input id="name">
@@ -154,7 +154,9 @@ dictionary UpdateElementGeometryOptions {
 };
 
 partial interface HTMLCanvasElement {
-  [CEReactions, Reflect] attribute boolean layoutSubtree;
+  [CEReactions, Reflect, ReflectOnly=("fallback", "drawable"),
+      ReflectMissing="fallback", ReflectInvalid="fallback"]
+      attribute DOMString content;
 
   attribute EventHandler onpaint;
 
@@ -353,13 +355,13 @@ The following new information is not considered sensitive:
 
 ## Accessibility
 
-Content under a `<canvas>` with `layoutsubtree` is exposed to accessibility in the same way as regular DOM (i.e., present in the accessibility tree unless this is modified with accessibility primitives like `aria-hidden="true"`, `inert`, etc.) with one special case: if a `drawable` element's geometry is not updated (either automatically via `drawElementImage` or explicitly with `updateElementGeometry`), the `drawable` element and its drawable subtree are reported to the accessibility tree without geometry information. This approach ensures that accessibility does not lose the semantic information of content outside a `drawable` subtree, or in a `drawable` subtree but without updated geometry. This allows for assistive technologies to filter out content without geometry information. It is important that the accessibility aspects of unused canvas descendants, such as hidden views or no-longer-drawn content, are considered, and in many cases these should be removed from the DOM or hidden using accessibility primitives like `aria-hidden="true"`.
+Content under a `<canvas>` with `content="drawable"` is exposed to accessibility in the same way as regular DOM (i.e., present in the accessibility tree unless this is modified with accessibility primitives like `aria-hidden="true"`, `inert`, etc.) with one special case: if a `drawable` element's geometry is not updated (either automatically via `drawElementImage` or explicitly with `updateElementGeometry`), the `drawable` element and its drawable subtree are reported to the accessibility tree without geometry information. This approach ensures that accessibility does not lose the semantic information of content outside a `drawable` subtree, or in a `drawable` subtree but without updated geometry. This allows for assistive technologies to filter out content without geometry information. It is important that the accessibility aspects of unused canvas descendants, such as hidden views or no-longer-drawn content, are considered, and in many cases these should be removed from the DOM or hidden using accessibility primitives like `aria-hidden="true"`.
 
 Note that accessibility indicators such as focus or carets will be rendered with `drawElementImage` (and similar WebGL/WebGPU APIs).
 
 Below is an example where the semantics of a figure, image, and caption are preserved while drawing the image and figure separately:
 ```html
-<canvas id="canvas" layoutsubtree>
+<canvas id="canvas" content="drawable">
   <figure id="figure">
     <img drawable id="image" src="..." alt="image alt text" />
     <figcaption drawable id="caption">A caption</figcaption>
