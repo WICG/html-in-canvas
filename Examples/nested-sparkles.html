@@ -27,7 +27,9 @@
   }
 </style>
 
-<canvas id="canvas" layoutsubtree>
+<!-- Note: content=drawable is the new API and layoutsubtree has been left -->
+<!-- only for temporary backwards compatibility. -->
+<canvas id="canvas" content="drawable" layoutsubtree>
   <div drawable id="poem">
     <div class="line">Roses are red</div>
     <div class="line">Violets are blue,</div>

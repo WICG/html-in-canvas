@@ -55,7 +55,9 @@
   }
 </style>
 
-<canvas id="gl-canvas" width="400" height="600" layoutsubtree>
+<!-- Note: content=drawable is the new API and layoutsubtree has been left -->
+<!-- only for temporary backwards compatibility. -->
+<canvas id="gl-canvas" width="400" height="600" content="drawable" layoutsubtree>
   <div drawable id="choice">
     <label><input type="radio" id="chk-english" name="language" value="english" checked> English</label>
     <label><input type="radio" id="chk-spanish" name="language" value="spanish"> Español</label>
