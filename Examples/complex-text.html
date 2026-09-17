@@ -10,7 +10,9 @@
   }
 </style>
 
-<canvas id="canvas" width="638" height="318" layoutsubtree="true">
+<!-- Note: content=drawable is the new API and layoutsubtree has been left -->
+<!-- only for temporary backwards compatibility. -->
+<canvas id="canvas" width="638" height="318" content="drawable" layoutsubtree="true">
   <div id="draw_element" drawable style="width: 550px;">
     Hello from <a href="https://github.com/WICG/html-in-canvas">html-in-canvas</a>!
     <br>I'm multi-line, <b>formatted</b>,

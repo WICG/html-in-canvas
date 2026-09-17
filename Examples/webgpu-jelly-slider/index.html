@@ -68,7 +68,9 @@
   }
 </style>
 
-<canvas layoutsubtree>
+<!-- Note: content=drawable is the new API and layoutsubtree has been left -->
+<!-- only for temporary backwards compatibility. -->
+<canvas content="drawable" layoutsubtree>
   <input drawable id="slider" type="range" min="0" max="100" step="1" value="100" />
   <div drawable id="value" inert="true"></div>
 </canvas>

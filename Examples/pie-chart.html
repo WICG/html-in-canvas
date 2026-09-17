@@ -19,7 +19,9 @@
   }
 </style>
 
-<canvas layoutsubtree class="pie" role="list" aria-label="Pie Chart">
+<!-- Note: content=drawable is the new API and layoutsubtree has been left -->
+<!-- only for temporary backwards compatibility. -->
+<canvas content="drawable" layoutsubtree class="pie" role="list" aria-label="Pie Chart">
   <div drawable class="label" role="listitem" tabindex="0" data-val="0.45" data-color="tomato">
     <span class="val">45%</span>Apple
   </div>
