@@ -57,19 +57,21 @@ On worker threads there is no synchronous access to DOM APIs. When updating elem
 <img width="250" height="38" alt="a screenshot showing a form element with a blinking cursor" src="https://github.com/user-attachments/assets/acbdd231-3259-4819-b57e-32e29c460fc9" />
 
 ```html
-<canvas id="canvas" style="width: 400px; height: 200px;" content="drawable">
-  <form drawable id="form_element">
+<canvas style="width: 400px; height: 200px;" content="drawable">
+  <form drawable>
     <label for="name">name:</label>
     <input id="name">
   </form>
 </canvas>
 
 <script>
-  const ctx = document.getElementById('canvas').getContext('2d');
+  const canvas = document.querySelector('canvas');
+  const form = document.querySelector('canvas form');
+  const ctx = canvas.getContext('2d');
 
   canvas.onpaint = () => {
     ctx.reset();
-    ctx.drawElementImage(form_element, 100, 0);
+    ctx.drawElementImage(form, 100, 0);
   };
 
   // Size the canvas grid to match the device scale factor.
