@@ -392,15 +392,15 @@ This example demonstrates using an `OffscreenCanvas` in a worker thread. The `ca
 </script>
 ```
 
-## Developer Trial (dev trial) Information
+## Developer Trial Information
 
-The HTML-in-Canvas features may be enabled with `chrome://flags/#canvas-draw-element` in Chrome Canary.
+HTML-in-Canvas can be tried today by enabling *both* `chrome://flags/#canvas-draw-element` and `chrome://flags/#enable-experimental-web-platform-features` in Chrome Canary.
 
 We are most interested in feedback on the following topics:
 * What content works, and what fails? Which failure modes are most important to fix?
 * How does the feature interact with accessibility features? How can accessibility support be improved?
 
-Please file bugs or design issues [here](https://github.com/WICG/html-in-canvas/issues/new).
+Please file API feedback [here](https://github.com/WICG/html-in-canvas/issues/new), and Chromium implementation bugs [here](https://issues.chromium.org/u/0/issues/new?pli=1&component=1456440&template=0).
 
 ## Alternatives considered: `paint` event timing
 
