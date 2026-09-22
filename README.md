@@ -80,65 +80,6 @@ On worker threads there is no synchronous access to DOM APIs. When updating elem
 </script>
 ```
 
-### OffscreenCanvas Example
-
-In this example, `OffscreenCanvas` in a worker is used. The `canvas` child form is captured as an `ElementImage` object in the `paint` event and transferred to the worker for painting.
-
-```html
-<!DOCTYPE html>
-<canvas id="canvas" style="width: 400px; height: 400px;" content="drawable">
-  <form drawable id="form">
-    <label for="name">name:</label>
-    <input id="name">
-  </form>
-</canvas>
-
-<script>
-  const workerCode = `
-    let ctx;
-    self.onmessage = (e) => {
-      if (e.data.canvas) {
-        ctx = e.data.canvas.getContext('2d');
-      }
-      if (e.data.width && e.data.height) {
-        ctx.canvas.width = e.data.width;
-        ctx.canvas.height = e.data.height;
-      }
-      // Draw and sync.
-      if (e.data.form) {
-        ctx.reset();
-        ctx.drawElementImage(e.data.form, 100, 0);
-      }
-    };
-  `;
-
-  const worker = new Worker(URL.createObjectURL(new Blob([workerCode])));
-  const offscreen = canvas.transferControlToOffscreen();
-
-  worker.postMessage({ canvas: offscreen }, [offscreen]);
-
-  canvas.onpaint = () => {
-    const formImg = canvas.captureElementImage(form);
-    worker.postMessage({ form: formImg }, [ formImg ]);
-  };
-
-  // OffscreenCanvas notification of element geometry updates.
-  canvas.onelementgeometryupdate = () => {
-    // #form's canvas element transform would now be updated. For example,
-    // form.getBoundingClientRect() would include an x translation of 100.
-  };
-
-  // Size the canvas grid to match the device scale factor.
-  new ResizeObserver(([entry]) => {
-    worker.postMessage({
-      width: entry.contentRect.width * devicePixelRatio,
-      height: entry.contentRect.height * devicePixelRatio
-    });
-    canvas.requestPaint();
-  }).observe(canvas);
-</script>
-```
-
 ### IDL changes
 ```idl
 dictionary UpdateElementGeometryOptions {
@@ -387,6 +328,65 @@ Below is an example where the semantics of a figure, image, and caption are pres
     ctx.drawElementImage(image, 0, 0);
     ctx.drawElementImage(caption, 0, 200);
   };
+</script>
+```
+
+## OffscreenCanvas Example
+
+This example demonstrates using an `OffscreenCanvas` in a worker thread. The `canvas` child form is captured as an `ElementImage` object in the `paint` event and transferred to the worker for painting.
+
+```html
+<!DOCTYPE html>
+<canvas id="canvas" style="width: 400px; height: 400px;" content="drawable">
+  <form drawable id="form">
+    <label for="name">name:</label>
+    <input id="name">
+  </form>
+</canvas>
+
+<script>
+  const workerCode = `
+    let ctx;
+    self.onmessage = (e) => {
+      if (e.data.canvas) {
+        ctx = e.data.canvas.getContext('2d');
+      }
+      if (e.data.width && e.data.height) {
+        ctx.canvas.width = e.data.width;
+        ctx.canvas.height = e.data.height;
+      }
+      // Draw and sync.
+      if (e.data.form) {
+        ctx.reset();
+        ctx.drawElementImage(e.data.form, 100, 0);
+      }
+    };
+  `;
+
+  const worker = new Worker(URL.createObjectURL(new Blob([workerCode])));
+  const offscreen = canvas.transferControlToOffscreen();
+
+  worker.postMessage({ canvas: offscreen }, [offscreen]);
+
+  canvas.onpaint = () => {
+    const formImg = canvas.captureElementImage(form);
+    worker.postMessage({ form: formImg }, [ formImg ]);
+  };
+
+  // OffscreenCanvas notification of element geometry updates.
+  canvas.onelementgeometryupdate = () => {
+    // #form's canvas element transform would now be updated. For example,
+    // form.getBoundingClientRect() would include an x translation of 100.
+  };
+
+  // Size the canvas grid to match the device scale factor.
+  new ResizeObserver(([entry]) => {
+    worker.postMessage({
+      width: entry.contentRect.width * devicePixelRatio,
+      height: entry.contentRect.height * devicePixelRatio
+    });
+    canvas.requestPaint();
+  }).observe(canvas);
 </script>
 ```
 
