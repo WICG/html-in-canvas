@@ -1,0 +1,468 @@
+<!doctype html>
+<meta charset="utf-8" />
+<title>WebGL Mammoth Example</title>
+<style>
+  body {
+    margin: 0;
+    overflow: hidden;
+    background: #111;
+    color: white;
+    font-family: sans-serif;
+  }
+
+  canvas {
+    display: block;
+    width: 100vw;
+    height: 100vh;
+  }
+
+  #ui-background {
+    width: 512px;
+    height: 512px;
+    background: rgba(40, 20, 0, 0.8);
+    border: 2px solid #ea0;
+    color: #ea0;
+    padding: 20px;
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    font-family: 'Courier New', Courier, monospace;
+  }
+
+  .ui-header {
+    font-size: 24px;
+    border-bottom: 2px solid #ea0;
+    padding-bottom: 10px;
+  }
+
+  .ui-row {
+    margin: 10px 0;
+  }
+
+  input[type="range"] {
+    width: 100%;
+    accent-color: #ea0;
+  }
+
+  input[type="text"] {
+    background: #210;
+    color: #ea0;
+    border: 1px solid #ea0;
+    padding: 5px;
+    width: 100%;
+  }
+</style>
+<canvas id="gl-canvas" layoutsubtree>
+  <div id="ui-background">
+    <div class="ui-header">MAMMOTH OS</div>
+    <div class="ui-row">
+      <label>DNA SEQUENCING...</label>
+      <input type="range" min="0" max="100" value="75">
+    </div>
+    <div class="ui-row">
+      <label>SPECIMEN DATA</label>
+      <input type="text" value="AGE: 10,000 YRS">
+    </div>
+    <div class="ui-row">
+      STATUS: REVIVED
+      <br>
+      TEMPERATURE: -20C
+    </div>
+  </div>
+</canvas>
+
+<!-- gl-matrix -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gl-matrix/2.8.1/gl-matrix-min.js"></script>
+
+<script>
+  const canvas = document.getElementById('gl-canvas');
+  const gl = canvas.getContext('webgl2');
+
+  if (!gl) {
+    alert('WebGL2 not supported');
+    throw new Error('WebGL2 not supported');
+  }
+
+  // Shader Sources (Same as Dragon)
+  const vsSource = `#version 300 es
+  layout(location = 0) in vec3 aPosition;
+  layout(location = 1) in vec3 aNormal;
+  layout(location = 2) in vec2 aTexCoord;
+
+  uniform mat4 uModelMatrix;
+  uniform mat4 uViewMatrix;
+  uniform mat4 uProjectionMatrix;
+
+  out vec2 vTexCoord;
+  out vec3 vNormal;
+  out vec3 vViewPosition;
+
+  void main() {
+    vec4 viewPos = uViewMatrix * uModelMatrix * vec4(aPosition, 1.0);
+    gl_Position = uProjectionMatrix * viewPos;
+    vTexCoord = aTexCoord;
+    
+    // Normal in View Space
+    vNormal = mat3(uViewMatrix * uModelMatrix) * aNormal; 
+    vViewPosition = viewPos.xyz;
+  }
+  `;
+
+  const fsSource = `#version 300 es
+  precision highp float;
+
+  in vec2 vTexCoord;
+  in vec3 vNormal;
+  in vec3 vViewPosition;
+
+  uniform sampler2D uSampler;
+  uniform sampler2D uBackgroundTexture;
+  uniform vec2 uResolution;
+
+  out vec4 fragColor;
+
+  void main() {
+    vec3 normal = normalize(vNormal);
+    vec3 viewDir = normalize(-vViewPosition);
+
+    // Refraction (Screen Space Distortion)
+    vec2 screenUV = gl_FragCoord.xy / uResolution;
+    vec2 refractionOffset = normal.xy * 0.05; // Distortion strength
+    
+    vec4 bgColor = texture(uBackgroundTexture, screenUV + refractionOffset);
+    
+    // Base Color (Texture)
+    vec4 texColor = texture(uSampler, vTexCoord);
+    
+    // Fresnel Effect
+    float fresnel = pow(1.0 - max(dot(normal, viewDir), 0.0), 2.0);
+    
+    // Specular Highlight
+    vec3 lightDir = normalize(vec3(0.5, 1.0, 0.7));
+    vec3 halfVector = normalize(lightDir + viewDir);
+    float NdotH = max(dot(normal, halfVector), 0.0);
+    float specular = pow(NdotH, 32.0);
+
+    // Combine: Background (Refracted) + Tint + Specular
+    vec3 glassColor = mix(bgColor.rgb, texColor.rgb, 0.3 * texColor.a); // Tint with texture
+    vec3 finalColor = glassColor + vec3(specular) + vec3(fresnel * 0.3);
+    
+    fragColor = vec4(finalColor, 0.9);
+  }
+  `;
+
+  // Unlit Shader for UI
+  const unlitVsSource = `#version 300 es
+  layout(location = 0) in vec3 aPosition;
+  layout(location = 1) in vec2 aTexCoord;
+
+  uniform mat4 uModelMatrix;
+  uniform mat4 uViewMatrix;
+  uniform mat4 uProjectionMatrix;
+
+  out vec2 vTexCoord;
+
+  void main() {
+    gl_Position = uProjectionMatrix * uViewMatrix * uModelMatrix * vec4(aPosition, 1.0);
+    vTexCoord = aTexCoord;
+  }
+  `;
+
+  const unlitFsSource = `#version 300 es
+  precision highp float;
+
+  in vec2 vTexCoord;
+  uniform sampler2D uSampler;
+
+  out vec4 fragColor;
+
+  void main() {
+    fragColor = texture(uSampler, vTexCoord);
+  }
+  `;
+
+  function createShader(gl, type, source) {
+    const shader = gl.createShader(type);
+    gl.shaderSource(shader, source);
+    gl.compileShader(shader);
+    if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
+      console.error(gl.getShaderInfoLog(shader));
+      gl.deleteShader(shader);
+      return null;
+    }
+    return shader;
+  }
+
+  const program = gl.createProgram();
+  const vs = createShader(gl, gl.VERTEX_SHADER, vsSource);
+  const fs = createShader(gl, gl.FRAGMENT_SHADER, fsSource);
+  gl.attachShader(program, vs);
+  gl.attachShader(program, fs);
+  gl.linkProgram(program);
+
+  const unlitProgram = gl.createProgram();
+  const unlitVs = createShader(gl, gl.VERTEX_SHADER, unlitVsSource);
+  const unlitFs = createShader(gl, gl.FRAGMENT_SHADER, unlitFsSource);
+  gl.attachShader(unlitProgram, unlitVs);
+  gl.attachShader(unlitProgram, unlitFs);
+  gl.linkProgram(unlitProgram);
+
+  const unlitUniforms = {
+    uModelMatrix: gl.getUniformLocation(unlitProgram, 'uModelMatrix'),
+    uViewMatrix: gl.getUniformLocation(unlitProgram, 'uViewMatrix'),
+    uProjectionMatrix: gl.getUniformLocation(unlitProgram, 'uProjectionMatrix'),
+    uSampler: gl.getUniformLocation(unlitProgram, 'uSampler'),
+  };
+
+  const uModelMatrix = gl.getUniformLocation(program, 'uModelMatrix');
+  const uViewMatrix = gl.getUniformLocation(program, 'uViewMatrix');
+  const uProjectionMatrix = gl.getUniformLocation(program, 'uProjectionMatrix');
+  const uSampler = gl.getUniformLocation(program, 'uSampler');
+
+  async function loadMammoth() {
+    const binResponse = await fetch('woolly-mammoth-100k-4096-gltf_std/woolly-mammoth-100k-4096.bin');
+    const binBuffer = await binResponse.arrayBuffer();
+
+    const vao = gl.createVertexArray();
+    gl.bindVertexArray(vao);
+
+    // Indices (Accessor 3, BufferView 3)
+    // Offset 2354816, Length 1200000, Count 300000, Type 5125 (UINT32)
+    const indicesOffset = 2354816;
+    const indicesLength = 1200000;
+    const indicesData = new Uint32Array(binBuffer, indicesOffset, indicesLength / 4);
+
+    const indexBuffer = gl.createBuffer();
+    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indexBuffer);
+    gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, indicesData, gl.STATIC_DRAW);
+
+    // Positions (Accessor 0, BufferView 0)
+    // Offset 0, Length 883056, Count 73588, Type VEC3 (FLOAT)
+    const posOffset = 0;
+    const posLength = 883056;
+    const posData = new Float32Array(binBuffer, posOffset, posLength / 4);
+
+    const posBuffer = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, posBuffer);
+    gl.bufferData(gl.ARRAY_BUFFER, posData, gl.STATIC_DRAW);
+
+    gl.enableVertexAttribArray(0);
+    gl.vertexAttribPointer(0, 3, gl.FLOAT, false, 0, 0);
+
+    // Normals (Accessor 1, BufferView 1)
+    // Offset 883056, Length 883056, Count 73588, Type VEC3 (FLOAT)
+    const normOffset = 883056;
+    const normLength = 883056;
+    const normData = new Float32Array(binBuffer, normOffset, normLength / 4);
+
+    const normBuffer = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, normBuffer);
+    gl.bufferData(gl.ARRAY_BUFFER, normData, gl.STATIC_DRAW);
+
+    gl.enableVertexAttribArray(1);
+    gl.vertexAttribPointer(1, 3, gl.FLOAT, false, 0, 0);
+
+    // TexCoords (Accessor 2, BufferView 2)
+    // Offset 1766112, Length 588704, Count 73588, Type VEC2 (FLOAT)
+    const uvOffset = 1766112;
+    const uvLength = 588704;
+    const uvData = new Float32Array(binBuffer, uvOffset, uvLength / 4);
+
+    const uvBuffer = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, uvBuffer);
+    gl.bufferData(gl.ARRAY_BUFFER, uvData, gl.STATIC_DRAW);
+
+    gl.enableVertexAttribArray(2);
+    gl.vertexAttribPointer(2, 2, gl.FLOAT, false, 0, 0);
+
+    // Texture (No Base Color found, use white placeholder)
+    const texture = gl.createTexture();
+    gl.bindTexture(gl.TEXTURE_2D, texture);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.REPEAT);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.REPEAT);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+
+    // White pixel for "clean glass" look (or light grey)
+    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 1, 1, 0, gl.RGBA, gl.UNSIGNED_BYTE, new Uint8Array([220, 220, 255, 255]));
+
+    return { vao, count: 300000, texture };
+  }
+
+  loadMammoth().then((mammoth) => {
+    // UI Setup
+    const uiVao = gl.createVertexArray();
+    gl.bindVertexArray(uiVao);
+
+    // Quad Positions (centered 1x1)
+    const uiPositions = new Float32Array([
+      -0.5, 0.5, 0.0,
+      0.5, 0.5, 0.0,
+      -0.5, -0.5, 0.0,
+      0.5, -0.5, 0.0,
+    ]);
+    const uiPosBuffer = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, uiPosBuffer);
+    gl.bufferData(gl.ARRAY_BUFFER, uiPositions, gl.STATIC_DRAW);
+    gl.enableVertexAttribArray(0);
+    gl.vertexAttribPointer(0, 3, gl.FLOAT, false, 0, 0);
+
+    // Quad UVs
+    const uiUvs = new Float32Array([
+      0.0, 0.0,
+      1.0, 0.0,
+      0.0, 1.0,
+      1.0, 1.0,
+    ]);
+    const uiUvBuffer = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, uiUvBuffer);
+    gl.bufferData(gl.ARRAY_BUFFER, uiUvs, gl.STATIC_DRAW);
+    gl.enableVertexAttribArray(1);
+    gl.vertexAttribPointer(1, 2, gl.FLOAT, false, 0, 0);
+
+    // UI Texture
+    const uiTexture = gl.createTexture();
+    gl.bindTexture(gl.TEXTURE_2D, uiTexture);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+
+    const uiElement = document.getElementById('ui-background');
+
+    // Background Texture for Refraction
+    const bgTexture = gl.createTexture();
+    gl.bindTexture(gl.TEXTURE_2D, bgTexture);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+
+    const uResolutionLoc = gl.getUniformLocation(program, 'uResolution');
+    const uBgTextureLoc = gl.getUniformLocation(program, 'uBackgroundTexture');
+
+    let lastTime = 0;
+    let rotation = 0;
+
+    function render(time) {
+      const now = time * 0.001;
+      const deltaTime = now - lastTime;
+      lastTime = now;
+
+      if (canvas.width !== canvas.clientWidth || canvas.height !== canvas.clientHeight) {
+        canvas.width = canvas.clientWidth;
+        canvas.height = canvas.clientHeight;
+        gl.viewport(0, 0, canvas.width, canvas.height);
+      }
+
+      gl.clearColor(0.1, 0.05, 0.05, 1.0);
+      gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+      gl.enable(gl.DEPTH_TEST);
+
+      // --- Draw UI Background ---
+      gl.useProgram(unlitProgram);
+
+      // Update UI Texture
+      if (gl.texElementImage2D) {
+        gl.activeTexture(gl.TEXTURE0);
+        gl.bindTexture(gl.TEXTURE_2D, uiTexture);
+        gl.texElementImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, uiElement);
+      }
+
+      const projection = mat4.create();
+      mat4.perspective(projection, 45 * Math.PI / 180, canvas.width / canvas.height, 0.1, 1000.0);
+
+      const view = mat4.create();
+      mat4.lookAt(view, [0, 50, 150], [0, 40, 0], [0, 1, 0]);
+
+      // UI Model Matrix
+      const uiModel = mat4.create();
+      mat4.translate(uiModel, uiModel, [0, 50, -50]);
+      mat4.scale(uiModel, uiModel, [200, 200, 1]);
+
+      const uiMVP = mat4.create();
+      mat4.multiply(uiMVP, projection, view);
+      mat4.multiply(uiMVP, uiMVP, uiModel);
+
+      // Adjust for 0..1 to -0.5..0.5 mapping
+      const adjustment = mat4.create();
+      mat4.translate(adjustment, adjustment, [-0.5, 0.5, 0]);
+      mat4.scale(adjustment, adjustment, [1, -1, 1]);
+
+      const finalUiTransform = mat4.create();
+      mat4.multiply(finalUiTransform, uiMVP, adjustment);
+
+      if (canvas.getElementTransform) {
+        const mvpDOM = new DOMMatrix(Array.from(uiMVP));
+        const width = uiElement.offsetWidth;
+        const height = uiElement.offsetHeight;
+
+        const toGLModel = new DOMMatrix()
+          .scale(1 / width, -1 / height, 1)
+          .translate(-width / 2, -height / 2);
+
+        const toCSSViewport = new DOMMatrix()
+          .translate(canvas.width / 2, canvas.height / 2)
+          .scale(canvas.width / 2, -canvas.height / 2, 1);
+
+        const finalTransform = toCSSViewport.multiply(mvpDOM).multiply(toGLModel);
+
+        const transform = canvas.getElementTransform(uiElement, finalTransform);
+        if (transform) {
+          uiElement.style.transform = transform.toString();
+        }
+      }
+
+      gl.uniformMatrix4fv(unlitUniforms.uProjectionMatrix, false, projection);
+      gl.uniformMatrix4fv(unlitUniforms.uViewMatrix, false, view);
+      gl.uniformMatrix4fv(unlitUniforms.uModelMatrix, false, uiModel);
+
+      gl.activeTexture(gl.TEXTURE0);
+      gl.bindTexture(gl.TEXTURE_2D, uiTexture);
+      gl.uniform1i(unlitUniforms.uSampler, 0);
+
+      gl.bindVertexArray(uiVao);
+      gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+
+      // --- Copy Framebuffer to Background Texture ---
+      gl.bindTexture(gl.TEXTURE_2D, bgTexture);
+      gl.copyTexImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 0, 0, canvas.width, canvas.height, 0);
+
+      // --- Draw Mammoth ---
+      gl.useProgram(program);
+
+      rotation += deltaTime * 0.5;
+
+      const model = mat4.create();
+      mat4.translate(model, model, [0, 20, 50]); // Move closer to camera and center vertically
+      mat4.rotateY(model, model, rotation);
+      mat4.scale(model, model, [30, 30, 30]); // Adjusted scale to fit
+
+      gl.uniformMatrix4fv(uProjectionMatrix, false, projection);
+      gl.uniformMatrix4fv(uViewMatrix, false, view);
+      gl.uniformMatrix4fv(uModelMatrix, false, model);
+      gl.uniform2f(uResolutionLoc, canvas.width, canvas.height);
+
+      gl.activeTexture(gl.TEXTURE0);
+      gl.bindTexture(gl.TEXTURE_2D, mammoth.texture);
+      gl.uniform1i(uSampler, 0);
+
+      gl.activeTexture(gl.TEXTURE1);
+      gl.bindTexture(gl.TEXTURE_2D, bgTexture);
+      gl.uniform1i(uBgTextureLoc, 1);
+
+      gl.bindVertexArray(mammoth.vao);
+
+      gl.enable(gl.BLEND);
+      gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
+
+      gl.drawElements(gl.TRIANGLES, mammoth.count, gl.UNSIGNED_INT, 0);
+
+      gl.disable(gl.BLEND);
+
+      requestAnimationFrame(render);
+    }
+    requestAnimationFrame(render);
+  });
+</script>
