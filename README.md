@@ -74,11 +74,11 @@ On worker threads there is no synchronous access to DOM APIs. When updating elem
     ctx.drawElementImage(form, 100, 0);
   };
 
-  // Size the canvas grid to match the device scale factor.
-  new ResizeObserver(([entry]) => {
-    canvas.width = entry.contentRect.width * devicePixelRatio;
-    canvas.height = entry.contentRect.height * devicePixelRatio;
-  }).observe(canvas);
+  // Size the canvas grid to match the device scale factor.=
+  new ResizeObserver((entries) => {
+    canvas.width = entries[0].devicePixelContentBoxSize[0].inlineSize;
+    canvas.height = entries[0].devicePixelContentBoxSize[0].blockSize;
+  }).observe(canvas, { box: 'device-pixel-content-box' });
 </script>
 ```
 
