@@ -75,10 +75,10 @@ On worker threads there is no synchronous access to DOM APIs. When updating elem
   };
 
   // Size the canvas grid to match the device scale factor.
-  new ResizeObserver(([entry]) => {
-    canvas.width = entry.contentRect.width * devicePixelRatio;
-    canvas.height = entry.contentRect.height * devicePixelRatio;
-  }).observe(canvas);
+  new ResizeObserver(([{ devicePixelContentBoxSize: [pixelSize] }]) => {
+    canvas.width = pixelSize.inlineSize;
+    canvas.height = pixelSize.blockSize;
+  }).observe(canvas, { box: 'device-pixel-content-box' });
 </script>
 ```
 
