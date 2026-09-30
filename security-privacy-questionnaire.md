@@ -1,7 +1,7 @@
 01.  What information might this feature expose to Web sites or other parties,
      and for what purposes is that exposure necessary?
      
-     A design requirement is to not expose any new security information, and to limit the amount of new privacy information (see: [Privacy-preserving painting](https://github.com/WICG/html-in-canvas?tab=readme-ov-file#privacy-preserving-painting)). For the purpose of enabling interactivity, this API will reveal form control rendering, scrollbar rendering, text selection, find-in-page selection, and the caret blink rate (all without revealing OS theme colors).
+     A design requirement is to not expose any new security information, and to limit the amount of new privacy information (see: [Read-back-allowed rendering](https://github.com/WICG/html-in-canvas#read-back-allowed-rendering)). For the purpose of enabling interactivity, this API will reveal form control rendering, scrollbar rendering, text selection, find-in-page selection, and the caret blink rate (all without revealing OS theme colors).
      
 02.  Do features in your specification expose the minimum amount of information
      necessary to enable their intended uses?
@@ -12,7 +12,7 @@
      personally-identifiable information (PII), or information derived from
      them?
      
-     Since the feature renders pixels from DOM elements into canvas, those pixels can now be accessed by script, so it is important that no PII is present in those pixels. Cross-origin information, visited link information, spellcheck information, and autofill previews must not be painted. Disabling painting of this information also prevents revealing invalidation information via the `paint` event. See [privacy-preserving-painting](https://github.com/WICG/html-in-canvas/tree/main?tab=readme-ov-file#privacy-preserving-painting) for additional details.
+     Since the feature renders pixels from DOM elements into canvas, those pixels can now be accessed by script, so it is important that no PII is present in those pixels. Cross-origin information, visited link information, spellcheck information, and autofill previews must not be painted. Disabling painting of this information also prevents revealing invalidation information via the `paint` event. See [read-back-allowed rendering](https://github.com/WICG/html-in-canvas#read-back-allowed-rendering) for additional details.
      
 04.  How do the features in your specification deal with sensitive information?
      
@@ -26,7 +26,7 @@
 06.  Do the features in your specification expose information about the
      underlying platform to origins?
      
-     Similar to #1, the painting of information revealing information about the underlying platform (e.g., form autofill) is disabled, but some new platform information is revealed for interactivity, such as the caret blink rate. See [privacy-preserving-painting](https://github.com/WICG/html-in-canvas/tree/main?tab=readme-ov-file#privacy-preserving-painting) for additional details.
+     Similar to #1, the painting of information revealing information about the underlying platform (e.g., form autofill) is disabled, but some new platform information is revealed for interactivity, such as the caret blink rate. See [read-back-allowed rendering](https://github.com/WICG/html-in-canvas#read-back-allowed-rendering) for additional details.
      
 8.  Does this specification allow an origin to send data to the underlying
      platform?
@@ -68,8 +68,8 @@
      
 16.  Does this specification have both "Security Considerations" and "Privacy
      Considerations" sections?
-     
-     The specification is still in progress. The privacy issues have been highlighted in the explainer.
+
+     The specification for read-back allowed rendering has been separated out into its own PR (https://github.com/whatwg/html/pull/12554/changes).
      
 17.  Do features in your specification enable origins to downgrade default
      security protections?
