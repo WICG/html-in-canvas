@@ -69,7 +69,7 @@
 16.  Does this specification have both "Security Considerations" and "Privacy
      Considerations" sections?
 
-     The specification for read-back allowed rendering has been separated out into its own PR (https://github.com/whatwg/html/pull/12554/changes).
+     The specification for read-back allowed rendering has been separated out into its own PR (https://github.com/whatwg/html/pull/12554/changes), and the spec states that read-back allowed rendering is used "so that security- or privacy-sensitive information, such as cross-origin data, is not exposed".
      
 17.  Do features in your specification enable origins to downgrade default
      security protections?
