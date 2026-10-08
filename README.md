@@ -74,7 +74,7 @@ On worker threads there is no synchronous access to DOM APIs. When updating elem
     ctx.drawElementImage(form, 100, 0);
   };
 
-  // Size the canvas grid to match the device scale factor.=
+  // Size the canvas grid to match the device scale factor.
   new ResizeObserver((entries) => {
     canvas.width = entries[0].devicePixelContentBoxSize[0].inlineSize;
     canvas.height = entries[0].devicePixelContentBoxSize[0].blockSize;
@@ -103,6 +103,11 @@ dictionary UpdateElementGeometryOptions {
   DOMMatrixInit canvasTransform;
 };
 
+dictionary ElementImageDefaultSize {
+  double width;
+  double height;
+};
+
 partial interface HTMLCanvasElement {
   [CEReactions, Reflect, ReflectOnly=("fallback", "drawable"),
       ReflectMissing="fallback", ReflectInvalid="fallback"]
@@ -129,6 +134,9 @@ partial interface HTMLCanvasElement {
   // Fired when the browser completes applying geometry updates originating
   // from an OffscreenCanvas.
   attribute EventHandler onelementgeometryupdate;
+
+  // The default size of the element in canvas grid coordinates.
+  ElementImageDefaultSize getElementImageDefaultSize((Element or ElementImage) element);
 };
 
 partial interface OffscreenCanvas {
@@ -146,6 +154,9 @@ partial interface OffscreenCanvas {
   // Clears the element's geometry and fires `elementgeometryupdate`
   // like `updateElementGeometry`.
   void clearElementGeometry((Element or ElementImage) element);
+
+  // The default size of the element in canvas grid coordinates.
+  ElementImageDefaultSize getElementImageDefaultSize((Element or ElementImage) element);
 };
 
 dictionary DrawElementImageOptions {
@@ -237,11 +248,6 @@ dictionary CanvasPaintEventInit : EventInit {
 
 [Exposed=(Window,Worker), Transferable]
 interface ElementImage {
-  // The default size of the element in canvas grid coordinates. If the dwidth
-  // and dheight parameters to drawElementImage() are omitted, these are the
-  // values that will be used.
-  readonly attribute double width;
-  readonly attribute double height;
   undefined close();
 };
 
