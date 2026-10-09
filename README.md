@@ -74,7 +74,7 @@ On worker threads there is no synchronous access to DOM APIs. When updating elem
     ctx.drawElementImage(form, 100, 0);
   };
 
-  // Size the canvas grid to match the device scale factor.=
+  // Size the canvas grid to match the device scale factor.
   new ResizeObserver((entries) => {
     canvas.width = entries[0].devicePixelContentBoxSize[0].inlineSize;
     canvas.height = entries[0].devicePixelContentBoxSize[0].blockSize;
@@ -85,22 +85,26 @@ On worker threads there is no synchronous access to DOM APIs. When updating elem
 ### IDL changes
 ```idl
 dictionary UpdateElementGeometryOptions {
-  // Controls how the canvas's hit testing order stack should be modified. If
-  // this is true and the element is already in the canvas's hit testing stack,
-  // do nothing. In all other cases, place the element at the top of the
-  // canvas's hit testing stack.
+  // Controls how the canvas's hit testing order stack should be modified.
+  // If this is true and the element is already in the canvas's hit testing
+  // stack, do nothing. In all other cases, place the element at the top of
+  // the canvas's hit testing stack.
   boolean preserveHitTestOrder = false;
 
   // Sets the element's canvas clip used for hit testing, evaluated in the
-  // coordinate space of `canvasTransform`.
-  // If omitted, the pre-existing value of the element's canvas clip is
-  // preserved.
-  DOMRectInit clip;
+  // coordinate space of `canvasTransform`. If omitted, the pre-existing
+  // value of the element's canvas clip is preserved.
+  DOMRectInit canvasClip;
 
-  // Sets the element's canvas transform which maps the element's border box,
-  // before CSS transforms, to the canvas. If omitted, the pre-existing value
-  // of the element's canvas transform is preserved.
+  // Sets the element's canvas transform which maps the element's border
+  // box, before CSS transforms, to the canvas. If omitted, the
+  // pre-existing value of the element's canvas transform is preserved.
   DOMMatrixInit canvasTransform;
+};
+
+dictionary ElementImageDefaultSize {
+  double width;
+  double height;
 };
 
 partial interface HTMLCanvasElement {
@@ -118,41 +122,50 @@ partial interface HTMLCanvasElement {
   void updateElementGeometry(
       (Element or ElementImage) element,
       optional UpdateElementGeometryOptions options = {});
+
   void clearElementGeometry((Element or ElementImage) element);
 
-  // Returns the current transform applied to the Element to map its
-  // border box, before CSS transforms, to the canvas coordinate space, or
-  // an identity DOMMatrix if no transform has been set. Updated
-  // with `updateElementGeometry` and cleared with `clearElementGeometry`.
+  // Returns the current transform applied to the Element to map its border
+  // box, before CSS transforms, to the canvas coordinate space, or an
+  // identity DOMMatrix if no transform has been set. Updated with
+  // `updateElementGeometry` and cleared with `clearElementGeometry`.
   [NewObject] DOMMatrix getElementTransform(Element element);
 
   // Fired when the browser completes applying geometry updates originating
   // from an OffscreenCanvas.
   attribute EventHandler onelementgeometryupdate;
+
+  // The default size of the element in canvas grid coordinates.
+  ElementImageDefaultSize getElementImageDefaultSize(
+      (Element or ElementImage) element);
 };
 
 partial interface OffscreenCanvas {
   // Updates the element's geometry. When called from a worker thread,
-  // only `ElementImage` may be passed. Worker-thread updates are
-  // batched via a microtask and asynchronously posted to the main
-  // thread. Main-thread updates are also batched via a microtask. When
-  // the main-thread updates of element geometry complete, an
+  // only `ElementImage` may be passed. Worker-thread updates are batched
+  // via a microtask and asynchronously posted to the main thread.
+  // Main-thread updates are also batched via a microtask. When the
+  // main-thread updates of element geometry complete, an
   // `elementgeometryupdate` event is fired on the associated
   // HTMLCanvasElement.
   void updateElementGeometry(
       (Element or ElementImage) element,
       optional UpdateElementGeometryOptions options = {});
 
-  // Clears the element's geometry and fires `elementgeometryupdate`
-  // like `updateElementGeometry`.
+  // Clears the element's geometry and fires `elementgeometryupdate` like
+  // `updateElementGeometry`.
   void clearElementGeometry((Element or ElementImage) element);
+
+  // The default size of the element in canvas grid coordinates.
+  ElementImageDefaultSize getElementImageDefaultSize(
+      (Element or ElementImage) element);
 };
 
 dictionary DrawElementImageOptions {
   // If true, prevents the automatic update of the Element's geometry.
   // If false, automatically updates the Element's geometry by calling
-  // `updateElementGeometry` with a `canvasTransform` that maps the element's
-  // border-box to the drawn position in the canvas.
+  // `updateElementGeometry` with a `canvasTransform` that maps the
+  // element's border-box to the drawn position in the canvas.
   boolean preserveElementGeometry = false;
 };
 
@@ -222,7 +235,7 @@ partial interface GPUQueue {
   void drawElementImageToTexture(
       GPUDrawElementImageSource source,
       GPUDrawElementImageDestination destination);
-}
+};
 
 [Exposed=Window]
 interface CanvasPaintEvent : Event {
@@ -237,11 +250,6 @@ dictionary CanvasPaintEventInit : EventInit {
 
 [Exposed=(Window,Worker), Transferable]
 interface ElementImage {
-  // The default size of the element in canvas grid coordinates. If the dwidth
-  // and dheight parameters to drawElementImage() are omitted, these are the
-  // values that will be used.
-  readonly attribute double width;
-  readonly attribute double height;
   undefined close();
 };
 
