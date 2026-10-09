@@ -198,13 +198,13 @@
 
     try {
       // Pre-allocate texture backing with pre-determined size.
-      const {defaultWidth, defaultHeight} = gl.canvas.getElementImageDefaultSize(element);
+      const {width, height} = gl.canvas.getElementImageDefaultSize(element);
       gl.texImage2D(
           /* target */ gl.TEXTURE_2D,
           /* level */ 0,
           /* internalformat */ gl.RGBA8,
-          /* width */ defaultWidth,
-          /* height */ defaultHeight,
+          /* width */ width,
+          /* height */ height,
           /* border */ 0,
           /* format */ gl.RGBA,
           /* type */ gl.UNSIGNED_BYTE,
