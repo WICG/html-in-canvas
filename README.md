@@ -6,8 +6,6 @@ This is a proposal for using 2D and 3D `<canvas>` to customize the rendering of 
 
 This is a living explainer which is continuously updated as we receive feedback.
 
-The APIs described here are implemented behind a flag in Chromium and can be enabled with `chrome://flags/#canvas-draw-element`.
-
 ## Motivation
 
 There is no web API to easily render complex layouts of text and other content into a `<canvas>`. As a result, `<canvas>`-based content suffers in accessibility, internationalization, performance, and quality.
@@ -399,16 +397,6 @@ This example demonstrates using an `OffscreenCanvas` in a worker thread. The `ca
   }).observe(canvas);
 </script>
 ```
-
-## Developer Trial Information
-
-HTML-in-Canvas can be tried today by enabling *both* `chrome://flags/#canvas-draw-element` and `chrome://flags/#enable-experimental-web-platform-features` in Chrome Canary.
-
-We are most interested in feedback on the following topics:
-* What content works, and what fails? Which failure modes are most important to fix?
-* How does the feature interact with accessibility features? How can accessibility support be improved?
-
-Please file API feedback [here](https://github.com/WICG/html-in-canvas/issues/new), and Chromium implementation bugs [here](https://issues.chromium.org/u/0/issues/new?pli=1&component=1456440&template=0).
 
 ## Alternatives considered: `paint` event timing
 
