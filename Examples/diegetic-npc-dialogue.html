@@ -1,0 +1,550 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Diegetic NPC Dialogue — html-in-canvas demo</title>
+<!--
+  ============================================================================
+  Diegetic NPC Dialogue Demo
+  ----------------------------------------------------------------------------
+  Demo contributed by @Twynzen (https://github.com/Twynzen)
+  Addresses issue #71 ("Replace webGL demo with one that is interactive").
+
+  A fully interactive HTML dialogue panel rendered as a texture on a 3D
+  billboard plane in a Three.js scene, using the new `texElementImage2D`
+  API. The user can orbit the camera around the NPC while keeping full
+  keyboard, mouse and screen-reader access to the <select>, <input>, and
+  <button> inside the panel.
+
+  What makes this different from the existing webGL cube demo:
+    • Real DOM controls — keyboard focus, screen readers, autofill and
+      form semantics all work normally, painted into the 3D scene.
+    • Hit testing follows the 3D billboard: the DOM panel's CSS transform
+      is synced each frame so its hit region matches its rendered location.
+    • OrbitControls lets the user rotate around the NPC while the panel
+      stays interactive and accessible.
+
+  Requires: Chrome Canary with `chrome://flags/#canvas-draw-element` enabled.
+  ============================================================================
+-->
+<style>
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0; padding: 0;
+    background: #0a0a0f;
+    color: #e0e0e6;
+    font-family: system-ui, -apple-system, sans-serif;
+    overflow: hidden;
+    height: 100vh;
+  }
+
+  #info {
+    position: fixed;
+    top: 16px; left: 16px;
+    max-width: 340px;
+    padding: 14px 18px;
+    background: rgba(15, 18, 26, 0.88);
+    border: 1px solid #2a3040;
+    border-radius: 10px;
+    font-size: 12.5px;
+    line-height: 1.5;
+    z-index: 10;
+    backdrop-filter: blur(8px);
+  }
+  #info h1 {
+    margin: 0 0 8px; font-size: 14px;
+    color: #7dd3ff; letter-spacing: 0.5px;
+  }
+  #info code {
+    background: #1a1f2a;
+    padding: 2px 6px; border-radius: 3px;
+    color: #a8e6a8;
+    font-family: "Source Code Pro", ui-monospace, monospace;
+    font-size: 11.5px;
+  }
+  #info .hint { color: #7a8090; font-size: 11px; margin-top: 8px; }
+
+  #fallback {
+    display: none;
+    position: fixed;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    padding: 24px 28px;
+    background: rgba(40, 20, 22, 0.96);
+    border: 1px solid #884a4a;
+    border-radius: 10px;
+    max-width: 480px;
+    z-index: 100;
+  }
+  #fallback h2 { color: #ff9a8a; margin: 0 0 10px; font-size: 18px; }
+  #fallback code { background: #2a1818; padding: 2px 6px; border-radius: 3px; color: #ffccbb; font-family: monospace; }
+
+  #scene { display: block; width: 100vw; height: 100vh; }
+
+  #dialogue-panel {
+    width: 420px;
+    padding: 22px 24px;
+    background: linear-gradient(180deg, #1a2030 0%, #0c1018 100%);
+    border: 2px solid #4a90e2;
+    border-radius: 14px;
+    box-shadow:
+      0 0 32px rgba(74, 144, 226, 0.45),
+      inset 0 1px 0 rgba(255, 255, 255, 0.06);
+    font-family: "Source Code Pro", "Courier New", ui-monospace, monospace;
+    color: #e0e0e6;
+  }
+  .npc-name {
+    font-size: 13px;
+    color: #ffd28a;
+    margin-bottom: 8px;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+  }
+  .npc-text {
+    font-size: 15px;
+    line-height: 1.5;
+    margin-bottom: 16px;
+    min-height: 48px;
+    color: #e8e8ee;
+  }
+  .npc-text::after {
+    content: "▋";
+    animation: blink 1s step-end infinite;
+    color: #4a90e2;
+    margin-left: 2px;
+  }
+  @keyframes blink { 50% { opacity: 0; } }
+
+  #dialogue-panel select,
+  #dialogue-panel input {
+    width: 100%;
+    padding: 9px 11px;
+    background: #0a0e16;
+    color: #e0e0e6;
+    border: 1px solid #3a5a80;
+    border-radius: 5px;
+    font-family: inherit;
+    font-size: 13px;
+    margin-bottom: 8px;
+  }
+  #dialogue-panel input::placeholder { color: #566070; }
+  #dialogue-panel select:focus,
+  #dialogue-panel input:focus {
+    outline: none;
+    border-color: #7dd3ff;
+    box-shadow: 0 0 10px rgba(125, 211, 255, 0.5);
+  }
+
+  #ask-btn {
+    width: 100%;
+    padding: 11px;
+    background: #4a90e2;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    font-family: inherit;
+    font-weight: 700;
+    cursor: pointer;
+    font-size: 12.5px;
+    letter-spacing: 1.2px;
+    transition: background 120ms;
+  }
+  #ask-btn:hover  { background: #5aa0f2; }
+  #ask-btn:active { background: #3a7fc2; }
+</style>
+</head>
+<body>
+
+<div id="info">
+  <h1>⟡ Diegetic HTML in 3D</h1>
+  <p>A fully interactive HTML dialogue panel rendered as a texture on a 3D plane, using the new <code>texElementImage2D</code> API.</p>
+  <p>The <code>&lt;select&gt;</code> and <code>&lt;input&gt;</code> are <b>real DOM elements</b> — keyboard, screen reader and focus all work normally, but they're painted into the 3D scene.</p>
+  <p class="hint">Drag to orbit. Requires Chrome Canary with <code>chrome://flags/#canvas-draw-element</code>.</p>
+</div>
+
+<div id="fallback">
+  <h2>Feature not supported</h2>
+  <p>This demo requires the experimental <b>html-in-canvas</b> API.</p>
+  <p>1. Open <b>Chrome Canary</b><br>
+     2. Enable <code>chrome://flags/#canvas-draw-element</code><br>
+     3. Restart and reload this page.</p>
+</div>
+
+<!--
+  The <canvas> hosts the 3D scene. `layoutsubtree` opts the child element
+  in: the dialogue panel participates in normal DOM layout, but the pixels
+  are not painted to the canvas automatically — we upload them to a WebGL
+  texture from the `paint` event via gl.texElementImage2D().
+-->
+<canvas id="scene" layoutsubtree width="1920" height="1080">
+  <div id="dialogue-panel">
+    <div class="npc-name">⟡ The Archivist</div>
+    <div class="npc-text" id="npc-text">What do you seek to learn, traveler?</div>
+
+    <select id="dialogue-options" aria-label="Dialogue options">
+      <option value="here">Tell me about this place</option>
+      <option value="beyond">What lies beyond?</option>
+      <option value="who">Who are you?</option>
+      <option value="farewell">Farewell</option>
+    </select>
+
+    <input type="text" id="custom-question"
+           placeholder="Or ask your own question..."
+           aria-label="Free-form question" />
+
+    <button id="ask-btn">ASK</button>
+  </div>
+</canvas>
+
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://unpkg.com/three@0.162.0/build/three.module.js",
+    "three/addons/": "https://unpkg.com/three@0.162.0/examples/jsm/"
+  }
+}
+</script>
+
+<script type="module">
+import * as THREE from "three";
+import { OrbitControls } from "three/addons/controls/OrbitControls.js";
+
+const canvas         = document.getElementById("scene");
+const panel          = document.getElementById("dialogue-panel");
+const npcText        = document.getElementById("npc-text");
+const dialogueSelect = document.getElementById("dialogue-options");
+const customInput    = document.getElementById("custom-question");
+const askBtn         = document.getElementById("ask-btn");
+const fallback       = document.getElementById("fallback");
+
+// --- Feature detection ------------------------------------------------
+const glProbe = canvas.getContext("webgl2") || canvas.getContext("webgl");
+const hasTexElementImage2D = glProbe && typeof glProbe.texElementImage2D === "function";
+const hasLayoutSubtree     = "layoutSubtree" in HTMLCanvasElement.prototype;
+const hasOnPaint           = "onpaint" in HTMLCanvasElement.prototype;
+
+if (!hasTexElementImage2D || !hasLayoutSubtree || !hasOnPaint) {
+  fallback.style.display = "block";
+  canvas.style.display   = "none";
+  throw new Error("html-in-canvas APIs not available");
+}
+
+// --- Renderer / scene / camera / controls -----------------------------
+const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: false });
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+renderer.setSize(window.innerWidth, window.innerHeight, false);
+renderer.setClearColor(0x0a0a0f, 1);
+
+const gl = renderer.getContext();
+
+const scene = new THREE.Scene();
+scene.fog = new THREE.FogExp2(0x0a0a0f, 0.055);
+
+const camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 0.1, 100);
+camera.position.set(3.8, 1.9, 5.2);
+
+const controls = new OrbitControls(camera, canvas);
+controls.target.set(0.5, 1.4, 0);
+controls.enableDamping = true;
+controls.dampingFactor = 0.08;
+controls.minDistance   = 3;
+controls.maxDistance   = 10;
+controls.maxPolarAngle = Math.PI / 1.95;
+
+// --- Lights -----------------------------------------------------------
+scene.add(new THREE.AmbientLight(0x3a3a55, 0.55));
+
+const keyLight = new THREE.DirectionalLight(0xffd28a, 1.1);
+keyLight.position.set(4, 6, 3);
+scene.add(keyLight);
+
+const rimLight = new THREE.PointLight(0x4a90e2, 2.2, 10);
+rimLight.position.set(-3, 2.5, -2);
+scene.add(rimLight);
+
+const panelLight = new THREE.PointLight(0x7dd3ff, 1.4, 5);
+panelLight.position.set(1.7, 1.5, 0.5);
+scene.add(panelLight);
+
+// --- Floor + glowing ring --------------------------------------------
+const floor = new THREE.Mesh(
+  new THREE.CircleGeometry(6, 64),
+  new THREE.MeshStandardMaterial({ color: 0x1a2030, roughness: 0.85, metalness: 0.15 })
+);
+floor.rotation.x = -Math.PI / 2;
+scene.add(floor);
+
+const ring = new THREE.Mesh(
+  new THREE.RingGeometry(1.2, 1.32, 64),
+  new THREE.MeshBasicMaterial({ color: 0x4a90e2, transparent: true, opacity: 0.4, side: THREE.DoubleSide })
+);
+ring.rotation.x = -Math.PI / 2;
+ring.position.y = 0.01;
+scene.add(ring);
+
+// --- NPC (stylized low-poly figure) ----------------------------------
+const npc = new THREE.Group();
+
+const body = new THREE.Mesh(
+  new THREE.ConeGeometry(0.55, 1.5, 10),
+  new THREE.MeshStandardMaterial({
+    color: 0x6a4a8a, roughness: 0.4, metalness: 0.35,
+    emissive: 0x221133, emissiveIntensity: 0.4
+  })
+);
+body.position.y = 0.75;
+npc.add(body);
+
+const head = new THREE.Mesh(
+  new THREE.SphereGeometry(0.3, 20, 20),
+  new THREE.MeshStandardMaterial({
+    color: 0xffd28a, roughness: 0.45,
+    emissive: 0x553322, emissiveIntensity: 0.3
+  })
+);
+head.position.y = 1.75;
+npc.add(head);
+
+const orb = new THREE.Mesh(
+  new THREE.SphereGeometry(0.1, 16, 16),
+  new THREE.MeshBasicMaterial({ color: 0x7dd3ff })
+);
+orb.position.set(0, 2.25, 0);
+npc.add(orb);
+
+scene.add(npc);
+
+// ======================================================================
+// Dialogue panel plane — texture is uploaded each frame via texElementImage2D.
+//
+// Key detail: we DO NOT let Three.js allocate the GL texture. Three.js
+// calls gl.texStorage2D() under the hood for DataTexture/Texture, which
+// produces IMMUTABLE storage — and texElementImage2D fails on immutable
+// textures with GL_INVALID_OPERATION (it is spec'd like texImage2D, not
+// texSubImage2D). Instead:
+//
+//   1. Create the GL handle ourselves with gl.createTexture() + parameter
+//      setup, so the storage stays mutable.
+//   2. Inject the handle into Three.js' internal property cache
+//      (renderer.properties.get(tex).__webglTexture = ourHandle) so the
+//      MeshBasicMaterial uses it as its `map` without re-uploading.
+//
+// The official Examples/webGL.html demo uses the same createTexture
+// pattern for the raw-WebGL case. This file adapts it for Three.js.
+// ======================================================================
+const panelWidth  = 2.4;
+const panelHeight = 1.7;
+
+const panelTexture = new THREE.Texture();
+panelTexture.minFilter    = THREE.LinearFilter;
+panelTexture.magFilter    = THREE.LinearFilter;
+panelTexture.generateMipmaps = false;
+panelTexture.flipY        = true;
+panelTexture.needsUpdate  = false; // prevent Three.js from uploading anything
+
+const panelMesh = new THREE.Mesh(
+  new THREE.PlaneGeometry(panelWidth, panelHeight),
+  new THREE.MeshBasicMaterial({ map: panelTexture, transparent: true, side: THREE.DoubleSide })
+);
+panelMesh.position.set(1.7, 1.5, 0);
+scene.add(panelMesh);
+
+const rawGLTexture = gl.createTexture();
+gl.bindTexture(gl.TEXTURE_2D, rawGLTexture);
+gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+gl.bindTexture(gl.TEXTURE_2D, null);
+
+const texProps = renderer.properties.get(panelTexture);
+texProps.__webglTexture = rawGLTexture;
+texProps.__webglInit    = true;
+texProps.__version      = panelTexture.version;
+texProps.__maxMipLevel  = 0;
+
+// --- Dialogue content -------------------------------------------------
+const responses = {
+  here:
+    "This place has stood longer than memory allows. Its stones remember what tongues forget.",
+  beyond:
+    "Beyond lies that which each traveler must see for themselves. No description would do it justice.",
+  who:
+    "I am the Archivist. I keep what would otherwise be lost, and I tell it to those who care to listen.",
+  farewell:
+    "Travel well, then. The road remembers every step."
+};
+
+dialogueSelect.addEventListener("change", (e) => {
+  npcText.textContent = responses[e.target.value] || "...";
+  canvas.requestPaint();
+});
+
+askBtn.addEventListener("click", () => {
+  const q = customInput.value.trim();
+  if (q) {
+    npcText.textContent = `On "${q.slice(0, 44)}"... let me consider.`;
+    customInput.value = "";
+    canvas.requestPaint();
+  }
+});
+
+customInput.addEventListener("keydown", (e) => {
+  if (e.key === "Enter") askBtn.click();
+});
+
+// ======================================================================
+// DOM↔3D alignment — interaction-aware freeze.
+//
+// The DOM panel is a child of the <canvas layoutsubtree> and must be
+// positioned so its hit region matches where the panel is painted in 3D.
+// We apply `panel.style.transform` each frame to reconcile the two.
+//
+// Two subtle problems to avoid:
+//
+//   (a) Drift from relative-transform math. Computing
+//         dx = screenX - panel.getBoundingClientRect().center
+//       is self-referential — the rect already includes the previous
+//       frame's transform, so the formula oscillates and accumulates
+//       large error. We instead measure the panel's NATURAL center
+//       once (with transform cleared) and compute an ABSOLUTE transform
+//       each frame: dx = screenX - naturalCx.
+//
+//   (b) Hit-test miss while interacting. If the DOM rect moves between
+//       pointerdown and pointerup (because the camera is mid-damping or
+//       mid-lookAt), the click target is lost — especially for <input>.
+//       We freeze DOM AND camera together while the pointer is over the
+//       panel, has pressed it, or something inside has keyboard focus.
+//       This keeps the DOM rect in exact lockstep with the billboard.
+//
+// Additionally: OrbitControls listens for pointerdown on the canvas,
+// and since the panel is a descendant, clicks on the panel would bubble
+// up and start a spurious orbit drag. We call e.stopPropagation() on
+// pointerdown to prevent that.
+// ======================================================================
+let lastDx = NaN, lastDy = NaN, lastScale = NaN;
+let focusGate = false, hoverGate = false, pressedGate = false;
+let isOrbiting = false;
+panel.style.transformOrigin = "center center";
+
+let naturalCx = 0, naturalCy = 0;
+function measurePanelNatural() {
+  const prev = panel.style.transform;
+  panel.style.transform = "none";
+  const pr = panel.getBoundingClientRect();
+  const cr = canvas.getBoundingClientRect();
+  naturalCx = pr.left + pr.width  / 2 - cr.left;
+  naturalCy = pr.top  + pr.height / 2 - cr.top;
+  panel.style.transform = prev;
+}
+measurePanelNatural();
+
+function frozen() {
+  return (focusGate || hoverGate || pressedGate) && !isOrbiting;
+}
+
+panel.addEventListener("focusin",  ()  => { focusGate = true; });
+panel.addEventListener("focusout", (e) => {
+  if (!panel.contains(e.relatedTarget)) focusGate = false;
+});
+
+panel.addEventListener("pointerenter", () => { hoverGate = true; });
+panel.addEventListener("pointerleave", () => { hoverGate = false; });
+
+panel.addEventListener("pointerdown", (e) => {
+  e.stopPropagation(); // don't start an orbit drag when clicking the panel
+  pressedGate = true;
+});
+window.addEventListener("pointerup",     () => { pressedGate = false; });
+window.addEventListener("pointercancel", () => { pressedGate = false; });
+
+controls.addEventListener("start", () => { isOrbiting = true;  });
+controls.addEventListener("end",   () => { isOrbiting = false; });
+
+// ======================================================================
+// paint event — the core of the html-in-canvas integration.
+// ======================================================================
+canvas.onpaint = () => {
+  // (1) Upload the HTML panel to our GL texture.
+  const prevActive = gl.getParameter(gl.ACTIVE_TEXTURE);
+  const prevBound  = gl.getParameter(gl.TEXTURE_BINDING_2D);
+
+  gl.activeTexture(gl.TEXTURE0);
+  gl.bindTexture(gl.TEXTURE_2D, rawGLTexture);
+  gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
+  gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, false);
+
+  gl.texElementImage2D(
+    gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, panel
+  );
+
+  gl.bindTexture(gl.TEXTURE_2D, prevBound);
+  gl.activeTexture(prevActive);
+
+  // (2) Project the 3D plane's world origin into screen space.
+  const worldPos = new THREE.Vector3();
+  panelMesh.getWorldPosition(worldPos);
+
+  const ndc  = worldPos.clone().project(camera);
+  const rect = canvas.getBoundingClientRect();
+  const screenX = (ndc.x *  0.5 + 0.5) * rect.width;
+  const screenY = (ndc.y * -0.5 + 0.5) * rect.height;
+
+  // (3) Scale the DOM to match the projected height of the plane.
+  const distance = camera.position.distanceTo(worldPos);
+  const worldHeightAtPlane = 2 * Math.tan((camera.fov * Math.PI) / 360) * distance;
+  const pixelsPerWorldUnit = rect.height / worldHeightAtPlane;
+  const scale = (panelHeight * pixelsPerWorldUnit) / panel.offsetHeight;
+
+  // (4) Absolute translation from natural position.
+  const dx = screenX - naturalCx;
+  const dy = screenY - naturalCy;
+
+  const PIXEL_THRESHOLD = 0.5;
+  const SCALE_THRESHOLD = 0.002;
+  const moved =
+    isNaN(lastDx) ||
+    Math.abs(dx - lastDx) > PIXEL_THRESHOLD ||
+    Math.abs(dy - lastDy) > PIXEL_THRESHOLD ||
+    Math.abs(scale - lastScale) > SCALE_THRESHOLD;
+
+  if (!frozen() && moved) {
+    panel.style.transform = `translate(${dx}px, ${dy}px) scale(${scale})`;
+    lastDx = dx; lastDy = dy; lastScale = scale;
+  }
+};
+
+// --- Animation loop --------------------------------------------------
+function animate(t) {
+  requestAnimationFrame(animate);
+
+  npc.position.y = Math.sin(t * 0.001) * 0.04;
+  orb.position.y = 2.25 + Math.sin(t * 0.002) * 0.14;
+  orb.position.x = Math.cos(t * 0.0015) * 0.28;
+  orb.position.z = Math.sin(t * 0.0015) * 0.28;
+  ring.material.opacity = 0.3 + Math.sin(t * 0.002) * 0.18;
+
+  // Skip camera/billboard updates while interacting with the panel, so
+  // the DOM rect and the 3D projection stay locked together during the
+  // click window (see DOM↔3D alignment block above).
+  if (!frozen()) {
+    panelMesh.lookAt(camera.position);
+    controls.update();
+  }
+
+  renderer.render(scene, camera);
+  canvas.requestPaint();
+}
+
+animate(0);
+
+window.addEventListener("resize", () => {
+  camera.aspect = window.innerWidth / window.innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(window.innerWidth, window.innerHeight, false);
+  measurePanelNatural();
+});
+</script>
+</body>
+</html>
